@@ -1,6 +1,7 @@
 // Káà — Calculator view-model
 // ---------------------------------------------------------------------------
-// Mirrors web/src/lib/calculator.ts. Owns the expression string, evaluated
+// Mirrors src/lib/calculator.ts (in the web app at the repo root). Owns the
+// expression string, evaluated
 // result, error state, and history. SwiftUI views observe via @Observable.
 
 import Foundation
