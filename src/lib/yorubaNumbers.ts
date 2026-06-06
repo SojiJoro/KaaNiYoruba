@@ -1,6 +1,6 @@
 // Káà — Yoruba Number Engine
 // ---------------------------------------------------------------------------
-// Converts an integer in [-999999, 999999] into its Yoruba word form.
+// Converts numbers into Yoruba word forms and can spell arbitrary digit strings.
 // Two modes are supported:
 //   - 'traditional': full vigesimal/subtractive logic (e.g. 75 = Márùndínlọ́gọ́rin)
 //   - 'modern'     : additive-only simplification (e.g. 75 = Àádọ́rin àti Márùn-ún)
@@ -9,6 +9,9 @@
 // (Bamgboṣe 1966; Abraham 1958; Yoruba Modern Practical Dictionary).
 // Hundreds/thousands combining forms are programmatic readable fallbacks;
 // the verified subtractive source of truth remains the explicit 0–99 table.
+// For decimals, IDs, phone-like strings, and values outside the full-number
+// renderer, the engine falls back to digit-by-digit reading so every typed
+// digit can still be written in Yorùbá.
 
 export type YorubaMode = 'traditional' | 'modern';
 
@@ -167,29 +170,118 @@ const TRADITIONAL_0_99: Record<number, string> = {
   99: 'Mọ́kàndínlọ́gọ́rùn',
 };
 
-const MAX_RENDERABLE = 999_999;
+const MAX_FULL_NUMBER = 999_999;
+
+const DIGIT_WORDS: Record<string, string> = {
+  '0': BASE_0_10[0],
+  '1': BASE_0_10[1],
+  '2': BASE_0_10[2],
+  '3': BASE_0_10[3],
+  '4': BASE_0_10[4],
+  '5': BASE_0_10[5],
+  '6': BASE_0_10[6],
+  '7': BASE_0_10[7],
+  '8': BASE_0_10[8],
+  '9': BASE_0_10[9],
+};
 
 // ---- Core converters -----------------------------------------------------
 
 /**
- * Convert an integer to Yoruba words.
- * Handles 0..999,999. Negative numbers are prefixed with "Òdì" (negative).
- * Values outside the supported window return their Arabic numeral as a string.
+ * Convert a JavaScript number to Yoruba words.
+ * Full traditional/modern number names are rendered through 999,999.
+ * Larger finite values and decimals fall back to readable digit spelling rather
+ * than showing raw Arabic numerals, so every possible key input has a Yoruba
+ * output. Negative numbers are prefixed with "Òdì" (negative).
  */
 export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
   if (!Number.isFinite(n)) return '—';
-  // Force into integer for word rendering. Decimals are surfaced separately.
-  const intPart = Math.trunc(n);
+  if (!Number.isInteger(n)) return numericInputToYoruba(n.toString(), mode);
 
-  if (intPart < 0) {
-    const positive = toYoruba(-intPart, mode);
+  if (n < 0) {
+    const positive = toYoruba(Math.abs(n), mode);
     return `Òdì ${positive}`;
   }
 
-  if (intPart > MAX_RENDERABLE) return intPart.toString();
+  if (n > MAX_FULL_NUMBER) return digitSequenceToYoruba(n.toString(), mode);
 
-  if (mode === 'modern') return toModern(intPart);
-  return toTraditional(intPart);
+  if (mode === 'modern') return toModern(n);
+  return toTraditional(n);
+}
+
+/**
+ * Spell every digit and decimal/sign mark in a numeric string. Useful for long
+ * account numbers, phone numbers, leading-zero values, and any value beyond the
+ * verified full-number renderer. Grouping commas, underscores, and spaces are
+ * ignored.
+ */
+export function digitSequenceToYoruba(
+  value: string,
+  _mode: YorubaMode = 'traditional',
+): string {
+  const normalized = normalizeNumericInput(value);
+  if (!isNumericString(normalized)) return '';
+
+  const words: string[] = [];
+  for (const char of normalized) {
+    if (char in DIGIT_WORDS) words.push(DIGIT_WORDS[char]);
+    else if (char === '-') words.push('Òdì');
+    else if (char === '+') words.push('Àfikún');
+    else if (char === '.') words.push('Ẹsẹ');
+  }
+  return words.join(' ');
+}
+
+/**
+ * Render a typed numeric string. Integers in the verified range use full Yoruba
+ * number names; decimals use a whole-number phrase plus individually spoken
+ * fractional digits; otherwise the function falls back to digit spelling.
+ */
+export function numericInputToYoruba(
+  value: string,
+  mode: YorubaMode = 'traditional',
+): string {
+  const normalized = normalizeNumericInput(value);
+  if (!isNumericString(normalized)) return '';
+
+  const sign = normalized.startsWith('-') ? 'Òdì ' : '';
+  const unsigned = normalized.replace(/^[+-]/, '');
+
+  if (unsigned.includes('.')) {
+    const [wholePartRaw, fractionPartRaw = ''] = unsigned.split('.');
+    const wholePart = wholePartRaw || '0';
+    const wholeNumber = Number(wholePart);
+    const wholeWords =
+      wholePart.length > 15 || wholeNumber > MAX_FULL_NUMBER
+        ? digitSequenceToYoruba(wholePart, mode)
+        : toYoruba(wholeNumber, mode);
+    const fractionWords = fractionPartRaw
+      .split('')
+      .map((digit) => DIGIT_WORDS[digit])
+      .filter(Boolean)
+      .join(' ');
+
+    return `${sign}${wholeWords}${fractionWords ? ` Ẹsẹ ${fractionWords}` : ' Ẹsẹ'}`.trim();
+  }
+
+  // Preserve leading-zero values as digit strings because 007 is not the same
+  // written form as 7 for phone numbers, IDs, and codes.
+  if (/^0\d+/.test(unsigned)) return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
+
+  const n = Number(unsigned);
+  if (!Number.isSafeInteger(n) || n > MAX_FULL_NUMBER) {
+    return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
+  }
+
+  return `${sign}${toYoruba(n, mode)}`.trim();
+}
+
+function normalizeNumericInput(value: string): string {
+  return value.trim().replace(/[,_\s]/g, '');
+}
+
+function isNumericString(value: string): boolean {
+  return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value);
 }
 
 function toTraditional(n: number): string {
@@ -201,9 +293,11 @@ function toTraditional(n: number): string {
 
 function toModern(n: number): string {
   if (n <= 10) return BASE_0_10[n];
-  if (n in TENS_BASE) return TENS_BASE[n];
-  if (n in HUNDREDS_BASE) return HUNDREDS_BASE[n];
+  if (n === 1000) return HUNDREDS_BASE[1000];
   if (n >= 1000) return thousandsPlusRemainder(n, 'modern');
+  if (n >= 100) return modernHundredsPlusRemainder(n);
+
+  if (n in TENS_BASE) return TENS_BASE[n];
 
   if (n >= 11 && n <= 99) {
     // Modern: decimal additive "[tens] àti [units]".
@@ -218,7 +312,19 @@ function toModern(n: number): string {
     return `${tensWord} àti ${BASE_0_10[units]}`;
   }
 
-  return hundredsPlusRemainder(n, 'modern');
+  return '';
+}
+
+function modernHundredsPlusRemainder(n: number): string {
+  const hundredCount = Math.floor(n / 100);
+  const remainder = n % 100;
+  const hundredWord =
+    hundredCount === 1
+      ? TENS_BASE[100]
+      : `${TENS_BASE[100]} ${unitCount(hundredCount, 'modern')}`;
+
+  if (remainder === 0) return hundredWord;
+  return `${hundredWord} àti ${toModern(remainder)}`;
 }
 
 // Thousands + remainder uses a transparent decimal grouping so larger typed
@@ -294,9 +400,8 @@ export function expressionToYoruba(expr: string, mode: YorubaMode = 'traditional
 
   return tokens
     .map((token) => {
-      if (/^-?\d+(\.\d+)?$/.test(token)) {
-        const n = Number(token);
-        return toYoruba(Math.trunc(n), mode);
+      if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(token)) {
+        return numericInputToYoruba(token, mode);
       }
       return operatorWord(token);
     })
@@ -307,7 +412,8 @@ export function expressionToYoruba(expr: string, mode: YorubaMode = 'traditional
  * Convenience: a Yoruba word for the digit a user just tapped, including ".".
  */
 export function digitWord(digit: string, mode: YorubaMode = 'traditional'): string {
-  if (digit === '.') return 'ààmì';
+  if (digit === '.') return 'Ẹsẹ';
+  if (digit in DIGIT_WORDS) return DIGIT_WORDS[digit];
   const n = Number(digit);
   if (Number.isNaN(n)) return '';
   return toYoruba(n, mode);

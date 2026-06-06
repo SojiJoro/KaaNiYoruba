@@ -17,7 +17,7 @@ const COUNTING_INSIGHTS = [
     detail:
       "Traditional Yorùbá counting is vigesimal: 40 is read as two twenties, 60 as three twenties, and 80 as four twenties.",
     example: "40 → Ogójì • 60 → Ọgọ́ta • 80 → Ọgọ́rin",
-    source: "NACLO Yoruba counting solution; Omniglot number list",
+    source: "NACLO Yoruba counting solution",
     sourceUrl: "https://naclo.org/resources/problems/2020/N2020-OS.pdf",
   },
   {
@@ -39,6 +39,16 @@ const COUNTING_INSIGHTS = [
     source: "Olubode-Sawe, Sources of Complexity",
     sourceUrl:
       "https://www.researchgate.net/publication/355043747_Sources_of_Complexity_in_the_Yoruba_Numeral_System_p_210-223",
+  },
+  {
+    title: "App fallback for every digit",
+    yoruba: "Ka díjítì kọ̀ọ̀kan",
+    detail:
+      "Because long IDs, phone numbers, leading zeros, and decimal fractions are not always ordinary counting numbers, the app also spells each digit so no input falls back to raw Arabic numerals.",
+    example: "007 → Òdo Òdo Méje • 12.05 → Méjìlá Ẹsẹ Òdo Márùn-ún",
+    source: "Yoruba Decimal System notes",
+    sourceUrl:
+      "https://yoruba-scipedia.wikidot.com/wiki%3Amodification-of-yoruba-numeral-system-for-use-in-scienc",
   },
 ];
 

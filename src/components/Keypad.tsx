@@ -41,7 +41,7 @@ export function Keypad({ mode, onKey }: KeypadProps) {
   return (
     <section
       aria-label="Calculator keypad"
-      className="grid w-full grid-cols-4 gap-2 sm:gap-3"
+      className="grid w-full grid-cols-4 gap-2"
     >
       {LAYOUT.map((cell) => (
         <KeyButton
@@ -66,7 +66,7 @@ function KeyButton({
 }) {
   const subtitle = labelFor(cell.key, mode);
   const base =
-    "relative flex min-h-[66px] select-none flex-col items-center justify-center rounded-[1.05rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[72px] sm:rounded-[1.25rem]";
+    "relative flex min-h-[56px] select-none flex-col items-center justify-center rounded-[1rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[66px] sm:rounded-[1.2rem]";
   const variantClasses = {
     digit:
       "border-border bg-warm-cream text-text-dark hover:border-soft-green/45 hover:bg-white",
@@ -79,7 +79,7 @@ function KeyButton({
   }[cell.variant];
 
   const span = cell.span === 2 ? "col-span-2" : "";
-  const tall = cell.tall ? "row-span-2 min-h-[140px] sm:min-h-[156px]" : "";
+  const tall = cell.tall ? "row-span-2 min-h-[120px] sm:min-h-[140px]" : "";
   const subtitleClass =
     cell.variant === "equals" || cell.emphasis
       ? "text-warm-cream/90"
@@ -92,12 +92,12 @@ function KeyButton({
       aria-label={`${symbolLabel(cell.key)}${subtitle ? `, ${subtitle}` : ""}`}
       className={`${base} ${variantClasses} ${span} ${tall}`}
     >
-      <span className="text-2xl font-bold leading-none tracking-tight sm:text-4xl">
+      <span className="text-2xl font-bold leading-none tracking-tight sm:text-3xl">
         {cell.key}
       </span>
       {subtitle ? (
         <span
-          className={`mt-1.5 max-w-full truncate text-[0.68rem] font-semibold leading-tight sm:text-sm ${subtitleClass}`}
+          className={`mt-1 max-w-full truncate text-[0.64rem] font-semibold leading-tight sm:text-xs ${subtitleClass}`}
         >
           {subtitle}
         </span>

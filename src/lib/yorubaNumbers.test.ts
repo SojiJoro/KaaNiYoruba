@@ -5,7 +5,13 @@
 // intentionally minimal so the suite stays vendor-neutral.
 
 import assert from 'node:assert/strict';
-import { toYoruba, expressionToYoruba, operatorWord } from './yorubaNumbers';
+import {
+  digitSequenceToYoruba,
+  expressionToYoruba,
+  numericInputToYoruba,
+  operatorWord,
+  toYoruba,
+} from './yorubaNumbers';
 
 interface Case {
   n: number;
@@ -48,13 +54,15 @@ const CASES: Case[] = [
   { n: 25, trad: 'Mẹ́ẹ̀dọ́gbọ̀n', modern: 'Ogún àti Márùn-ún' },
   // Hundreds and larger typed values
   { n: 65, trad: 'Márùndínláàádọ́rin', modern: 'Ọgọ́ta àti Márùn-ún' },
-  { n: 200, trad: 'Igba' },
+  { n: 200, trad: 'Igba', modern: 'Ọgọ́rùn-ún méjì' },
   { n: 300, trad: 'Ọ̀ọ́dúnrún' },
   { n: 400, trad: 'Irinwó' },
-  { n: 500, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta' },
-  { n: 1000, trad: 'Ẹgbẹ̀rún' },
-  { n: 1001, trad: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
-  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Mẹ́rìnléláàádọ́rùn ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta' },
+  { n: 500, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ọgọ́rùn-ún márùn-ún' },
+  { n: 1000, trad: 'Ẹgbẹ̀rún', modern: 'Ẹgbẹ̀rún' },
+  { n: 1001, trad: 'Ẹgbẹ̀rún kan àti Ọ̀kan', modern: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
+  { n: 558, trad: 'Méjìdínlọ́gọ́ta ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Mẹ́jọ' },
+  { n: 2232, trad: 'Ẹgbẹ̀rún méjì àti Méjìlélọ́gbọ̀n ó lé ní Igba', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
+  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Mẹ́rìnléláàádọ́rùn ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
 ];
 
 let pass = 0;
@@ -79,9 +87,23 @@ try {
   assert.equal(expressionToYoruba('12×3'), 'Méjìlá ìgbà Mẹ́ta');
   assert.equal(expressionToYoruba('10-4'), 'Mẹ́wàá yọ Mẹ́rin');
   assert.equal(expressionToYoruba('100÷5'), 'Ọgọ́rùn-ún pín sí Márùn-ún');
-  pass += 4;
+  assert.equal(expressionToYoruba('2.5+3'), 'Méjì Ẹsẹ Márùn-ún pẹ̀lú Mẹ́ta');
+  pass += 5;
 } catch (e) {
-  fail += 4;
+  fail += 5;
+  console.error(' ✗', (e as Error).message);
+}
+
+// Typed numbers, decimals, and arbitrary digit strings
+try {
+  assert.equal(numericInputToYoruba('007'), 'Òdo Òdo Méje');
+  assert.equal(numericInputToYoruba('12345678901234567890'), 'Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo');
+  assert.equal(numericInputToYoruba('12.05'), 'Méjìlá Ẹsẹ Òdo Márùn-ún');
+  assert.equal(toYoruba(1_000_000), 'Ọ̀kan Òdo Òdo Òdo Òdo Òdo Òdo');
+  assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo Ẹsẹ Ọ̀kan');
+  pass += 5;
+} catch (e) {
+  fail += 5;
   console.error(' ✗', (e as Error).message);
 }
 
