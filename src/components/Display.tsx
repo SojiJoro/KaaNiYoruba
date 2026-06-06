@@ -54,7 +54,7 @@ export function Display({
           type="button"
           onClick={() => onSpeak?.(headlineYoruba || "")}
           aria-label="Gbọ́ pípè"
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-soft-green/40 bg-primary-green text-warm-cream shadow-lg shadow-primary-green/20 transition hover:-translate-y-0.5 hover:bg-deep-green focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-warm-cream"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-warm-cream text-primary-green shadow-button transition hover:-translate-y-0.5 hover:border-soft-green/60 hover:bg-pale-green focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-warm-cream"
           title="Gbọ́ pípè (Hear pronunciation)"
         >
           <SpeakerIcon />
@@ -79,7 +79,7 @@ export function Display({
         </div>
         <div
           aria-label="Result in Arabic numerals"
-          className="max-w-full self-end overflow-hidden text-ellipsis rounded-2xl border border-border bg-background px-3 py-2 text-right font-mono text-2xl font-bold text-muted shadow-sm sm:shrink-0 sm:text-4xl"
+          className="max-w-full self-end overflow-hidden text-ellipsis px-2 py-1 text-right font-mono text-3xl font-bold text-text-dark sm:shrink-0 sm:text-5xl"
         >
           {headlineArabic || " "}
         </div>

@@ -10,6 +10,38 @@ interface LearningModeProps {
 
 const RANGE_END = 20;
 
+const COUNTING_INSIGHTS = [
+  {
+    title: "Base-20 backbone",
+    yoruba: "Ogún ni ìpìlẹ̀",
+    detail:
+      "Traditional Yorùbá counting is vigesimal: 40 is read as two twenties, 60 as three twenties, and 80 as four twenties.",
+    example: "40 → Ogójì • 60 → Ọgọ́ta • 80 → Ọgọ́rin",
+    source: "NACLO Yoruba counting solution; Omniglot number list",
+    sourceUrl: "https://naclo.org/resources/problems/2020/N2020-OS.pdf",
+  },
+  {
+    title: "Count back near targets",
+    yoruba: "Dín = count back",
+    detail:
+      "Numbers just before the next ten or score often subtract from a target, so 35 is five less than 40 and 75 is five less than 80.",
+    example: "35 → Márùndínlógójì • 75 → Márùndínlọ́gọ́rin",
+    source: "NACLO examples; Olubode-Sawe 2013",
+    sourceUrl:
+      "https://www.researchgate.net/publication/355043747_Sources_of_Complexity_in_the_Yoruba_Numeral_System_p_210-223",
+  },
+  {
+    title: "Tone and compounding matter",
+    yoruba: "Ohùn yí ọ̀rọ̀ padà",
+    detail:
+      "Research notes that number words combine arithmetic operations with phonological changes, so the spoken form can differ from a literal word-by-word build.",
+    example: "19 → Mọ́kàndínlógún • 25 → Mẹ́ẹ̀dọ́gbọ̀n",
+    source: "Olubode-Sawe, Sources of Complexity",
+    sourceUrl:
+      "https://www.researchgate.net/publication/355043747_Sources_of_Complexity_in_the_Yoruba_Numeral_System_p_210-223",
+  },
+];
+
 export function LearningMode({ mode, onSpeak }: LearningModeProps) {
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -115,6 +147,55 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
           })}
         </div>
       </div>
+
+      <section className="rounded-3xl border border-border bg-background/75 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">
+              Research notes
+            </p>
+            <h3 className="mt-1 font-serif text-2xl text-deep-green">
+              Yorùbá number counting
+            </h3>
+          </div>
+          <span className="rounded-full bg-pale-green px-3 py-1 text-xs font-bold text-primary-green">
+            20-base
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {COUNTING_INSIGHTS.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-border bg-warm-cream p-4 shadow-button"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h4 className="font-serif text-lg font-semibold text-deep-green">
+                  {item.title}
+                </h4>
+                <span className="text-xs font-bold text-primary-green">
+                  {item.yoruba}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-muted">{item.detail}</p>
+              <p className="mt-3 rounded-2xl bg-pale-green/70 px-3 py-2 font-serif text-sm text-deep-green">
+                {item.example}
+              </p>
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted/80">
+                Source:{" "}
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary-green underline-offset-2 hover:underline"
+                >
+                  {item.source}
+                </a>
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

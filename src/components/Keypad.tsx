@@ -66,20 +66,24 @@ function KeyButton({
 }) {
   const subtitle = labelFor(cell.key, mode);
   const base =
-    "relative flex min-h-[66px] select-none flex-col items-center justify-center rounded-[1.1rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[72px] sm:rounded-[1.35rem]";
+    "relative flex min-h-[66px] select-none flex-col items-center justify-center rounded-[1.05rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[72px] sm:rounded-[1.25rem]";
   const variantClasses = {
     digit:
       "border-border bg-warm-cream text-text-dark hover:border-soft-green/45 hover:bg-white",
     op: cell.emphasis
-      ? "border-soft-green/55 bg-soft-green text-deep-green hover:bg-soft-green/85 font-bold"
-      : "border-soft-green/25 bg-pale-green text-deep-green hover:bg-soft-green/25 font-semibold",
-    fn: "border-soft-green/20 bg-pale-green text-deep-green hover:bg-soft-green/20 font-semibold",
+      ? "border-soft-green/55 bg-gradient-to-br from-soft-green to-primary-green text-warm-cream hover:from-soft-green hover:to-deep-green font-bold"
+      : "border-border bg-pale-green/55 text-text-dark hover:bg-soft-green/20 font-semibold",
+    fn: "border-border bg-pale-green/70 text-text-dark hover:bg-soft-green/20 font-semibold",
     equals:
       "border-deep-green bg-gradient-to-br from-primary-green to-deep-green text-warm-cream font-bold shadow-xl shadow-primary-green/25 hover:shadow-primary-green/35",
   }[cell.variant];
 
   const span = cell.span === 2 ? "col-span-2" : "";
   const tall = cell.tall ? "row-span-2 min-h-[140px] sm:min-h-[156px]" : "";
+  const subtitleClass =
+    cell.variant === "equals" || cell.emphasis
+      ? "text-warm-cream/90"
+      : "text-primary-green";
 
   return (
     <button
@@ -92,7 +96,9 @@ function KeyButton({
         {cell.key}
       </span>
       {subtitle ? (
-        <span className="mt-1.5 max-w-full truncate text-[0.68rem] font-semibold leading-tight text-primary-green sm:text-sm">
+        <span
+          className={`mt-1.5 max-w-full truncate text-[0.68rem] font-semibold leading-tight sm:text-sm ${subtitleClass}`}
+        >
           {subtitle}
         </span>
       ) : null}
