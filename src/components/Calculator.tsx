@@ -24,10 +24,10 @@ import { ModeToggle } from "./ModeToggle";
 type Tab = "calculator" | "history" | "converter" | "learn";
 
 const TABS: Array<{ id: Tab; label: string; icon: string }> = [
-  { id: "calculator", label: "Kálkù", icon: "⌘" },
+  { id: "calculator", label: "Kálkù", icon: "▦" },
   { id: "history", label: "Ìtàn", icon: "◷" },
-  { id: "converter", label: "Yípadà", icon: "⇄" },
-  { id: "learn", label: "Kọ́ ẹ̀kọ́", icon: "✎" },
+  { id: "converter", label: "Yípadà", icon: "▱" },
+  { id: "learn", label: "Kọ́ ẹ̀kọ́", icon: "◈" },
 ];
 
 export function Calculator() {
@@ -118,7 +118,7 @@ export function Calculator() {
 
   return (
     <div className="w-full max-w-5xl pb-24 sm:pb-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] border border-border/80 bg-background/92 p-3 shadow-app backdrop-blur sm:rounded-[2.25rem] sm:p-7 lg:p-8">
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-border/70 bg-background/90 p-3 shadow-app backdrop-blur sm:rounded-[2.25rem] sm:p-7 lg:p-8">
         <div className="pointer-events-none absolute left-8 top-0 h-px w-1/2 bg-gradient-to-r from-gold/60 to-transparent" />
         <AppHeader mode={mode} onModeChange={setMode} />
 
@@ -158,7 +158,7 @@ export function Calculator() {
             </div>
           </div>
 
-          <aside className="hidden rounded-[1.75rem] border border-border bg-warm-cream/75 p-5 shadow-card lg:flex lg:flex-col lg:gap-4">
+          <aside className="hidden rounded-[1.75rem] border border-border bg-warm-cream/80 p-5 shadow-card lg:flex lg:flex-col lg:gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-gold">
                 Live guide
@@ -205,7 +205,7 @@ function AppHeader({
   return (
     <header className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h1 className="font-serif text-5xl font-black leading-none tracking-[-0.04em] text-deep-green sm:text-7xl">
+        <h1 className="font-serif text-5xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-7xl">
           K
           <span className="relative inline-block">
             á
@@ -232,7 +232,7 @@ function BottomNav({
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-3 bottom-3 z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.5rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-6 sm:mt-6 sm:max-w-xl sm:rounded-full"
+      className="fixed inset-x-3 bottom-3 z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.5rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-6 sm:mt-6 sm:max-w-xl sm:rounded-[1.75rem]"
     >
       {TABS.map((item) => (
         <TabButton
@@ -264,7 +264,7 @@ function TabButton({
       onClick={onClick}
       className={`group flex min-h-14 flex-col items-center justify-center rounded-full px-2 text-center transition-all ${
         active
-          ? "bg-pale-green text-deep-green"
+          ? "bg-pale-green text-primary-green shadow-sm"
           : "text-muted hover:bg-pale-green/60 hover:text-deep-green"
       }`}
     >
