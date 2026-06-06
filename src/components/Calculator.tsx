@@ -118,7 +118,7 @@ export function Calculator() {
 
   return (
     <div className="w-full max-w-5xl pb-24 sm:pb-6">
-      <section className="relative overflow-hidden rounded-[2.25rem] border border-border/80 bg-background/92 p-5 shadow-app backdrop-blur sm:p-7 lg:p-8">
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-border/80 bg-background/92 p-3 shadow-app backdrop-blur sm:rounded-[2.25rem] sm:p-7 lg:p-8">
         <div className="pointer-events-none absolute left-8 top-0 h-px w-1/2 bg-gradient-to-r from-gold/60 to-transparent" />
         <AppHeader mode={mode} onModeChange={setMode} />
 
@@ -203,9 +203,9 @@ function AppHeader({
   onModeChange: (mode: YorubaMode) => void;
 }) {
   return (
-    <header className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+    <header className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h1 className="font-serif text-6xl font-black leading-none tracking-[-0.04em] text-deep-green sm:text-7xl">
+        <h1 className="font-serif text-5xl font-black leading-none tracking-[-0.04em] text-deep-green sm:text-7xl">
           K
           <span className="relative inline-block">
             á
@@ -232,7 +232,7 @@ function BottomNav({
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-4 bottom-4 z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-6 sm:mt-6 sm:max-w-xl"
+      className="fixed inset-x-3 bottom-3 z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.5rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-6 sm:mt-6 sm:max-w-xl sm:rounded-full"
     >
       {TABS.map((item) => (
         <TabButton

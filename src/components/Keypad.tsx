@@ -41,7 +41,7 @@ export function Keypad({ mode, onKey }: KeypadProps) {
   return (
     <section
       aria-label="Calculator keypad"
-      className="grid w-full grid-cols-4 gap-2.5 sm:gap-3"
+      className="grid w-full grid-cols-4 gap-2 sm:gap-3"
     >
       {LAYOUT.map((cell) => (
         <KeyButton
@@ -66,7 +66,7 @@ function KeyButton({
 }) {
   const subtitle = labelFor(cell.key, mode);
   const base =
-    "relative flex min-h-[72px] select-none flex-col items-center justify-center rounded-[1.35rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background";
+    "relative flex min-h-[66px] select-none flex-col items-center justify-center rounded-[1.1rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[72px] sm:rounded-[1.35rem]";
   const variantClasses = {
     digit:
       "border-border bg-warm-cream text-text-dark hover:border-soft-green/45 hover:bg-white",
@@ -79,7 +79,7 @@ function KeyButton({
   }[cell.variant];
 
   const span = cell.span === 2 ? "col-span-2" : "";
-  const tall = cell.tall ? "row-span-2 min-h-[156px]" : "";
+  const tall = cell.tall ? "row-span-2 min-h-[140px] sm:min-h-[156px]" : "";
 
   return (
     <button
@@ -88,11 +88,11 @@ function KeyButton({
       aria-label={`${symbolLabel(cell.key)}${subtitle ? `, ${subtitle}` : ""}`}
       className={`${base} ${variantClasses} ${span} ${tall}`}
     >
-      <span className="text-3xl font-bold leading-none tracking-tight sm:text-4xl">
+      <span className="text-2xl font-bold leading-none tracking-tight sm:text-4xl">
         {cell.key}
       </span>
       {subtitle ? (
-        <span className="mt-1.5 max-w-full truncate text-[0.78rem] font-semibold leading-tight text-primary-green sm:text-sm">
+        <span className="mt-1.5 max-w-full truncate text-[0.68rem] font-semibold leading-tight text-primary-green sm:text-sm">
           {subtitle}
         </span>
       ) : null}

@@ -18,7 +18,7 @@ export function ConverterPanel({ mode, onSpeak }: ConverterPanelProps) {
       <header>
         <h2 className="font-serif text-2xl text-deep-green">Yípadà Nọ́mbà</h2>
         <p className="mt-1 text-sm text-muted">
-          Tẹ nọ́mbà kan láàrín 0–1,000 láti rí ọ̀rọ̀ Yorùbá rẹ̀.
+          Tẹ nọ́mbà kan láàrín 0–999,999 láti rí ọ̀rọ̀ Yorùbá rẹ̀.
         </p>
       </header>
 
@@ -27,8 +27,8 @@ export function ConverterPanel({ mode, onSpeak }: ConverterPanelProps) {
         <input
           type="number"
           inputMode="numeric"
-          min={-1000}
-          max={1000}
+          min={-999999}
+          max={999999}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           className="rounded-2xl border border-border bg-background px-4 py-3 font-mono text-2xl text-text-dark focus:outline-none focus:ring-2 focus:ring-primary-green"
@@ -40,7 +40,7 @@ export function ConverterPanel({ mode, onSpeak }: ConverterPanelProps) {
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">
             Yorùbá
           </p>
-          <p className="mt-1 break-words font-serif text-4xl leading-tight text-deep-green">
+          <p className="mt-1 break-words font-serif text-[clamp(2rem,9vw,2.25rem)] leading-tight text-deep-green [overflow-wrap:anywhere] sm:text-4xl">
             {yoruba || "—"}
           </p>
         </div>
@@ -66,7 +66,7 @@ function parseValue(s: string): number | null {
   if (s.trim() === "") return null;
   const n = Number(s);
   if (!Number.isFinite(n)) return null;
-  if (n < -1000 || n > 1000) return null;
+  if (n < -999999 || n > 999999) return null;
   return Math.trunc(n);
 }
 

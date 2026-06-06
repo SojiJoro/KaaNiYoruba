@@ -46,12 +46,15 @@ const CASES: Case[] = [
   // Modern-only sanity
   { n: 15, trad: 'Mẹ́ẹ̀dógún', modern: 'Mẹ́wàá àti Márùn-ún' },
   { n: 25, trad: 'Mẹ́ẹ̀dọ́gbọ̀n', modern: 'Ogún àti Márùn-ún' },
-  // Hundreds
+  // Hundreds and larger typed values
+  { n: 65, trad: 'Márùndínláàádọ́rin', modern: 'Ọgọ́ta àti Márùn-ún' },
   { n: 200, trad: 'Igba' },
   { n: 300, trad: 'Ọ̀ọ́dúnrún' },
   { n: 400, trad: 'Irinwó' },
   { n: 500, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta' },
   { n: 1000, trad: 'Ẹgbẹ̀rún' },
+  { n: 1001, trad: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
+  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Mẹ́rìnléláàádọ́rùn ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta' },
 ];
 
 let pass = 0;
