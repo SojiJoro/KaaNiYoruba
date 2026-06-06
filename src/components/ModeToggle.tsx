@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import type { YorubaMode } from '@/lib/yorubaNumbers';
+import type { YorubaMode } from "@/lib/yorubaNumbers";
 
 interface ModeToggleProps {
   mode: YorubaMode;
@@ -12,19 +12,19 @@ export function ModeToggle({ mode, onChange }: ModeToggleProps) {
     <div
       role="radiogroup"
       aria-label="Yoruba number mode"
-      className="flex items-center gap-1 rounded-full bg-paper-dark/60 dark:bg-cocoa-light/60 p-1 border border-cocoa/10 dark:border-cream/10"
+      className="inline-flex w-full items-center gap-1 rounded-full border border-border bg-warm-cream p-1 shadow-sm sm:w-auto"
     >
       <SegmentButton
-        label="Àtọwọ́dọ́wọ́"
-        sublabel="Traditional"
-        active={mode === 'traditional'}
-        onClick={() => onChange('traditional')}
+        label="Traditional"
+        sublabel="Àtọwọ́dọ́wọ́"
+        active={mode === "traditional"}
+        onClick={() => onChange("traditional")}
       />
       <SegmentButton
-        label="Òde-òní"
-        sublabel="Modern"
-        active={mode === 'modern'}
-        onClick={() => onChange('modern')}
+        label="Modern"
+        sublabel="Òde-òní"
+        active={mode === "modern"}
+        onClick={() => onChange("modern")}
       />
     </div>
   );
@@ -47,14 +47,16 @@ function SegmentButton({
       role="radio"
       aria-checked={active}
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-serif transition-colors flex flex-col items-center leading-tight ${
+      className={`flex min-h-11 flex-1 flex-col items-center justify-center rounded-full px-4 py-2 text-xs leading-tight transition-all sm:min-w-28 ${
         active
-          ? 'bg-moss text-cream shadow-sm'
-          : 'text-cocoa/70 dark:text-cream/70 hover:bg-cocoa/5 dark:hover:bg-cream/5'
+          ? "bg-primary-green text-warm-cream shadow-md shadow-primary-green/20"
+          : "text-muted hover:bg-pale-green hover:text-deep-green"
       }`}
     >
-      <span className="font-semibold">{label}</span>
-      <span className="text-[10px] opacity-70">{sublabel}</span>
+      <span className="font-bold">{label}</span>
+      <span className="mt-0.5 font-serif text-[11px] opacity-80">
+        {sublabel}
+      </span>
     </button>
   );
 }

@@ -1,7 +1,11 @@
-'use client';
+"use client";
 
-import { expressionToYoruba, toYoruba, type YorubaMode } from '@/lib/yorubaNumbers';
-import { formatNumber } from '@/lib/calculator';
+import {
+  expressionToYoruba,
+  toYoruba,
+  type YorubaMode,
+} from "@/lib/yorubaNumbers";
+import { formatNumber } from "@/lib/calculator";
 
 interface DisplayProps {
   expression: string;
@@ -11,62 +15,84 @@ interface DisplayProps {
   onSpeak?: (text: string) => void;
 }
 
-export function Display({ expression, result, error, mode, onSpeak }: DisplayProps) {
-  // Decide what to show as the headline Yoruba word.
-  // Priority: error > computed result > current expression's last operand.
+export function Display({
+  expression,
+  result,
+  error,
+  mode,
+  onSpeak,
+}: DisplayProps) {
   const headlineYoruba = headlineFor({ expression, result, error, mode });
   const headlineArabic = headlineArabicFor({ expression, result });
-  const expressionYoruba = expression ? expressionToYoruba(expression, mode) : '';
+  const expressionYoruba = expression
+    ? expressionToYoruba(expression, mode)
+    : "";
+  const displayExpression = formatExpression(expression);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-cocoa/10 bg-gradient-to-br from-paper to-paper-dark/70 px-6 py-7 shadow-inner dark:border-cream/10 dark:from-cocoa/70 dark:to-cocoa-light/45 flex flex-col gap-4 min-h-[220px] justify-between">
-      <div className="pointer-events-none absolute right-5 top-5 h-20 w-20 rounded-full border border-moss/15" />
-      <div className="relative flex flex-col gap-1">
-        <div
-          aria-label="Expression in Arabic numerals"
-          className="text-cocoa/60 dark:text-cream/60 text-lg font-mono tracking-tight min-h-[1.5rem]"
-        >
-          {expression || ' '}
+    <section className="relative isolate flex min-h-[250px] flex-col justify-between overflow-hidden rounded-[2rem] border border-border bg-warm-cream px-5 py-5 shadow-premium sm:min-h-[280px] sm:px-7 sm:py-6">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+      <div className="pointer-events-none absolute -right-14 -top-16 h-40 w-40 rounded-full bg-soft-green/10" />
+
+      <div className="relative flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p
+            aria-label="Expression in Arabic numerals"
+            className="min-h-[1.5rem] break-words font-mono text-lg font-semibold tracking-tight text-muted sm:text-xl"
+          >
+            {displayExpression || " "}
+          </p>
+          <p
+            aria-label="Expression in Yoruba"
+            className="min-h-[2rem] break-words font-serif text-[1.7rem] leading-tight text-primary-green sm:text-3xl"
+          >
+            {expressionYoruba || " "}
+          </p>
         </div>
-        <div
-          aria-label="Expression in Yoruba"
-          className="text-cocoa dark:text-cream text-2xl leading-snug font-serif min-h-[2rem]"
+
+        <button
+          type="button"
+          onClick={() => onSpeak?.(headlineYoruba || "")}
+          aria-label="Gbọ́ pípè"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-soft-green/40 bg-primary-green text-warm-cream shadow-lg shadow-primary-green/20 transition hover:-translate-y-0.5 hover:bg-deep-green focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-warm-cream"
+          title="Gbọ́ pípè (Hear pronunciation)"
         >
-          {expressionYoruba || ' '}
-        </div>
+          <SpeakerIcon />
+        </button>
       </div>
 
+      <div className="my-5 h-px w-full bg-border" />
+
       <div className="relative flex items-end justify-between gap-4">
-        <div className="flex flex-col">
-          <div
+        <div className="min-w-0 flex-1">
+          <span className="mb-3 inline-flex rounded-full border border-soft-green/30 bg-soft-green/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary-green">
+            Ìtàn ìṣirò
+          </span>
+          <h2
             aria-live="polite"
-            className={`text-5xl sm:text-6xl font-bold leading-tight ${
-              error ? 'text-rust' : 'text-cocoa dark:text-cream'
-            } font-serif tracking-tight`}
+            className={`break-words font-serif text-[3.6rem] font-black uppercase leading-[0.92] tracking-tight sm:text-7xl ${
+              error ? "text-error" : "text-deep-green"
+            }`}
           >
-            {error ? error : headlineYoruba || ' '}
-          </div>
+            {error ? error : headlineYoruba || " "}
+          </h2>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => onSpeak?.(headlineYoruba || '')}
-            aria-label="Gbọ́ pípè"
-            className="rounded-full bg-moss/20 hover:bg-moss/30 text-moss dark:text-moss-light p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-moss focus:ring-offset-2 focus:ring-offset-paper dark:focus:ring-offset-cocoa"
-            title="Gbọ́ pípè (Hear pronunciation)"
-          >
-            <SpeakerIcon />
-          </button>
-          <div
-            aria-label="Result in Arabic numerals"
-            className="text-cocoa/70 dark:text-cream/70 text-2xl font-mono min-w-[3ch] text-right"
-          >
-            {headlineArabic}
-          </div>
+        <div
+          aria-label="Result in Arabic numerals"
+          className="shrink-0 rounded-2xl border border-border bg-background px-3 py-2 text-right font-mono text-3xl font-bold text-muted shadow-sm sm:text-4xl"
+        >
+          {headlineArabic || " "}
         </div>
       </div>
-    </div>
+    </section>
   );
+}
+
+function formatExpression(expression: string): string {
+  return expression
+    .replace(/([+−×÷])/g, " $1 ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function headlineFor({
@@ -80,20 +106,17 @@ function headlineFor({
   error: string | null;
   mode: YorubaMode;
 }): string {
-  if (error) return '';
-  if (result !== null && expression === formatNumber(result)) {
-    return toYoruba(result, mode);
+  if (error) return "";
+  if (result !== null) {
+    return toYoruba(Math.trunc(result), mode);
   }
-  if (!expression) return '';
-  // Show the most recent operand in Yoruba.
+  if (!expression) return "";
   const tokens = expression.split(/([+\-−*×/÷])/).filter(Boolean);
   const last = tokens[tokens.length - 1];
   if (/^-?\d+(\.\d+)?$/.test(last)) {
-    const n = Number(last);
-    return toYoruba(Math.trunc(n), mode);
+    return toYoruba(Math.trunc(Number(last)), mode);
   }
-  // Last char is an operator; show the operator word large.
-  return '';
+  return "";
 }
 
 function headlineArabicFor({
@@ -103,14 +126,14 @@ function headlineArabicFor({
   expression: string;
   result: number | null;
 }): string {
-  if (result !== null && expression === formatNumber(result)) {
+  if (result !== null) {
     return formatNumber(result);
   }
-  if (!expression) return '';
+  if (!expression) return "";
   const tokens = expression.split(/([+\-−*×/÷])/).filter(Boolean);
   const last = tokens[tokens.length - 1];
   if (/^-?\d+(\.\d+)?$/.test(last)) return last;
-  return '';
+  return "";
 }
 
 function SpeakerIcon() {

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { toYoruba, type YorubaMode } from '@/lib/yorubaNumbers';
+import { useMemo, useState } from "react";
+import { toYoruba, type YorubaMode } from "@/lib/yorubaNumbers";
 
 interface LearningModeProps {
   mode: YorubaMode;
@@ -17,7 +17,10 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
   const [quizChoice, setQuizChoice] = useState<string | null>(null);
 
   const correct = useMemo(() => toYoruba(index, mode), [index, mode]);
-  const choices = useMemo(() => buildChoices(index, correct, mode), [index, correct, mode]);
+  const choices = useMemo(
+    () => buildChoices(index, correct, mode),
+    [index, correct, mode],
+  );
 
   const next = () => {
     setIndex((i) => (i + 1) % (RANGE_END + 1));
@@ -36,39 +39,39 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
   };
 
   return (
-    <div className="rounded-3xl bg-paper/80 dark:bg-cocoa/40 border border-cocoa/10 dark:border-cream/10 px-6 py-6 flex flex-col gap-5">
+    <div className="flex flex-col gap-5 rounded-[2rem] border border-border bg-warm-cream px-6 py-6 shadow-card">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-cocoa dark:text-cream text-xl">
+          <h2 className="font-serif text-2xl text-deep-green">
             Kọ́ Ẹ̀kọ́ (Learn)
           </h2>
-          <p className="text-xs text-cocoa/60 dark:text-cream/60 mt-0.5">
+          <p className="mt-0.5 text-xs text-muted">
             Nọ́mbà 0–{RANGE_END} • Iye àbáyọ: {score.right}/{score.total}
           </p>
         </div>
         <button
           type="button"
           onClick={next}
-          className="rounded-full bg-moss text-cream px-4 py-1.5 text-sm font-semibold hover:bg-moss-dark transition-colors"
+          className="rounded-full bg-primary-green px-4 py-2 text-sm font-bold text-warm-cream transition-colors hover:bg-deep-green"
         >
           Tókàn →
         </button>
       </header>
 
-      <div className="text-center bg-paper-dark/40 dark:bg-cocoa-light/40 rounded-2xl py-8 px-4 border border-cocoa/10 dark:border-cream/10">
-        <div className="text-8xl font-bold font-mono text-cocoa dark:text-cream leading-none">
+      <div className="rounded-3xl border border-border bg-background/70 px-4 py-8 text-center">
+        <div className="font-mono text-8xl font-bold leading-none text-text-dark">
           {index}
         </div>
         <div className="mt-4 min-h-[3rem] flex items-center justify-center">
           {revealed ? (
-            <span className="text-3xl font-serif text-moss-dark dark:text-moss-light">
+            <span className="font-serif text-3xl text-deep-green">
               {correct}
             </span>
           ) : (
             <button
               type="button"
               onClick={() => setRevealed(true)}
-              className="text-cocoa/60 dark:text-cream/60 underline text-sm"
+              className="text-sm text-muted underline"
             >
               Tẹ láti rí ìdáhùn
             </button>
@@ -77,14 +80,14 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
         <button
           type="button"
           onClick={() => onSpeak(correct)}
-          className="mt-2 inline-flex items-center gap-1 text-moss-dark dark:text-moss-light text-sm hover:underline"
+          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary-green hover:underline"
         >
           <SpeakerIcon /> Gbọ́ pípè
         </button>
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-cocoa/50 dark:text-cream/50">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted">
           Yan ìdáhùn tó tọ́
         </p>
         <div className="grid grid-cols-2 gap-2">
@@ -94,17 +97,17 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
             const showCorrect = revealed && isCorrect;
             const showWrong = revealed && isPicked && !isCorrect;
             const klass = showCorrect
-              ? 'bg-moss text-cream border-moss-dark'
+              ? "border-primary-green bg-primary-green text-warm-cream"
               : showWrong
-              ? 'bg-rust/10 text-rust border-rust/30'
-              : 'bg-paper dark:bg-cocoa text-cocoa dark:text-cream border-cocoa/10 dark:border-cream/10 hover:bg-paper-dark dark:hover:bg-cocoa-light';
+                ? "border-error/30 bg-error/10 text-error"
+                : "border-border bg-warm-cream text-text-dark hover:bg-pale-green";
             return (
               <button
                 key={c}
                 type="button"
                 disabled={!!quizChoice}
                 onClick={() => handleQuiz(c)}
-                className={`rounded-2xl px-3 py-3 border text-base font-serif transition-colors ${klass}`}
+                className={`rounded-2xl border px-3 py-3 font-serif text-base transition-colors ${klass}`}
               >
                 {c}
               </button>
@@ -122,7 +125,8 @@ function buildChoices(n: number, correct: string, mode: YorubaMode): string[] {
   const pool: number[] = [];
   for (let i = 0; i <= RANGE_END; i++) if (i !== n) pool.push(i);
   // Shuffle deterministically by n so the same card always shows the same options.
-  const seed = (a: number, b: number) => ((a * 9301 + b * 49297) % 233280) / 233280;
+  const seed = (a: number, b: number) =>
+    ((a * 9301 + b * 49297) % 233280) / 233280;
   pool.sort((a, b) => seed(a, n) - seed(b, n));
   let i = 0;
   while (set.size < 4 && i < pool.length) {
