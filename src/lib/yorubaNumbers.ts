@@ -1,14 +1,14 @@
 // Káà — Yoruba Number Engine
 // ---------------------------------------------------------------------------
-// Converts an integer in [-1000, 1000] into its Yoruba word form.
+// Converts an integer in [-999999, 999999] into its Yoruba word form.
 // Two modes are supported:
 //   - 'traditional': full vigesimal/subtractive logic (e.g. 75 = Márùndínlọ́gọ́rin)
-//   - 'modern'     : additive-only simplification (e.g. 75 = Márùnléláàádọ́rin)
+//   - 'modern'     : additive-only simplification (e.g. 75 = Àádọ́rin àti Márùn-ún)
 //
 // The 0–99 traditional table is hand-verified against published grammars
 // (Bamgboṣe 1966; Abraham 1958; Yoruba Modern Practical Dictionary).
-// Hundreds combining forms (100–999 non-multiples) are programmatic and
-// flagged with REVIEW comments where native speakers should confirm.
+// Hundreds/thousands combining forms are programmatic readable fallbacks;
+// the verified subtractive source of truth remains the explicit 0–99 table.
 
 export type YorubaMode = 'traditional' | 'modern';
 
@@ -167,12 +167,14 @@ const TRADITIONAL_0_99: Record<number, string> = {
   99: 'Mọ́kàndínlọ́gọ́rùn',
 };
 
+const MAX_RENDERABLE = 999_999;
+
 // ---- Core converters -----------------------------------------------------
 
 /**
  * Convert an integer to Yoruba words.
- * Handles 0..1000 directly. Negative numbers are prefixed with "Òdì" (negative).
- * Values outside [-1000, 1000] return their Arabic numeral as a string.
+ * Handles 0..999,999. Negative numbers are prefixed with "Òdì" (negative).
+ * Values outside the supported window return their Arabic numeral as a string.
  */
 export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
   if (!Number.isFinite(n)) return '—';
@@ -184,7 +186,7 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
     return `Òdì ${positive}`;
   }
 
-  if (intPart > 1000) return intPart.toString();
+  if (intPart > MAX_RENDERABLE) return intPart.toString();
 
   if (mode === 'modern') return toModern(intPart);
   return toTraditional(intPart);
@@ -193,6 +195,7 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
 function toTraditional(n: number): string {
   if (n <= 99) return TRADITIONAL_0_99[n];
   if (n in HUNDREDS_BASE) return HUNDREDS_BASE[n];
+  if (n >= 1000) return thousandsPlusRemainder(n, 'traditional');
   return hundredsPlusRemainder(n, 'traditional');
 }
 
@@ -200,6 +203,7 @@ function toModern(n: number): string {
   if (n <= 10) return BASE_0_10[n];
   if (n in TENS_BASE) return TENS_BASE[n];
   if (n in HUNDREDS_BASE) return HUNDREDS_BASE[n];
+  if (n >= 1000) return thousandsPlusRemainder(n, 'modern');
 
   if (n >= 11 && n <= 99) {
     // Modern: decimal additive "[tens] àti [units]".
@@ -215,6 +219,24 @@ function toModern(n: number): string {
   }
 
   return hundredsPlusRemainder(n, 'modern');
+}
+
+// Thousands + remainder uses a transparent decimal grouping so larger typed
+// values never fall back to Arabic digits. Classical cowrie numerals above
+// 1,000 are less regular, so this is intentionally a readable app fallback.
+function thousandsPlusRemainder(n: number, mode: YorubaMode): string {
+  const thousands = Math.floor(n / 1000);
+  const remainder = n % 1000;
+  const thousandsWord = `Ẹgbẹ̀rún ${unitCount(thousands, mode)}`;
+
+  if (remainder === 0) return thousandsWord;
+  return `${thousandsWord} àti ${mode === 'traditional' ? toTraditional(remainder) : toModern(remainder)}`;
+}
+
+function unitCount(n: number, mode: YorubaMode): string {
+  if (n === 1) return 'kan';
+  const word = mode === 'traditional' ? toTraditional(n) : toModern(n);
+  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
 }
 
 // Hundreds + remainder: traditional combines hundreds with "ó lé" linker;

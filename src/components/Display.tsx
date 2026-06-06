@@ -30,7 +30,7 @@ export function Display({
   const displayExpression = formatExpression(expression);
 
   return (
-    <section className="relative isolate flex min-h-[250px] flex-col justify-between overflow-hidden rounded-[2rem] border border-border bg-warm-cream px-5 py-5 shadow-premium sm:min-h-[280px] sm:px-7 sm:py-6">
+    <section className="relative isolate flex min-h-[230px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-border bg-warm-cream px-4 py-4 shadow-premium sm:min-h-[280px] sm:rounded-[2rem] sm:px-7 sm:py-6">
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
       <div className="pointer-events-none absolute -right-14 -top-16 h-40 w-40 rounded-full bg-soft-green/10" />
 
@@ -44,7 +44,7 @@ export function Display({
           </p>
           <p
             aria-label="Expression in Yoruba"
-            className="min-h-[2rem] break-words font-serif text-[1.7rem] leading-tight text-primary-green sm:text-3xl"
+            className="min-h-[2rem] break-words font-serif text-[clamp(1.15rem,6vw,1.7rem)] leading-tight text-primary-green [overflow-wrap:anywhere] sm:text-3xl"
           >
             {expressionYoruba || " "}
           </p>
@@ -63,14 +63,14 @@ export function Display({
 
       <div className="my-5 h-px w-full bg-border" />
 
-      <div className="relative flex items-end justify-between gap-4">
+      <div className="relative flex flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <span className="mb-3 inline-flex rounded-full border border-soft-green/30 bg-soft-green/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary-green">
             Ìtàn ìṣirò
           </span>
           <h2
             aria-live="polite"
-            className={`break-words font-serif text-[3.6rem] font-black uppercase leading-[0.92] tracking-tight sm:text-7xl ${
+            className={`break-words font-serif text-[clamp(2.15rem,13vw,3.6rem)] font-black leading-[0.95] tracking-tight [overflow-wrap:anywhere] sm:text-7xl ${
               error ? "text-error" : "text-deep-green"
             }`}
           >
@@ -79,7 +79,7 @@ export function Display({
         </div>
         <div
           aria-label="Result in Arabic numerals"
-          className="shrink-0 rounded-2xl border border-border bg-background px-3 py-2 text-right font-mono text-3xl font-bold text-muted shadow-sm sm:text-4xl"
+          className="max-w-full self-end overflow-hidden text-ellipsis rounded-2xl border border-border bg-background px-3 py-2 text-right font-mono text-2xl font-bold text-muted shadow-sm sm:shrink-0 sm:text-4xl"
         >
           {headlineArabic || " "}
         </div>
