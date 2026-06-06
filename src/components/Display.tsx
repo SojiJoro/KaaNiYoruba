@@ -19,8 +19,9 @@ export function Display({ expression, result, error, mode, onSpeak }: DisplayPro
   const expressionYoruba = expression ? expressionToYoruba(expression, mode) : '';
 
   return (
-    <div className="rounded-3xl bg-paper/80 dark:bg-cocoa/40 px-6 py-7 shadow-inner border border-cocoa/10 dark:border-cream/10 flex flex-col gap-4 min-h-[200px] justify-between">
-      <div className="flex flex-col gap-1">
+    <div className="relative overflow-hidden rounded-3xl border border-cocoa/10 bg-gradient-to-br from-paper to-paper-dark/70 px-6 py-7 shadow-inner dark:border-cream/10 dark:from-cocoa/70 dark:to-cocoa-light/45 flex flex-col gap-4 min-h-[220px] justify-between">
+      <div className="pointer-events-none absolute right-5 top-5 h-20 w-20 rounded-full border border-moss/15" />
+      <div className="relative flex flex-col gap-1">
         <div
           aria-label="Expression in Arabic numerals"
           className="text-cocoa/60 dark:text-cream/60 text-lg font-mono tracking-tight min-h-[1.5rem]"
@@ -35,7 +36,7 @@ export function Display({ expression, result, error, mode, onSpeak }: DisplayPro
         </div>
       </div>
 
-      <div className="flex items-end justify-between gap-4">
+      <div className="relative flex items-end justify-between gap-4">
         <div className="flex flex-col">
           <div
             aria-live="polite"
@@ -51,7 +52,7 @@ export function Display({ expression, result, error, mode, onSpeak }: DisplayPro
             type="button"
             onClick={() => onSpeak?.(headlineYoruba || '')}
             aria-label="Gbọ́ pípè"
-            className="rounded-full bg-moss/20 hover:bg-moss/30 text-moss dark:text-moss-light p-2 transition-colors"
+            className="rounded-full bg-moss/20 hover:bg-moss/30 text-moss dark:text-moss-light p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-moss focus:ring-offset-2 focus:ring-offset-paper dark:focus:ring-offset-cocoa"
             title="Gbọ́ pípè (Hear pronunciation)"
           >
             <SpeakerIcon />

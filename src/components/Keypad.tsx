@@ -47,7 +47,7 @@ const LAYOUT: LayoutCell[][] = [
 
 export function Keypad({ mode, onKey }: KeypadProps) {
   return (
-    <div className="grid grid-cols-4 gap-3 w-full">
+    <div className="grid w-full grid-cols-4 gap-2.5 rounded-[1.75rem] border border-cocoa/10 bg-cocoa/[0.03] p-2 dark:border-cream/10 dark:bg-cream/[0.04] sm:gap-3 sm:p-3">
       {LAYOUT.flatMap((row, ri) =>
         row.map((cell, ci) => (
           <KeyButton
@@ -73,14 +73,14 @@ function KeyButton({
 }) {
   const subtitle = labelFor(cell.key, mode);
   const base =
-    'relative flex flex-col items-center justify-center rounded-2xl aspect-square select-none transition-transform active:scale-95 shadow-sm border';
+    'relative flex flex-col items-center justify-center rounded-2xl aspect-square select-none border shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus:outline-none focus:ring-2 focus:ring-moss focus:ring-offset-2 focus:ring-offset-paper dark:focus:ring-offset-cocoa';
   const variantClasses = {
     digit:
-      'bg-paper dark:bg-cocoa text-cocoa dark:text-cream border-cocoa/10 dark:border-cream/10 hover:bg-paper-dark dark:hover:bg-cocoa-light',
-    op: 'bg-moss/15 dark:bg-moss/25 text-moss-dark dark:text-moss-light border-moss/30 hover:bg-moss/25 font-semibold',
-    fn: 'bg-cocoa/5 dark:bg-cream/5 text-cocoa/70 dark:text-cream/70 border-cocoa/10 dark:border-cream/10 hover:bg-cocoa/10',
+      'bg-paper text-cocoa border-cocoa/10 hover:bg-paper-dark hover:shadow-md dark:bg-cocoa dark:text-cream dark:border-cream/10 dark:hover:bg-cocoa-light',
+    op: 'bg-moss/15 text-moss-dark border-moss/30 hover:bg-moss/25 hover:shadow-md dark:bg-moss/25 dark:text-moss-light font-semibold',
+    fn: 'bg-cocoa/5 text-cocoa/70 border-cocoa/10 hover:bg-cocoa/10 dark:bg-cream/5 dark:text-cream/70 dark:border-cream/10',
     equals:
-      'bg-moss text-cream border-moss-dark hover:bg-moss-dark font-bold',
+      'bg-moss text-cream border-moss-dark hover:bg-moss-dark hover:shadow-lg hover:shadow-moss/25 font-bold',
   }[cell.variant];
 
   const span = cell.span === 2 ? 'col-span-2 aspect-[2.2/1]' : '';
