@@ -1,6 +1,6 @@
 # The Yoruba Number Engine
 
-This document explains how Káà converts an Arabic integer into a Yoruba word. The same algorithm is implemented twice — once in TypeScript (`web/src/lib/yorubaNumbers.ts`) and once in Swift (`ios/Kaa/YorubaNumberEngine.swift`) — and both pass an identical test corpus.
+This document explains how Káà converts an Arabic integer into a Yoruba word. The same algorithm is implemented twice — once in TypeScript (`src/lib/yorubaNumbers.ts`) and once in Swift (`ios/Kaa/YorubaNumberEngine.swift`) — and both pass an identical test corpus.
 
 ## Why this isn't a simple lookup
 
@@ -81,7 +81,7 @@ Modern mode uses a decimal additive `[tens] àti [units]` form throughout 15–9
 
 ## Hand-verified test corpus
 
-See `web/src/lib/yorubaNumbers.test.ts` (38 cases) and `ios/KaaTests/YorubaNumberEngineTests.swift` (same coverage). Both run on every CI build. Adding a case is one line:
+See `src/lib/yorubaNumbers.test.ts` (40 cases) and `ios/KaaTests/YorubaNumberEngineTests.swift` (same coverage). Adding a case is one line:
 
 ```ts
 { n: 19, trad: 'Mọ́kàndínlógún' }

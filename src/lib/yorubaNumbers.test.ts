@@ -1,6 +1,6 @@
 // Káà — Yoruba number engine test cases
 // ---------------------------------------------------------------------------
-// Runnable as a plain Node script (`node --import tsx web/src/lib/yorubaNumbers.test.ts`)
+// Runnable as a plain Node script (`node --import tsx src/lib/yorubaNumbers.test.ts`)
 // or under any test runner that recognises `assert`-based files. The shape is
 // intentionally minimal so the suite stays vendor-neutral.
 

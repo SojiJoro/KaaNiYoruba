@@ -4,8 +4,8 @@ A calculator that teaches and preserves Yoruba counting logic. Káà is not a tr
 
 This repository contains two implementations sharing the same number engine logic:
 
-- **`web/`** — Next.js 14 (App Router) + TypeScript + Tailwind CSS, deployable to Vercel.
-- **`ios/`** — SwiftUI (iOS 17+), Xcode project source.
+- **Repo root** — Next.js 14 (App Router) + TypeScript + Tailwind CSS, deployable to Vercel.
+- **`ios/`** — SwiftUI (iOS 16+), Xcode project source.
 
 ---
 
@@ -98,10 +98,21 @@ Each digit button displays the Arabic numeral large and the Yoruba word small be
 
 ## 3. Deployment
 
-See [`web/README.md`](./web/README.md) for Vercel deployment steps and [`ios/README.md`](./ios/README.md) for Xcode setup.
+See [`WEB.md`](./WEB.md) for Vercel deployment steps and [`ios/README.md`](./ios/README.md) for Xcode setup.
+
+Quick start:
+
+```bash
+npm install
+npm run dev          # http://localhost:3000
+npm test             # 40 Yoruba engine test cases
+npm run build        # production build
+```
+
+Then connect the repo to Vercel — leave Root Directory as the default (`.`) and Vercel will detect Next.js automatically.
 
 ---
 
 ## 4. Native speaker review needed
 
-The traditional Yoruba number engine is well-attested for 0–99. For 100–1000 the published sources diverge on combining forms (`lé` vs `ó` linker, vowel elision at hundred boundaries). Entries flagged with `// REVIEW:` in `yorubaNumbers.ts` should be verified by a fluent speaker before shipping.
+The traditional Yoruba number engine is well-attested for 0–99. For 100–1000 the published sources diverge on combining forms (`lé` vs `ó` linker, vowel elision at hundred boundaries). Entries flagged with `// REVIEW:` in `src/lib/yorubaNumbers.ts` should be verified by a fluent speaker before shipping.

@@ -1,6 +1,6 @@
 // Káà — Swift number engine tests
 // ---------------------------------------------------------------------------
-// Mirrors web/src/lib/yorubaNumbers.test.ts. Add the file to a XCTest target.
+// Mirrors src/lib/yorubaNumbers.test.ts (web app, repo root). Add to XCTest target.
 
 import XCTest
 @testable import Kaa
