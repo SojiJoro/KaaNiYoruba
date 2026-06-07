@@ -1,17 +1,25 @@
-// Káà — Yoruba Number Engine
+// Kàá — Yoruba Number Engine
 // ---------------------------------------------------------------------------
 // Converts numbers into Yoruba word forms and can spell arbitrary digit strings.
 // Two modes are supported:
-//   - 'traditional': full vigesimal/subtractive logic (e.g. 75 = Márùndínlọ́gọ́rin)
-//   - 'modern'     : additive-only simplification (e.g. 75 = Àádọ́rin àti Márùn-ún)
+//   - 'traditional': vigesimal/subtractive logic (e.g. 75 = Márùndínlọ́gọ́rin)
+//   - 'modern'     : decimal additive simplification (e.g. 75 = Àádọ́rin àti Márùn-ún)
 //
-// The 0–99 traditional table is hand-verified against published grammars
-// (Bamgboṣe 1966; Abraham 1958; Yoruba Modern Practical Dictionary).
-// Hundreds/thousands combining forms are programmatic readable fallbacks;
-// the verified subtractive source of truth remains the explicit 0–99 table.
-// For decimals, IDs, phone-like strings, and values outside the full-number
-// renderer, the engine falls back to digit-by-digit reading so every typed
-// digit can still be written in Yorùbá.
+// The engine is GENERATIVE: it can name any finite safe integer (and the integer
+// part of any decimal) in real Yorùbá, not just a fixed table range. It does this
+// by combining hand-verified base words with the language's own composition
+// rules — see docs/yoruba-number-logic.md for the full description:
+//   * 0–99            : hand-verified table (subtractive tone changes resist
+//                       clean generation, so the spellings live in a table).
+//   * 100–999         : hundred base + remainder, joined base-first with "ó lé"
+//                       (traditional) or "àti" (modern).
+//   * 1,000 and above : grouped by scale words (Ẹgbẹ̀rún = 1e3, Mílíọ̀nù = 1e6,
+//                       Bilíọ̀nù = 1e9, Tirílíọ̀nù = 1e12), each group joined with
+//                       "àti", the way large numbers are read aloud today.
+//
+// Only true digit strings (leading-zero codes, phone numbers, IDs, the
+// fractional digits of a decimal, or values beyond Number.MAX_SAFE_INTEGER) fall
+// back to digit-by-digit reading.
 
 export type YorubaMode = 'traditional' | 'modern';
 
@@ -61,6 +69,19 @@ export const HUNDREDS_BASE: Record<number, string> = {
   900: 'Ẹ̀ẹ́dẹ́gbẹ̀rún',
   1000: 'Ẹgbẹ̀rún',
 };
+
+// ---- Scale words for grouping 1,000 and above -----------------------------
+// Ẹgbẹ̀rún (1,000) is the classical vigesimal word (igba × 5); the million /
+// billion / trillion scale words are the widely-used modern loan terms. Grouping
+// by these and joining with "àti" is how large numbers are spoken today and lets
+// the engine name any value instead of falling back to digit spelling.
+
+const SCALE_WORDS: Array<{ value: number; word: string }> = [
+  { value: 1_000_000_000_000, word: 'Tirílíọ̀nù' },
+  { value: 1_000_000_000, word: 'Bilíọ̀nù' },
+  { value: 1_000_000, word: 'Mílíọ̀nù' },
+  { value: 1_000, word: 'Ẹgbẹ̀rún' },
+];
 
 // ---- Tier 4: hand-verified 0–99 traditional table -------------------------
 // This table is the canonical source-of-truth for 0–99. It is intentionally
@@ -170,8 +191,6 @@ const TRADITIONAL_0_99: Record<number, string> = {
   99: 'Mọ́kàndínlọ́gọ́rùn',
 };
 
-const MAX_FULL_NUMBER = 999_999;
-
 const DIGIT_WORDS: Record<string, string> = {
   '0': BASE_0_10[0],
   '1': BASE_0_10[1],
@@ -189,10 +208,11 @@ const DIGIT_WORDS: Record<string, string> = {
 
 /**
  * Convert a JavaScript number to Yoruba words.
- * Full traditional/modern number names are rendered through 999,999.
- * Larger finite values and decimals fall back to readable digit spelling rather
- * than showing raw Arabic numerals, so every possible key input has a Yoruba
- * output. Negative numbers are prefixed with "Òdì" (negative).
+ * Any finite safe integer is named in full Yorùbá (no upper table limit).
+ * Decimals render the whole part as a name plus individually spoken fractional
+ * digits. Values beyond Number.MAX_SAFE_INTEGER fall back to readable digit
+ * spelling so precision is never silently invented. Negative numbers are
+ * prefixed with "Òdì" (negative).
  */
 export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
   if (!Number.isFinite(n)) return '—';
@@ -203,17 +223,85 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
     return `Òdì ${positive}`;
   }
 
-  if (n > MAX_FULL_NUMBER) return digitSequenceToYoruba(n.toString(), mode);
+  if (!Number.isSafeInteger(n)) return digitSequenceToYoruba(n.toString(), mode);
 
-  if (mode === 'modern') return toModern(n);
-  return toTraditional(n);
+  return toWords(n, mode);
+}
+
+/**
+ * The generative heart of the engine: render a non-negative safe integer.
+ */
+function toWords(n: number, mode: YorubaMode): string {
+  if (n === 0) return BASE_0_10[0];
+  if (n < 100) {
+    return mode === 'traditional' ? TRADITIONAL_0_99[n] : modernUnder100(n);
+  }
+  if (n < 1000) return hundredsGroup(n, mode);
+
+  // 1,000 and above: peel off the largest scale, recurse on the remainder.
+  const scale = SCALE_WORDS.find((s) => n >= s.value)!;
+  const count = Math.floor(n / scale.value);
+  const remainder = n % scale.value;
+  const head = `${scale.word} ${asMultiplier(count, mode)}`;
+  if (remainder === 0) return head;
+  return `${head} àti ${toWords(remainder, mode)}`;
+}
+
+/**
+ * Render a value 100–999 as "hundred-base + remainder".
+ * Traditional: base first, linked with "ó lé"; the remainder keeps its
+ * subtractive 0–99 form. Modern: "Ọgọ́rùn-ún [×n] àti [remainder]".
+ */
+function hundredsGroup(n: number, mode: YorubaMode): string {
+  const hundredCount = Math.floor(n / 100);
+  const remainder = n % 100;
+
+  if (mode === 'traditional') {
+    const base = HUNDREDS_BASE[hundredCount * 100];
+    if (remainder === 0) return base;
+    return `${base} ó lé ${TRADITIONAL_0_99[remainder]}`;
+  }
+
+  const hundredWord =
+    hundredCount === 1
+      ? TENS_BASE[100]
+      : `${TENS_BASE[100]} ${asMultiplier(hundredCount, 'modern')}`;
+  if (remainder === 0) return hundredWord;
+  return `${hundredWord} àti ${modernUnder100(remainder)}`;
+}
+
+/**
+ * Modern decimal-additive form for 0–99: "[tens] àti [units]".
+ * Keeps the canonical 0–14 forms; uses "àti" for 15–99 where the traditional
+ * subtractive construction would otherwise apply.
+ */
+function modernUnder100(n: number): string {
+  if (n <= 10) return BASE_0_10[n];
+  if (n <= 14) return TRADITIONAL_0_99[n];
+  if (n in TENS_BASE) return TENS_BASE[n];
+
+  const tens = Math.floor(n / 10) * 10;
+  const units = n % 10;
+  const tensWord = tens === 10 ? BASE_0_10[10] : TENS_BASE[tens];
+  if (units === 0) return tensWord;
+  return `${tensWord} àti ${BASE_0_10[units]}`;
+}
+
+/**
+ * Render the multiplier that follows a scale or hundred word.
+ * "kan" for 1 (e.g. Ẹgbẹ̀rún kan); otherwise the lower-cased number word so it
+ * reads as a modifier (e.g. Ẹgbẹ̀rún méjì, Mílíọ̀nù mẹ́ta).
+ */
+function asMultiplier(n: number, mode: YorubaMode): string {
+  if (n === 1) return 'kan';
+  const word = toWords(n, mode);
+  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
 }
 
 /**
  * Spell every digit and decimal/sign mark in a numeric string. Useful for long
  * account numbers, phone numbers, leading-zero values, and any value beyond the
- * verified full-number renderer. Grouping commas, underscores, and spaces are
- * ignored.
+ * safe-integer range. Grouping commas, underscores, and spaces are ignored.
  */
 export function digitSequenceToYoruba(
   value: string,
@@ -233,9 +321,10 @@ export function digitSequenceToYoruba(
 }
 
 /**
- * Render a typed numeric string. Integers in the verified range use full Yoruba
- * number names; decimals use a whole-number phrase plus individually spoken
- * fractional digits; otherwise the function falls back to digit spelling.
+ * Render a typed numeric string. Integers within the safe-integer range use full
+ * Yoruba number names; decimals use a whole-number phrase plus individually
+ * spoken fractional digits; leading-zero values and out-of-range magnitudes fall
+ * back to digit spelling.
  */
 export function numericInputToYoruba(
   value: string,
@@ -252,7 +341,7 @@ export function numericInputToYoruba(
     const wholePart = wholePartRaw || '0';
     const wholeNumber = Number(wholePart);
     const wholeWords =
-      wholePart.length > 15 || wholeNumber > MAX_FULL_NUMBER
+      wholePart.length > 15 || !Number.isSafeInteger(wholeNumber)
         ? digitSequenceToYoruba(wholePart, mode)
         : toYoruba(wholeNumber, mode);
     const fractionWords = fractionPartRaw
@@ -269,7 +358,7 @@ export function numericInputToYoruba(
   if (/^0\d+/.test(unsigned)) return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
 
   const n = Number(unsigned);
-  if (!Number.isSafeInteger(n) || n > MAX_FULL_NUMBER) {
+  if (!Number.isSafeInteger(n)) {
     return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
   }
 
@@ -282,86 +371,6 @@ function normalizeNumericInput(value: string): string {
 
 function isNumericString(value: string): boolean {
   return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value);
-}
-
-function toTraditional(n: number): string {
-  if (n <= 99) return TRADITIONAL_0_99[n];
-  if (n in HUNDREDS_BASE) return HUNDREDS_BASE[n];
-  if (n >= 1000) return thousandsPlusRemainder(n, 'traditional');
-  return hundredsPlusRemainder(n, 'traditional');
-}
-
-function toModern(n: number): string {
-  if (n <= 10) return BASE_0_10[n];
-  if (n === 1000) return HUNDREDS_BASE[1000];
-  if (n >= 1000) return thousandsPlusRemainder(n, 'modern');
-  if (n >= 100) return modernHundredsPlusRemainder(n);
-
-  if (n in TENS_BASE) return TENS_BASE[n];
-
-  if (n >= 11 && n <= 99) {
-    // Modern: decimal additive "[tens] àti [units]".
-    // Preserves the canonical 11–14 forms (Mọ́kànlá etc.) where they are
-    // already universal, and uses "àti" for the 15–99 window where the
-    // traditional subtractive form would otherwise apply.
-    if (n <= 14) return TRADITIONAL_0_99[n];
-    const tens = Math.floor(n / 10) * 10;
-    const units = n % 10;
-    const tensWord = tens === 10 ? BASE_0_10[10] : TENS_BASE[tens];
-    if (units === 0) return tensWord;
-    return `${tensWord} àti ${BASE_0_10[units]}`;
-  }
-
-  return '';
-}
-
-function modernHundredsPlusRemainder(n: number): string {
-  const hundredCount = Math.floor(n / 100);
-  const remainder = n % 100;
-  const hundredWord =
-    hundredCount === 1
-      ? TENS_BASE[100]
-      : `${TENS_BASE[100]} ${unitCount(hundredCount, 'modern')}`;
-
-  if (remainder === 0) return hundredWord;
-  return `${hundredWord} àti ${toModern(remainder)}`;
-}
-
-// Thousands + remainder uses a transparent decimal grouping so larger typed
-// values never fall back to Arabic digits. Classical cowrie numerals above
-// 1,000 are less regular, so this is intentionally a readable app fallback.
-function thousandsPlusRemainder(n: number, mode: YorubaMode): string {
-  const thousands = Math.floor(n / 1000);
-  const remainder = n % 1000;
-  const thousandsWord = `Ẹgbẹ̀rún ${unitCount(thousands, mode)}`;
-
-  if (remainder === 0) return thousandsWord;
-  return `${thousandsWord} àti ${mode === 'traditional' ? toTraditional(remainder) : toModern(remainder)}`;
-}
-
-function unitCount(n: number, mode: YorubaMode): string {
-  if (n === 1) return 'kan';
-  const word = mode === 'traditional' ? toTraditional(n) : toModern(n);
-  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
-}
-
-// Hundreds + remainder: traditional combines hundreds with "ó lé" linker;
-// modern just uses "àti" (and). The combined forms below 1000 are programmatic.
-function hundredsPlusRemainder(n: number, mode: YorubaMode): string {
-  const hundred = Math.floor(n / 100) * 100;
-  const remainder = n - hundred;
-  const hundredWord = HUNDREDS_BASE[hundred];
-
-  if (remainder === 0) return hundredWord;
-
-  // REVIEW: For 101–999 non-multiples of 100, fluent speakers commonly say
-  // "[remainder] ó lé [hundred]" in traditional, e.g. 105 ≈ "Márùn-ún ó lé
-  // ní ọgọ́rùn-ún". Compound vowel elision varies by dialect, so we render
-  // an explicit additive form and flag for review.
-  if (mode === 'traditional') {
-    return `${toTraditional(remainder)} ó lé ní ${hundredWord}`; // REVIEW
-  }
-  return `${hundredWord} àti ${toModern(remainder)}`;
 }
 
 /**

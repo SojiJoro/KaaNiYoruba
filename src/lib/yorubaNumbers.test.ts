@@ -1,4 +1,4 @@
-// Káà — Yoruba number engine test cases
+// Kàá — Yoruba number engine test cases
 // ---------------------------------------------------------------------------
 // Runnable as a plain Node script (`node --import tsx src/lib/yorubaNumbers.test.ts`)
 // or under any test runner that recognises `assert`-based files. The shape is
@@ -58,11 +58,18 @@ const CASES: Case[] = [
   { n: 300, trad: 'Ọ̀ọ́dúnrún' },
   { n: 400, trad: 'Irinwó' },
   { n: 500, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ọgọ́rùn-ún márùn-ún' },
-  { n: 1000, trad: 'Ẹgbẹ̀rún', modern: 'Ẹgbẹ̀rún' },
+  // Hundreds + remainder: base-first "ó lé" (traditional), "àti" (modern)
+  { n: 105, trad: 'Ọgọ́rùn-ún ó lé Márùn-ún', modern: 'Ọgọ́rùn-ún àti Márùn-ún' },
+  { n: 250, trad: 'Igba ó lé Àádọ́ta', modern: 'Ọgọ́rùn-ún méjì àti Àádọ́ta' },
+  { n: 555, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Márùndínlọ́gọ́ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Márùn-ún' },
+  // Thousands and beyond — generated, never digit-spelled
+  { n: 1000, trad: 'Ẹgbẹ̀rún kan', modern: 'Ẹgbẹ̀rún kan' },
   { n: 1001, trad: 'Ẹgbẹ̀rún kan àti Ọ̀kan', modern: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
-  { n: 558, trad: 'Méjìdínlọ́gọ́ta ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Mẹ́jọ' },
-  { n: 2232, trad: 'Ẹgbẹ̀rún méjì àti Méjìlélọ́gbọ̀n ó lé ní Igba', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
-  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Mẹ́rìnléláàádọ́rùn ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
+  { n: 558, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Méjìdínlọ́gọ́ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Mẹ́jọ' },
+  { n: 2232, trad: 'Ẹgbẹ̀rún méjì àti Igba ó lé Méjìlélọ́gbọ̀n', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
+  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Mẹ́rìnléláàádọ́rùn', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
+  { n: 1_000_000, trad: 'Mílíọ̀nù kan', modern: 'Mílíọ̀nù kan' },
+  { n: 1_258_222, trad: 'Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún' },
 ];
 
 let pass = 0;
@@ -99,7 +106,8 @@ try {
   assert.equal(numericInputToYoruba('007'), 'Òdo Òdo Méje');
   assert.equal(numericInputToYoruba('12345678901234567890'), 'Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo');
   assert.equal(numericInputToYoruba('12.05'), 'Méjìlá Ẹsẹ Òdo Márùn-ún');
-  assert.equal(toYoruba(1_000_000), 'Ọ̀kan Òdo Òdo Òdo Òdo Òdo Òdo');
+  assert.equal(toYoruba(1_000_000), 'Mílíọ̀nù kan');
+  assert.equal(numericInputToYoruba('1258222'), 'Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún');
   assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo Ẹsẹ Ọ̀kan');
   pass += 5;
 } catch (e) {
@@ -119,5 +127,5 @@ try {
   console.error(' ✗', (e as Error).message);
 }
 
-console.log(`Káà tests — ${pass} passed, ${fail} failed`);
+console.log(`Kàá tests — ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

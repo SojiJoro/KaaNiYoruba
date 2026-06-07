@@ -42,7 +42,7 @@ const COUNTING_INSIGHTS = [
     title: "Modern decimal help",
     yoruba: "Ọ̀nà òde-òní",
     detail:
-      "Some modern teaching proposals simplify hard subtractive forms with more decimal, additive phrasing. That is why Káà keeps both traditional and modern modes visible.",
+      "Some modern teaching proposals simplify hard subtractive forms with more decimal, additive phrasing. That is why Kàá keeps both traditional and modern modes visible.",
     example: "75 traditional → Márùndínlọ́gọ́rin • modern → Àádọ́rin àti Márùn-ún",
     source: "Proposal for a Yoruba decimal counting system",
     sourceUrl: "https://repository.ui.edu.ng/items/6164afe0-3ef5-4e30-9fb1-c303a6e783b6",
@@ -51,9 +51,9 @@ const COUNTING_INSIGHTS = [
     title: "App fallback for every digit",
     yoruba: "Ka díjítì kọ̀ọ̀kan",
     detail:
-      "Long IDs, phone numbers, leading zeros, and decimals are not always ordinary counting numbers, so Káà can spell each digit instead of showing raw Arabic numerals.",
+      "Long IDs, phone numbers, leading zeros, and decimals are not always ordinary counting numbers, so Kàá can spell each digit instead of showing raw Arabic numerals.",
     example: "007 → Òdo Òdo Méje • 12.05 → Méjìlá Ẹsẹ Òdo Márùn-ún",
-    source: "Káà number engine",
+    source: "Kàá number engine",
     sourceUrl: "https://www.omniglot.com/language/numbers/yoruba.htm",
   },
 ];

@@ -41,7 +41,7 @@ export function Keypad({ mode, onKey }: KeypadProps) {
   return (
     <section
       aria-label="Calculator keypad"
-      className="grid min-h-0 w-full flex-1 grid-cols-4 grid-rows-5 gap-2 sm:flex-none"
+      className="grid min-h-0 w-full flex-1 grid-cols-4 grid-rows-5 gap-2.5 sm:flex-none sm:gap-3"
     >
       {LAYOUT.map((cell) => (
         <KeyButton
@@ -92,12 +92,12 @@ function KeyButton({
       aria-label={`${symbolLabel(cell.key)}${subtitle ? `, ${subtitle}` : ""}`}
       className={`${base} ${variantClasses} ${span} ${tall}`}
     >
-      <span className="text-2xl font-bold leading-none tracking-tight sm:text-3xl">
+      <span className="text-[1.6rem] font-bold leading-none tracking-tight sm:text-3xl">
         {cell.key}
       </span>
       {subtitle ? (
         <span
-          className={`mt-0.5 max-w-full truncate text-[0.58rem] font-semibold leading-tight sm:mt-1 sm:text-xs ${subtitleClass}`}
+          className={`mt-1 max-w-full truncate text-[0.62rem] font-semibold leading-tight opacity-90 sm:mt-1.5 sm:text-xs ${subtitleClass}`}
         >
           {subtitle}
         </span>

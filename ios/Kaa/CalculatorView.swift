@@ -1,4 +1,4 @@
-// Káà — Top-level calculator screen
+// Kàá — Top-level calculator screen
 // ---------------------------------------------------------------------------
 // Owns the tab switcher and stitches the display, keypad, and ancillary
 // panels together. Designed for iPhone first; safe-area aware.
@@ -56,7 +56,7 @@ struct CalculatorView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Káà")
+                Text("Kàá")
                     .font(.system(size: 36, weight: .bold, design: .serif))
                     .foregroundColor(KaaTheme.text(scheme))
                 Text("Yoruba number & calculator")

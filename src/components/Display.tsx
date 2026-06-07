@@ -27,7 +27,7 @@ export function Display({
   const displayExpression = formatExpression(expression);
 
   return (
-    <section className="relative isolate flex min-h-[0] flex-[0.9] flex-col justify-between overflow-hidden rounded-[1.45rem] border border-border bg-warm-cream px-4 py-4 shadow-premium sm:min-h-[210px] sm:flex-none sm:rounded-[2rem] sm:px-6 sm:py-5">
+    <section className="relative isolate flex min-h-[0] flex-[0.9] flex-col justify-between overflow-hidden rounded-[1.45rem] border border-border bg-warm-cream px-5 py-5 shadow-premium sm:min-h-[210px] sm:flex-none sm:rounded-[2rem] sm:px-6 sm:py-5">
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
       <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-soft-green/10" />
 
@@ -36,7 +36,7 @@ export function Display({
           aria-label="Expression in Arabic numerals"
           className="min-h-5 min-w-0 flex-1 break-words font-mono text-sm font-semibold tracking-tight text-muted sm:min-h-6 sm:text-lg"
         >
-          {displayExpression || " "}
+          {displayExpression || " "}
         </p>
 
         <button
@@ -50,28 +50,41 @@ export function Display({
         </button>
       </div>
 
-      <div className="my-2 h-px w-full bg-border sm:my-4" />
+      <div className="my-2.5 h-px w-full bg-border sm:my-4" />
 
-      <div className="relative flex items-end justify-between gap-3">
-        <div className="min-w-0 flex-1">
+      <div className="relative flex min-h-0 flex-1 flex-col justify-end gap-2.5">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
           <h2
             aria-live="polite"
-            className={`break-words font-serif text-[clamp(1.35rem,7vw,2.35rem)] font-black leading-[1.02] tracking-tight [overflow-wrap:anywhere] sm:text-[clamp(2.25rem,5vw,4rem)] ${
-              error ? "text-error" : "text-deep-green"
-            }`}
+            className={`break-words [overflow-wrap:anywhere] font-serif font-black leading-[1.1] tracking-tight ${resultSizeClass(
+              error ? error : headlineYoruba,
+            )} ${error ? "text-error" : "text-deep-green"}`}
           >
-            {error ? error : headlineYoruba || " "}
+            {error ? error : headlineYoruba || " "}
           </h2>
         </div>
-        <div
-          aria-label="Result in Arabic numerals"
-          className="max-w-[35%] shrink-0 overflow-hidden text-ellipsis rounded-2xl border border-border bg-background/80 px-2 py-1.5 text-right font-mono text-xl font-bold text-muted shadow-sm sm:px-3 sm:py-2 sm:text-4xl"
-        >
-          {headlineArabic || " "}
-        </div>
+        {headlineArabic ? (
+          <div
+            aria-label="Result in Arabic numerals"
+            className="max-w-full self-end overflow-x-auto whitespace-nowrap rounded-xl border border-border bg-background/80 px-3 py-1 text-right font-mono text-base font-bold text-muted shadow-sm sm:text-2xl"
+          >
+            {headlineArabic}
+          </div>
+        ) : null}
       </div>
     </section>
   );
+}
+
+// Scale the headline to its length so short words stay bold and beautiful while
+// long compound numbers shrink to fit instead of overflowing the panel.
+function resultSizeClass(text: string): string {
+  const len = (text || "").length;
+  if (len <= 7) return "text-[clamp(2.1rem,10vw,3.5rem)]";
+  if (len <= 15) return "text-[clamp(1.6rem,7.5vw,2.6rem)]";
+  if (len <= 28) return "text-[clamp(1.3rem,6vw,2rem)]";
+  if (len <= 48) return "text-[clamp(1.1rem,4.8vw,1.6rem)]";
+  return "text-[clamp(0.95rem,4vw,1.35rem)]";
 }
 
 function formatExpression(expression: string): string {

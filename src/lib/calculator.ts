@@ -1,4 +1,4 @@
-// Káà — Calculator engine
+// Kàá — Calculator engine
 // ---------------------------------------------------------------------------
 // A small, dependency-free expression evaluator that supports +, −, ×, ÷
 // with operator precedence. Designed to keep state as a single readable

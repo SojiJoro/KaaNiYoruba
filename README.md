@@ -1,6 +1,6 @@
-# Káà — Yoruba Number & Calculator App
+# Kàá — Yoruba Number & Calculator App
 
-A calculator that teaches and preserves Yoruba counting logic. Káà is not a translation of a calculator — it is a Yoruba-first numeric experience. Every digit, expression, and result is rendered in proper Yoruba with diacritics intact, alongside small Arabic numerals for reference.
+A calculator that teaches and preserves Yoruba counting logic. Kàá is not a translation of a calculator — it is a Yoruba-first numeric experience. Every digit, expression, and result is rendered in proper Yoruba with diacritics intact, alongside small Arabic numerals for reference.
 
 This repository contains two implementations sharing the same number engine logic:
 
@@ -13,7 +13,7 @@ This repository contains two implementations sharing the same number engine logi
 
 ### 1.1 Core concept
 
-Káà ("Káà" meaning "house/room" — a cultural home for numbers) is a calculator that:
+Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calculator that:
 
 1. Renders every tapped number with its Yoruba word directly beneath it.
 2. Renders every operator with its Yoruba word (`pẹ̀lú`, `yọ`, `ìgbà`, `pín sí`).
@@ -28,8 +28,8 @@ Káà ("Káà" meaning "house/room" — a cultural home for numbers) is a calcul
 | 2 | Yoruba word display under every input | Implemented |
 | 3 | Yoruba result as the main output | Implemented |
 | 4 | Tiny Arabic result on the right | Implemented |
-| 5 | Number converter (Arabic → Yoruba, 0–1,000) | Implemented |
-| 6 | Traditional Yoruba mode (subtractive) | Implemented (verified 0–99, hundreds need native review) |
+| 5 | Number converter (Arabic → Yoruba, any safe integer) | Implemented (generative — no upper limit) |
+| 6 | Traditional Yoruba mode (subtractive) | Implemented (verified 0–99 table; 100+ generated, join particle pending native review) |
 | 7 | Modern Yoruba mode (additive only) | Implemented |
 | 8 | History of calculations | Implemented |
 | 9 | Audio pronunciation placeholder | Implemented (button + hook for TTS/recorded audio) |
@@ -60,7 +60,7 @@ Káà ("Káà" meaning "house/room" — a cultural home for numbers) is a calcul
 
 ```
 ┌──────────────────────────────────────┐
-│  Káà            ●Trad ○Modern  🎧    │ ← top bar: mode toggle + audio
+│  Kàá            ●Trad ○Modern  🎧    │ ← top bar: mode toggle + audio
 ├──────────────────────────────────────┤
 │                                      │
 │   2 + 2                              │ ← expression line (Arabic, small)
@@ -113,6 +113,16 @@ Then connect the repo to Vercel — leave Root Directory as the default (`.`) an
 
 ---
 
-## 4. Native speaker review needed
+## 4. Counting logic (source of truth)
+
+The full, researched counting system — vigesimal tens, hundreds, thousands,
+`ọkẹ́` (20,000), the add/subtract rule, the corrected hundreds combiner, and the
+modern decimal layer — lives in **[`docs/yoruba-number-logic.md`](./docs/yoruba-number-logic.md)**.
+Read it before touching the engine; update it when you change the engine.
+
+The product backlog (50 concrete steps toward a shipped app) is in
+**[`docs/app-roadmap-50.md`](./docs/app-roadmap-50.md)**.
+
+## 5. Native speaker review needed
 
 The traditional Yoruba number engine is well-attested for 0–99. For 100–1000 the published sources diverge on combining forms (`lé` vs `ó` linker, vowel elision at hundred boundaries). Entries flagged with `// REVIEW:` in `src/lib/yorubaNumbers.ts` should be verified by a fluent speaker before shipping.

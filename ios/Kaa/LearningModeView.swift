@@ -1,4 +1,4 @@
-// Káà — Children's learning mode
+// Kàá — Children's learning mode
 
 import SwiftUI
 

@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Káà — Yoruba Number & Calculator",
+  title: "Kàá — Yoruba Number & Calculator",
   description:
     "A calculator that teaches Yoruba counting logic. Every number shown in proper Yoruba with diacritics, alongside Arabic numerals.",
-  applicationName: "Káà",
+  applicationName: "Kàá",
 };
 
 export const viewport: Viewport = {

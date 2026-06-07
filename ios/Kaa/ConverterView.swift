@@ -1,4 +1,4 @@
-// Káà — Number converter pane
+// Kàá — Number converter pane
 
 import SwiftUI
 
