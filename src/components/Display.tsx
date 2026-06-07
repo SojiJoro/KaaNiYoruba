@@ -89,7 +89,7 @@ function resultSizeClass(text: string): string {
 
 function formatExpression(expression: string): string {
   return expression
-    .replace(/([+−×÷])/g, " $1 ")
+    .replace(/([+−×÷^])/g, " $1 ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -110,7 +110,7 @@ function headlineFor({
     return toYoruba(result, mode);
   }
   if (!expression) return "";
-  const tokens = expression.split(/([+\-−*×/÷])/).filter(Boolean);
+  const tokens = expression.split(/([+\-−*×/÷^])/).filter(Boolean);
   const last = tokens[tokens.length - 1];
   if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(last)) {
     return numericInputToYoruba(last, mode);
@@ -129,7 +129,7 @@ function headlineArabicFor({
     return formatNumber(result);
   }
   if (!expression) return "";
-  const tokens = expression.split(/([+\-−*×/÷])/).filter(Boolean);
+  const tokens = expression.split(/([+\-−*×/÷^])/).filter(Boolean);
   const last = tokens[tokens.length - 1];
   if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(last)) return last;
   return "";

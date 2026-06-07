@@ -399,6 +399,9 @@ export function operatorWord(symbol: string): string {
     case '/':
     case '÷':
       return 'pín sí';
+    case '^':
+      // "in n ways/places" — x^n read as "x ní ọ̀nà [n]".
+      return 'ní ọ̀nà';
     case '=':
       return 'dọ́gba';
     default:
@@ -414,7 +417,7 @@ export function expressionToYoruba(expr: string, mode: YorubaMode = 'traditional
   // Tokenise on operators while keeping them.
   const tokens = expr
     .replace(/\s+/g, '')
-    .split(/([+\-−*×/÷])/)
+    .split(/([+\-−*×/÷^])/)
     .filter(Boolean);
 
   return tokens

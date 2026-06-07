@@ -143,6 +143,7 @@ public enum YorubaNumberEngine {
         case "-", "−": return "yọ"
         case "*", "×": return "ìgbà"
         case "/", "÷": return "pín sí"
+        case "^": return "ní ọ̀nà"
         case "=": return "dọ́gba"
         default: return symbol
         }
@@ -228,7 +229,7 @@ public enum YorubaNumberEngine {
         var buf = ""
         for char in stripped {
             let s = String(char)
-            if "+-−*×/÷".contains(char) {
+            if "+-−*×/÷^".contains(char) {
                 if !buf.isEmpty { out.append(buf); buf = "" }
                 out.append(s)
             } else {

@@ -21,6 +21,7 @@ export type CalcKey =
   | '−'
   | '×'
   | '÷'
+  | '^'
   | '='
   | 'C'
   | '⌫';
@@ -37,7 +38,7 @@ export const initialState: CalcState = {
   error: null,
 };
 
-const OPERATORS = new Set(['+', '−', '×', '÷']);
+const OPERATORS = new Set(['+', '−', '×', '÷', '^']);
 
 function isOperator(c: string) {
   return OPERATORS.has(c);
@@ -130,7 +131,8 @@ export function evaluate(expr: string): EvalResult {
     const rpn = toRPN(tokens);
     const value = evalRPN(rpn);
     if (!Number.isFinite(value)) {
-      return { value: null, error: 'Àṣìṣe' };
+      // Overflow (e.g. a huge power) reads as "too big"; NaN is a generic error.
+      return { value: null, error: Number.isNaN(value) ? 'Àṣìṣe' : 'Tóbi jù' };
     }
     return { value, error: null };
   } catch (err) {
@@ -173,7 +175,14 @@ const PRECEDENCE: Record<string, number> = {
   '−': 1,
   '×': 2,
   '÷': 2,
+  '^': 3,
 };
+
+// '^' (power) is right-associative, so equal-precedence powers stack to the
+// right: 2^3^2 = 2^(3^2). Every other operator is left-associative.
+function isRightAssociative(op: string): boolean {
+  return op === '^';
+}
 
 function toRPN(tokens: Token[]): Token[] {
   const out: Token[] = [];
@@ -182,11 +191,16 @@ function toRPN(tokens: Token[]): Token[] {
     if (t.kind === 'num') {
       out.push(t);
     } else {
-      while (
-        ops.length &&
-        PRECEDENCE[ops[ops.length - 1].value] >= PRECEDENCE[t.value]
-      ) {
-        out.push(ops.pop()!);
+      while (ops.length) {
+        const top = ops[ops.length - 1].value;
+        const higher = PRECEDENCE[top] > PRECEDENCE[t.value];
+        const equalLeft =
+          PRECEDENCE[top] === PRECEDENCE[t.value] && !isRightAssociative(t.value);
+        if (higher || equalLeft) {
+          out.push(ops.pop()!);
+        } else {
+          break;
+        }
       }
       ops.push(t);
     }
@@ -217,6 +231,9 @@ function evalRPN(rpn: Token[]): number {
       case '÷':
         if (b === 0) throw new Error('Pípín pẹ̀lú òdo');
         stack.push(a / b);
+        break;
+      case '^':
+        stack.push(Math.pow(a, b));
         break;
     }
   }

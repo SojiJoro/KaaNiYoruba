@@ -71,6 +71,7 @@ Exact vowel elision at the joins (`ó lé` vs `ọ́ lé`) is dialect-variable; 
 | `−` | `yọ` | take away |
 | `×` | `ìgbà` | times |
 | `÷` | `pín sí` | divide into |
+| `^` | `ní ọ̀nà` | to the power of ("in n places") |
 | `=` | `dọ́gba` | equals |
 
 ## Negatives and decimals

@@ -95,7 +95,8 @@ try {
   assert.equal(expressionToYoruba('10-4'), 'Mẹ́wàá yọ Mẹ́rin');
   assert.equal(expressionToYoruba('100÷5'), 'Ọgọ́rùn-ún pín sí Márùn-ún');
   assert.equal(expressionToYoruba('2.5+3'), 'Méjì Ẹsẹ Márùn-ún pẹ̀lú Mẹ́ta');
-  pass += 5;
+  assert.equal(expressionToYoruba('2^10'), 'Méjì ní ọ̀nà Mẹ́wàá');
+  pass += 6;
 } catch (e) {
   fail += 5;
   console.error(' ✗', (e as Error).message);
@@ -124,7 +125,8 @@ try {
   assert.equal(operatorWord('−'), 'yọ');
   assert.equal(operatorWord('×'), 'ìgbà');
   assert.equal(operatorWord('÷'), 'pín sí');
-  pass += 4;
+  assert.equal(operatorWord('^'), 'ní ọ̀nà');
+  pass += 5;
 } catch (e) {
   fail += 4;
   console.error(' ✗', (e as Error).message);

@@ -279,6 +279,7 @@ For a number `N = base + r` (base = the largest table value ≤ N, r = remainder
 | `−` | **yọ** | take away |
 | `×` | **ìṣẹ́po / ìgbà** | times |
 | `÷` | **pín sí** | divide into |
+| `^` | **ní ọ̀nà** | "in n ways/places" — `2^10` = `Méjì ní ọ̀nà Mẹ́wàá` (two, in ten places) |
 | `=` | **dọ́gba** | equals |
 | `.` (point) | **ààmì** | mark |
 | `−n` (negative) | **òdì** | negative |
