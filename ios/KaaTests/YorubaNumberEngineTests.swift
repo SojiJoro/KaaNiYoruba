@@ -51,7 +51,27 @@ final class YorubaNumberEngineTests: XCTestCase {
         XCTAssertEqual(YorubaNumberEngine.toYoruba(300), "Ọ̀ọ́dúnrún")
         XCTAssertEqual(YorubaNumberEngine.toYoruba(400), "Irinwó")
         XCTAssertEqual(YorubaNumberEngine.toYoruba(500), "Ẹ̀ẹ́dẹ́gbẹ̀ta")
-        XCTAssertEqual(YorubaNumberEngine.toYoruba(1000), "Ẹgbẹ̀rún")
+    }
+
+    func test_hundreds_with_remainder() {
+        // Base-first "ó lé" (traditional), "àti" (modern)
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(105), "Ọgọ́rùn-ún ó lé Márùn-ún")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(250), "Igba ó lé Àádọ́ta")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(555), "Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Márùndínlọ́gọ́ta")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(105, mode: .modern), "Ọgọ́rùn-ún àti Márùn-ún")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(250, mode: .modern), "Ọgọ́rùn-ún méjì àti Àádọ́ta")
+    }
+
+    func test_thousands_and_beyond() {
+        // Generated, never digit-spelled
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(1000), "Ẹgbẹ̀rún kan")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(1001), "Ẹgbẹ̀rún kan àti Ọ̀kan")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(2000), "Ẹgbẹ̀rún méjì")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(1_000_000), "Mílíọ̀nù kan")
+        XCTAssertEqual(
+            YorubaNumberEngine.toYoruba(1_258_222),
+            "Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún"
+        )
     }
 
     func test_operator_words() {

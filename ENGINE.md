@@ -33,7 +33,7 @@ The engine layers four tables:
 | 3 | hundreds 100, 200, 300, ..., 1000 | Hand-coded base words: Igba, Irinwó, Ẹgbẹ̀rún, ... |
 | 4 | every other integer 11–99 | Hand-coded combinations of tiers 1+2 with subtractive logic |
 
-For 100–999 non-multiples of 100 we apply a **programmatic** combining rule (see below) and flag those entries for native-speaker review.
+Above the tables the engine is **generative**: 100–999 combine a hundred base with a remainder, and 1,000+ are grouped by scale words (`Ẹgbẹ̀rún` = 1e3, `Mílíọ̀nù` = 1e6, `Bilíọ̀nù` = 1e9, `Tirílíọ̀nù` = 1e12) joined with `àti`. This means **any** finite safe integer is named in real Yorùbá — there is no upper limit at which it reverts to Arabic digits. Only true digit strings (leading-zero codes, phone numbers, the fractional digits of a decimal, or magnitudes beyond `Number.MAX_SAFE_INTEGER`) are read digit-by-digit.
 
 ## Why tier 4 is hand-coded
 
@@ -50,14 +50,18 @@ That's mostly true. **But** the unit forms morph when they enter a compound (e.g
 
 These exceptions are easy to mis-handle algorithmically and easy to verify in a table, so we use a table.
 
-## Combining rule for hundreds
+## Combining rule for hundreds and above
 
-For 100–999 non-multiples (e.g. 105, 250, 595), we apply:
+For 100–999 non-multiples (e.g. 105, 250, 555):
 
-- **Traditional:** `[remainder] ó lé ní [hundred]` — e.g. 105 → `Márùn-ún ó lé ní Ọgọ́rùn-ún`
-- **Modern:** `[hundred] àti [remainder]` — e.g. 105 → `Ọgọ́rùn-ún àti Márùn-ún`
+- **Traditional:** base first, `[hundred] ó lé [remainder]` — e.g. 105 → `Ọgọ́rùn-ún ó lé Márùn-ún`, 555 → `Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Márùndínlọ́gọ́ta`. (This corrected the earlier remainder-first `… ó lé ní …` form.)
+- **Modern:** `[hundred] àti [remainder]` — e.g. 105 → `Ọgọ́rùn-ún àti Márùn-ún`.
 
-Fluent speakers report dialectal variation here (vowel elision, choice of linker), so these forms carry a `REVIEW:` comment in the source and should be confirmed before shipping.
+For 1,000 and above, the engine peels off the largest scale word, names the multiplier (`kan` for 1, otherwise the lower-cased number word), and recurses on the remainder, joining groups with `àti`:
+
+> 1,258,222 → `Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún`
+
+Exact vowel elision at the joins (`ó lé` vs `ọ́ lé`) is dialect-variable; see `docs/yoruba-number-logic.md`.
 
 ## Operator words
 
@@ -88,7 +92,7 @@ Modern mode uses a decimal additive `[tens] àti [units]` form throughout 15–9
 
 ## Hand-verified test corpus
 
-See `src/lib/yorubaNumbers.test.ts` (40 cases) and `ios/KaaTests/YorubaNumberEngineTests.swift` (same coverage). Adding a case is one line:
+See `src/lib/yorubaNumbers.test.ts` and `ios/KaaTests/YorubaNumberEngineTests.swift` (same coverage, including hundreds, thousands, millions). Adding a case is one line:
 
 ```ts
 { n: 19, trad: 'Mọ́kàndínlógún' }
@@ -96,6 +100,7 @@ See `src/lib/yorubaNumbers.test.ts` (40 cases) and `ios/KaaTests/YorubaNumberEng
 
 ## Limitations
 
-1. Hundreds combining forms (101–999 non-multiples) are programmatic and flagged for review.
-2. Numbers above 1,000 currently fall back to the Arabic numeral — extending past 1,000 requires another layer (Ẹgbẹ̀wá for 2,000, Ẹgbàá for 2,000 in some dialects, etc.) and a fluent speaker.
-3. The audio button uses `AVSpeechSynthesisVoice(language: "yo-NG")` / Web Speech API `lang="yo-NG"`. Neither platform ships a high-quality Yoruba TTS voice on every device; production deployments should bundle recorded clips.
+1. The hundreds/thousands join particle (`ó lé` vs `ọ́ lé`, vowel elision) is dialect-variable; the engine uses a single consistent base-first `ó lé` form. Flagged for native-speaker confirmation in `docs/yoruba-number-logic.md`.
+2. Large numbers use the **modern decimal** scale words (`Ẹgbẹ̀rún`, `Mílíọ̀nù`, …) rather than the irregular classical "bag" units (`Ẹgbàá` = 2,000, `Ọkẹ́` = 20,000). The classical units are documented for the Learn/reference layer; the decimal scale is what makes naming *any* number tractable.
+3. Multipliers lower-case only their leading word (e.g. `Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta`); fully natural running text would lower-case throughout. This is a display convention, not a meaning change.
+4. The audio button uses `AVSpeechSynthesisVoice(language: "yo-NG")` / Web Speech API `lang="yo-NG"`. Neither platform ships a high-quality Yoruba TTS voice on every device; production deployments should bundle recorded clips.

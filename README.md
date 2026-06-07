@@ -28,8 +28,8 @@ Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calcul
 | 2 | Yoruba word display under every input | Implemented |
 | 3 | Yoruba result as the main output | Implemented |
 | 4 | Tiny Arabic result on the right | Implemented |
-| 5 | Number converter (Arabic → Yoruba, 0–1,000) | Implemented |
-| 6 | Traditional Yoruba mode (subtractive) | Implemented (verified 0–99, hundreds need native review) |
+| 5 | Number converter (Arabic → Yoruba, any safe integer) | Implemented (generative — no upper limit) |
+| 6 | Traditional Yoruba mode (subtractive) | Implemented (verified 0–99 table; 100+ generated, join particle pending native review) |
 | 7 | Modern Yoruba mode (additive only) | Implemented |
 | 8 | History of calculations | Implemented |
 | 9 | Audio pronunciation placeholder | Implemented (button + hook for TTS/recorded audio) |

@@ -114,18 +114,26 @@ public enum YorubaNumberEngine {
         99: "Mọ́kàndínlọ́gọ́rùn",
     ]
 
+    // MARK: Scale words for grouping 1,000 and above
+    // Ẹgbẹ̀rún (1,000) is the classical vigesimal word (igba × 5); million /
+    // billion / trillion use the widely-used modern loan terms. Grouping by these
+    // and joining with "àti" lets the engine name any value.
+    private static let scaleWords: [(value: Int, word: String)] = [
+        (1_000_000_000_000, "Tirílíọ̀nù"),
+        (1_000_000_000, "Bilíọ̀nù"),
+        (1_000_000, "Mílíọ̀nù"),
+        (1_000, "Ẹgbẹ̀rún"),
+    ]
+
     // MARK: Public API
 
-    /// Convert an integer (-1000…1000) to Yoruba words.
+    /// Convert an integer to Yoruba words. Any non-negative Int is named in full
+    /// Yorùbá (no upper table limit); negatives are prefixed with "Òdì".
     public static func toYoruba(_ n: Int, mode: YorubaMode = .traditional) -> String {
         if n < 0 {
             return "Òdì \(toYoruba(-n, mode: mode))"
         }
-        if n > 1000 { return String(n) }
-        switch mode {
-        case .traditional: return toTraditional(n)
-        case .modern: return toModern(n)
-        }
+        return toWords(n, mode: mode)
     }
 
     /// Yoruba word for a calculator operator symbol.
@@ -160,43 +168,58 @@ public enum YorubaNumberEngine {
 
     // MARK: Internals
 
-    private static func toTraditional(_ n: Int) -> String {
-        if n <= 99 { return traditional0to99[n] ?? String(n) }
-        if let h = hundredsBase[n] { return h }
-        return hundredsPlusRemainder(n, mode: .traditional)
-    }
-
-    private static func toModern(_ n: Int) -> String {
-        if n <= 10 { return base0to10[n] ?? String(n) }
-        if let t = tensBase[n] { return t }
-        if let h = hundredsBase[n] { return h }
-        if (11...99).contains(n) {
-            // Modern: decimal additive "[tens] àti [units]". 11–14 keep their
-            // canonical forms; 15–99 use "àti" rather than the traditional
-            // subtractive construction.
-            if n <= 14 { return traditional0to99[n] ?? String(n) }
-            let tens = (n / 10) * 10
-            let units = n % 10
-            let tensWord = tens == 10 ? (base0to10[10] ?? String(tens)) : (tensBase[tens] ?? String(tens))
-            if units == 0 { return tensWord }
-            let unitWord = base0to10[units] ?? String(units)
-            return "\(tensWord) àti \(unitWord)"
+    /// Generative core: render a non-negative integer in Yorùbá.
+    private static func toWords(_ n: Int, mode: YorubaMode) -> String {
+        if n == 0 { return base0to10[0]! }
+        if n < 100 {
+            return mode == .traditional ? (traditional0to99[n] ?? String(n)) : modernUnder100(n)
         }
-        return hundredsPlusRemainder(n, mode: .modern)
+        if n < 1000 { return hundredsGroup(n, mode: mode) }
+
+        // 1,000 and above: peel off the largest scale, recurse on the remainder.
+        let scale = scaleWords.first(where: { n >= $0.value })!
+        let count = n / scale.value
+        let remainder = n % scale.value
+        let head = "\(scale.word) \(asMultiplier(count, mode: mode))"
+        if remainder == 0 { return head }
+        return "\(head) àti \(toWords(remainder, mode: mode))"
     }
 
-    private static func hundredsPlusRemainder(_ n: Int, mode: YorubaMode) -> String {
-        let hundred = (n / 100) * 100
-        let remainder = n - hundred
-        let hundredWord = hundredsBase[hundred] ?? String(hundred)
+    /// 100–999 as "hundred-base + remainder": base-first "ó lé" (traditional) or
+    /// "Ọgọ́rùn-ún [×n] àti [remainder]" (modern).
+    private static func hundredsGroup(_ n: Int, mode: YorubaMode) -> String {
+        let hundredCount = n / 100
+        let remainder = n % 100
+        if mode == .traditional {
+            let base = hundredsBase[hundredCount * 100] ?? String(hundredCount * 100)
+            if remainder == 0 { return base }
+            return "\(base) ó lé \(traditional0to99[remainder] ?? String(remainder))"
+        }
+        let hundredWord = hundredCount == 1
+            ? (tensBase[100] ?? "Ọgọ́rùn-ún")
+            : "\(tensBase[100] ?? "Ọgọ́rùn-ún") \(asMultiplier(hundredCount, mode: .modern))"
         if remainder == 0 { return hundredWord }
-        // REVIEW: combining form for hundreds + remainder is dialect-sensitive.
-        switch mode {
-        case .traditional:
-            return "\(toTraditional(remainder)) ó lé ní \(hundredWord)"
-        case .modern:
-            return "\(hundredWord) àti \(toModern(remainder))"
-        }
+        return "\(hundredWord) àti \(modernUnder100(remainder))"
+    }
+
+    /// Modern decimal-additive form for 0–99: "[tens] àti [units]".
+    private static func modernUnder100(_ n: Int) -> String {
+        if n <= 10 { return base0to10[n] ?? String(n) }
+        if n <= 14 { return traditional0to99[n] ?? String(n) }
+        if let t = tensBase[n] { return t }
+        let tens = (n / 10) * 10
+        let units = n % 10
+        let tensWord = tens == 10 ? (base0to10[10] ?? String(tens)) : (tensBase[tens] ?? String(tens))
+        if units == 0 { return tensWord }
+        return "\(tensWord) àti \(base0to10[units] ?? String(units))"
+    }
+
+    /// Multiplier after a scale or hundred word: "kan" for 1, else the
+    /// number word with a lower-cased leading character so it reads as a modifier.
+    private static func asMultiplier(_ n: Int, mode: YorubaMode) -> String {
+        if n == 1 { return "kan" }
+        let word = toWords(n, mode: mode)
+        return word.prefix(1).lowercased() + word.dropFirst()
     }
 
     private static func tokenizeExpression(_ expr: String) -> [String] {
