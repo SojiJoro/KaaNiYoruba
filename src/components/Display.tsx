@@ -106,6 +106,11 @@ function headlineFor({
   mode: YorubaMode;
 }): string {
   if (error) return "";
+  // A lone typed number is read from its exact digits, so long inputs never
+  // decay into a float's "Òdo Òdo…" tail.
+  if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(expression)) {
+    return numericInputToYoruba(expression, mode);
+  }
   if (result !== null) {
     return toYoruba(result, mode);
   }

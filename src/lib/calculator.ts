@@ -40,6 +40,11 @@ export const initialState: CalcState = {
 
 const OPERATORS = new Set(['+', '−', '×', '÷', '^']);
 
+// Like a physical calculator, cap how many digits one operand can hold. 15 keeps
+// every typed number inside JavaScript's exact-integer range, so it always
+// renders as real Yorùbá instead of a float whose tail decays into "Òdo Òdo…".
+const MAX_OPERAND_DIGITS = 15;
+
 function isOperator(c: string) {
   return OPERATORS.has(c);
 }
@@ -83,6 +88,13 @@ export function applyKey(state: CalcState, key: CalcKey): CalcState {
     // Replace a stale result with a fresh number when typing after "=".
     if (base.lastResult !== null && base.expression === formatNumber(base.lastResult)) {
       return { ...base, expression: key, lastResult: null };
+    }
+    // Cap the current operand's digit count (real-calculator behaviour).
+    if (/^[0-9]$/.test(key)) {
+      const lastOpIndex = lastOperatorIndex(base.expression);
+      const currentOperand = base.expression.slice(lastOpIndex + 1);
+      const digitCount = (currentOperand.match(/\d/g) ?? []).length;
+      if (digitCount >= MAX_OPERAND_DIGITS) return base;
     }
     return { ...base, expression: base.expression + key };
   }
@@ -242,11 +254,25 @@ function evalRPN(rpn: Token[]): number {
 
 export function formatNumber(n: number): string {
   if (!Number.isFinite(n)) return '—';
-  // Use plain (non-scientific) notation so very large integers stay readable
-  // and line up with the spelled-out Yoruba headline.
-  if (Number.isInteger(n)) {
+  const abs = Math.abs(n);
+  // Exact integers stay as plain digits.
+  if (Number.isInteger(n) && abs <= Number.MAX_SAFE_INTEGER) {
     return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
   }
-  // Trim trailing zeros and cap to 6 decimal places.
+  // Too big (or too small) to show exactly → scientific notation, like a
+  // physical calculator, instead of a precision-losing string of zeros.
+  if (abs !== 0 && (abs >= 1e15 || abs < 1e-6)) {
+    return trimExponential(n.toExponential(6));
+  }
+  // Ordinary decimals: trim trailing zeros, cap to 6 places.
   return parseFloat(n.toFixed(6)).toString();
+}
+
+// "2.232000e+30" -> "2.232e30"
+function trimExponential(s: string): string {
+  const [mantissaRaw, expRaw] = s.split('e');
+  const mantissa = mantissaRaw.includes('.')
+    ? mantissaRaw.replace(/0+$/, '').replace(/\.$/, '')
+    : mantissaRaw;
+  return `${mantissa}e${expRaw.replace('+', '')}`;
 }

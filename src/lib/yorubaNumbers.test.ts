@@ -110,9 +110,10 @@ try {
   assert.equal(toYoruba(1_000_000), 'Mílíọ̀nù kan');
   assert.equal(numericInputToYoruba('1258222'), 'Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún');
   assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo Ẹsẹ Ọ̀kan');
-  // Beyond MAX_SAFE_INTEGER: must still produce words, not blank (no sci-notation).
-  assert.equal(toYoruba(1e21).startsWith('Ọ̀kan'), true);
-  assert.equal(toYoruba(1e21).length > 0, true);
+  // Beyond MAX_SAFE_INTEGER: read as Yorùbá scientific notation, never a
+  // float's zero-tail ("Òdo Òdo…").
+  assert.equal(toYoruba(1e21), 'Ọ̀kan ìgbà mẹ́wàá ní ọ̀nà Mọ́kànlélógún');
+  assert.equal(/Òdo Òdo Òdo/.test(toYoruba(2.232e30)), false);
   pass += 5;
 } catch (e) {
   fail += 5;
