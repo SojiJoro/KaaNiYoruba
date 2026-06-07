@@ -33,7 +33,9 @@ The engine layers four tables:
 | 3 | hundreds 100, 200, 300, ..., 1000 | Hand-coded base words: Igba, Irinwó, Ẹgbẹ̀rún, ... |
 | 4 | every other integer 11–99 | Hand-coded combinations of tiers 1+2 with subtractive logic |
 
-Above the tables the engine is **generative**: 100–999 combine a hundred base with a remainder, and 1,000+ are grouped by scale words (`Ẹgbẹ̀rún` = 1e3, `Mílíọ̀nù` = 1e6, `Bilíọ̀nù` = 1e9, `Tirílíọ̀nù` = 1e12) joined with `àti`. This means **any** finite safe integer is named in real Yorùbá — there is no upper limit at which it reverts to Arabic digits. Only true digit strings (leading-zero codes, phone numbers, the fractional digits of a decimal, or magnitudes beyond `Number.MAX_SAFE_INTEGER`) are read digit-by-digit.
+Above the tables the engine is **generative** and runs on **BigInt**, so it names integers of any magnitude exactly. 100–999 combine a hundred base with a remainder; 1,000+ are grouped by scale words and the largest group is peeled off recursively. The scale words run `Ẹgbẹ̀rún` (10³), then the borrowed international names `Mílíọ̀nù` (10⁶), `Bílíọ̀nù` (10⁹), `Tirílíọ̀nù` (10¹²), `Kwadírílíọ̀nù` (10¹⁵), `Kwíntílíọ̀nù` (10¹⁸), `Sẹ́kítílíọ̀nù` (10²¹), `Sẹ́ptílíọ̀nù` (10²⁴), `Ọ́kítílíọ̀nù` (10²⁷), `Nónílíọ̀nù` (10³⁰), `Dẹ́sílíọ̀nù` (10³³). Typed numbers are named exactly to any length; a computed result beyond ~15 significant figures is first rounded to calculator precision (so its float noise becomes clean zeros). Only values above ~10³⁶ fall back to scientific notation, and only true digit strings (leading-zero codes, phone numbers, decimal fraction digits) are read digit-by-digit.
+
+The Swift port reaches a quintillion (`Int` is 64-bit); the higher scales need the web engine's BigInt.
 
 ## Why tier 4 is hand-coded
 

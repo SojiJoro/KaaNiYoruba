@@ -71,17 +71,28 @@ export const HUNDREDS_BASE: Record<number, string> = {
 };
 
 // ---- Scale words for grouping 1,000 and above -----------------------------
-// Ẹgbẹ̀rún (1,000) is the classical vigesimal word (igba × 5); the million /
-// billion / trillion scale words are the widely-used modern loan terms. Grouping
-// by these and joining with "àti" is how large numbers are spoken today and lets
-// the engine name any value instead of falling back to digit spelling.
+// Ẹgbẹ̀rún (1,000) is the classical vigesimal word (igba × 5). From a million up,
+// modern Yorùbá borrows the international scale names and pronounces them in a
+// Yorùbá way. Stored as BigInt so the engine can name any magnitude exactly —
+// up to a decillion (10^33) — instead of losing precision to floating point.
 
-const SCALE_WORDS: Array<{ value: number; word: string }> = [
-  { value: 1_000_000_000_000, word: 'Tirílíọ̀nù' },
-  { value: 1_000_000_000, word: 'Bilíọ̀nù' },
-  { value: 1_000_000, word: 'Mílíọ̀nù' },
-  { value: 1_000, word: 'Ẹgbẹ̀rún' },
+const SCALE_WORDS_BIG: Array<{ value: bigint; word: string }> = [
+  { value: 10n ** 33n, word: 'Dẹ́sílíọ̀nù' }, // decillion
+  { value: 10n ** 30n, word: 'Nónílíọ̀nù' }, // nonillion
+  { value: 10n ** 27n, word: 'Ọ́kítílíọ̀nù' }, // octillion
+  { value: 10n ** 24n, word: 'Sẹ́ptílíọ̀nù' }, // septillion
+  { value: 10n ** 21n, word: 'Sẹ́kítílíọ̀nù' }, // sextillion
+  { value: 10n ** 18n, word: 'Kwíntílíọ̀nù' }, // quintillion
+  { value: 10n ** 15n, word: 'Kwadírílíọ̀nù' }, // quadrillion
+  { value: 10n ** 12n, word: 'Tirílíọ̀nù' }, // trillion
+  { value: 10n ** 9n, word: 'Bílíọ̀nù' }, // billion
+  { value: 10n ** 6n, word: 'Mílíọ̀nù' }, // million
+  { value: 1000n, word: 'Ẹgbẹ̀rún' }, // thousand
 ];
+
+// Largest magnitude we name with scale words (one notch above a decillion).
+// Beyond this, fall back to scientific notation so strings stay sane.
+const MAX_NAMED = 10n ** 36n;
 
 // ---- Tier 4: hand-verified 0–99 traditional table -------------------------
 // This table is the canonical source-of-truth for 0–99. It is intentionally
@@ -223,12 +234,25 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
     return `Òdì ${positive}`;
   }
 
-  // Beyond the exact-integer range a float keeps only ~16 significant digits;
-  // spelling it digit-by-digit would invent a tail of zeros ("Òdo Òdo …").
-  // Read it as scientific notation instead, the way a calculator overflows.
-  if (!Number.isSafeInteger(n)) return scientificToYoruba(n, mode);
+  // Name with scale words (million → decillion) using exact BigInt arithmetic.
+  // Exact integers convert directly; a value beyond the exact range is a rounded
+  // float, so we keep 15 significant figures (calculator precision) and zero the
+  // unreliable tail — empty place-value groups then vanish, giving a clean name
+  // instead of an "Òdo Òdo …" run. Only astronomical values use scientific form.
+  const big = Number.isSafeInteger(n) ? BigInt(n) : roundedBigInt(n, 15);
+  if (big < MAX_NAMED) return bigToWords(big, mode);
+  return scientificToYoruba(n, mode);
+}
 
-  return toWords(n, mode);
+/** Round a large positive float to `sig` significant figures as an exact BigInt. */
+function roundedBigInt(n: number, sig: number): bigint {
+  const [mantissa, expStr] = n.toExponential(sig - 1).split('e');
+  const exp = parseInt(expStr, 10);
+  const digits = mantissa.replace('.', '');
+  const scale = exp - (sig - 1);
+  return scale >= 0
+    ? BigInt(digits) * 10n ** BigInt(scale)
+    : BigInt(digits) / 10n ** BigInt(-scale);
 }
 
 /**
@@ -249,25 +273,35 @@ function scientificToYoruba(n: number, mode: YorubaMode): string {
 }
 
 /**
- * The generative heart of the engine: render a non-negative safe integer.
+ * The generative heart of the engine: render a non-negative BigInt.
+ * 0–999 use the verified tables; 1,000 and up peel off the largest scale word
+ * (Ẹgbẹ̀rún … Dẹ́sílíọ̀nù) and recurse on the remainder. Empty groups vanish, so
+ * 1,000,000,000 reads "Bílíọ̀nù kan" — never a string of zeros.
  */
-function toWords(n: number, mode: YorubaMode): string {
-  if (n === 0) return BASE_0_10[0];
-  if (n < 100) {
-    return mode === 'traditional' ? TRADITIONAL_0_99[n] : modernUnder100(n);
+function bigToWords(n: bigint, mode: YorubaMode): string {
+  if (n < 1000n) {
+    const k = Number(n);
+    if (k === 0) return BASE_0_10[0];
+    if (k < 100) return mode === 'traditional' ? TRADITIONAL_0_99[k] : modernUnder100(k);
+    return hundredsGroup(k, mode);
   }
-  if (n < 1000) return hundredsGroup(n, mode);
 
-  // 1,000 and above: peel off the largest scale, recurse on the remainder.
-  const scale = SCALE_WORDS.find((s) => n >= s.value)!;
-  const count = Math.floor(n / scale.value);
+  const scale = SCALE_WORDS_BIG.find((s) => n >= s.value)!;
+  const count = n / scale.value;
   const remainder = n % scale.value;
-  const head = `${scale.word} ${asMultiplier(count, mode)}`;
-  if (remainder === 0) return head;
+  const head = `${scale.word} ${asMultiplierBig(count, mode)}`;
+  if (remainder === 0n) return head;
   // Traditional keeps the vigesimal additive particle "ó lé"; modern joins
   // place-value groups with the decimal "àti".
   const join = mode === 'traditional' ? 'ó lé' : 'àti';
-  return `${head} ${join} ${toWords(remainder, mode)}`;
+  return `${head} ${join} ${bigToWords(remainder, mode)}`;
+}
+
+/** Multiplier after a BigInt scale word: "kan" for 1, else lower-cased name. */
+function asMultiplierBig(n: bigint, mode: YorubaMode): string {
+  if (n === 1n) return 'kan';
+  const word = bigToWords(n, mode);
+  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
 }
 
 /**
@@ -310,15 +344,9 @@ function modernUnder100(n: number): string {
   return `${tensWord} àti ${BASE_0_10[units]}`;
 }
 
-/**
- * Render the multiplier that follows a scale or hundred word.
- * "kan" for 1 (e.g. Ẹgbẹ̀rún kan); otherwise the lower-cased number word so it
- * reads as a modifier (e.g. Ẹgbẹ̀rún méjì, Mílíọ̀nù mẹ́ta).
- */
+/** Multiplier after a hundred word (small counts), via the BigInt path. */
 function asMultiplier(n: number, mode: YorubaMode): string {
-  if (n === 1) return 'kan';
-  const word = toWords(n, mode);
-  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
+  return asMultiplierBig(BigInt(n), mode);
 }
 
 /**
@@ -362,11 +390,7 @@ export function numericInputToYoruba(
   if (unsigned.includes('.')) {
     const [wholePartRaw, fractionPartRaw = ''] = unsigned.split('.');
     const wholePart = wholePartRaw || '0';
-    const wholeNumber = Number(wholePart);
-    const wholeWords =
-      wholePart.length > 15 || !Number.isSafeInteger(wholeNumber)
-        ? digitSequenceToYoruba(wholePart, mode)
-        : toYoruba(wholeNumber, mode);
+    const wholeWords = integerStringToYoruba(wholePart, mode);
     const fractionWords = fractionPartRaw
       .split('')
       .map((digit) => DIGIT_WORDS[digit])
@@ -380,12 +404,18 @@ export function numericInputToYoruba(
   // written form as 7 for phone numbers, IDs, and codes.
   if (/^0\d+/.test(unsigned)) return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
 
-  const n = Number(unsigned);
-  if (!Number.isSafeInteger(n)) {
-    return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
-  }
+  return `${sign}${integerStringToYoruba(unsigned, mode)}`.trim();
+}
 
-  return `${sign}${toYoruba(n, mode)}`.trim();
+/**
+ * Name a plain integer string of any length exactly via BigInt — so a typed
+ * quadrillion reads "Kwadírílíọ̀nù kan", not a precision-losing float. Beyond the
+ * named scale range (≈37 digits) it falls back to digit-by-digit reading.
+ */
+function integerStringToYoruba(digits: string, mode: YorubaMode): string {
+  const value = BigInt(digits);
+  if (value < MAX_NAMED) return bigToWords(value, mode);
+  return digitSequenceToYoruba(digits, mode);
 }
 
 function normalizeNumericInput(value: string): string {

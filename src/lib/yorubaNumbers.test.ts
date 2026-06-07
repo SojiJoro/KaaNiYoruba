@@ -105,16 +105,22 @@ try {
 // Typed numbers, decimals, and arbitrary digit strings
 try {
   assert.equal(numericInputToYoruba('007'), 'Òdo Òdo Méje');
-  assert.equal(numericInputToYoruba('12345678901234567890'), 'Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo');
+  // A leading-zero string still reads digit-by-digit (phone numbers / IDs).
+  assert.equal(digitSequenceToYoruba('007'), 'Òdo Òdo Méje');
   assert.equal(numericInputToYoruba('12.05'), 'Méjìlá Ẹsẹ Òdo Márùn-ún');
   assert.equal(toYoruba(1_000_000), 'Mílíọ̀nù kan');
   assert.equal(numericInputToYoruba('1258222'), 'Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún');
   assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo Ẹsẹ Ọ̀kan');
-  // Beyond MAX_SAFE_INTEGER: read as Yorùbá scientific notation, never a
-  // float's zero-tail ("Òdo Òdo…").
-  assert.equal(toYoruba(1e21), 'Ọ̀kan ìgbà mẹ́wàá ní ọ̀nà Mọ́kànlélógún');
+  // Borrowed scale words past a trillion (exact via BigInt) — quadrillion → decillion.
+  assert.equal(toYoruba(1e15), 'Kwadírílíọ̀nù kan');
+  assert.equal(toYoruba(1e18), 'Kwíntílíọ̀nù kan');
+  assert.equal(toYoruba(1e21), 'Sẹ́kítílíọ̀nù kan');
+  assert.equal(toYoruba(1e24), 'Sẹ́ptílíọ̀nù kan');
+  assert.equal(numericInputToYoruba('1000000000000'), 'Tirílíọ̀nù kan');
+  assert.equal(numericInputToYoruba('1000000000000000000000000000000000'), 'Dẹ́sílíọ̀nù kan');
+  // Large values never produce an "Òdo Òdo" run.
   assert.equal(/Òdo Òdo Òdo/.test(toYoruba(2.232e30)), false);
-  pass += 5;
+  pass += 13;
 } catch (e) {
   fail += 5;
   console.error(' ✗', (e as Error).message);

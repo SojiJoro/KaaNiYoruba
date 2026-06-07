@@ -40,10 +40,10 @@ export const initialState: CalcState = {
 
 const OPERATORS = new Set(['+', '−', '×', '÷', '^']);
 
-// Like a physical calculator, cap how many digits one operand can hold. 15 keeps
-// every typed number inside JavaScript's exact-integer range, so it always
-// renders as real Yorùbá instead of a float whose tail decays into "Òdo Òdo…".
-const MAX_OPERAND_DIGITS = 15;
+// Cap how many digits one operand can hold. Typed numbers are named exactly via
+// BigInt, so we allow the full named range (up to a decillion, 34 digits). Note
+// arithmetic itself stays float-precision (~15 sig figs), like a pocket calculator.
+const MAX_OPERAND_DIGITS = 34;
 
 function isOperator(c: string) {
   return OPERATORS.has(c);
