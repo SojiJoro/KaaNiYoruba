@@ -83,7 +83,7 @@ function KeyButton({
 }) {
   const subtitle = labelFor(cell.key, mode);
   const base =
-    "relative flex min-h-[3.85rem] select-none flex-col items-center justify-center gap-0.5 rounded-[1.3rem] border px-1 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[4.5rem] sm:rounded-[1.35rem]";
+    "relative flex min-h-[clamp(3.35rem,8.5svh,4.5rem)] select-none flex-col items-center justify-center overflow-hidden rounded-[1.35rem] border px-2 py-2 text-center shadow-button transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[72px] sm:rounded-[1.45rem] sm:px-3 sm:py-2.5";
   const variantClasses = {
     digit:
       "border-border bg-warm-cream text-text-dark hover:border-soft-green/45 hover:bg-white",
@@ -96,7 +96,7 @@ function KeyButton({
   }[cell.variant];
 
   const span = cell.span === 2 ? "col-span-2" : "";
-  const tall = cell.tall ? "row-span-2 min-h-[8.2rem] sm:min-h-[9.5rem]" : "";
+  const tall = cell.tall ? "row-span-2 min-h-[clamp(7.15rem,18svh,9.5rem)] sm:min-h-[150px]" : "";
   const subtitleClass =
     cell.variant === "equals" || cell.emphasis
       ? "text-warm-cream/90"
@@ -109,18 +109,32 @@ function KeyButton({
       aria-label={`${symbolLabel(cell.key)}${subtitle ? `, ${subtitle}` : ""}`}
       className={`${base} ${variantClasses} ${span} ${tall}`}
     >
-      <span className="text-[1.6rem] font-bold leading-none tracking-tight sm:text-3xl">
-        {cell.key}
-      </span>
-      {subtitle ? (
+      <span className="pointer-events-none absolute inset-x-2 top-1.5 h-px rounded-full bg-white/60 opacity-70" />
+      <span
+        className={`flex min-h-0 flex-col items-center justify-center ${cell.tall ? "gap-2 sm:gap-2.5" : "gap-1 sm:gap-1.5"}`}
+      >
         <span
-          className={`mt-1 max-w-full truncate text-[0.62rem] font-semibold leading-tight opacity-90 sm:mt-1.5 sm:text-xs ${subtitleClass}`}
+          className={`${symbolSizeClass(cell)} font-black leading-[0.88] tracking-[-0.04em]`}
         >
-          {subtitle}
+          {cell.key}
         </span>
-      ) : null}
+        {subtitle ? (
+          <span
+            className={`max-w-full whitespace-nowrap text-[0.68rem] font-bold leading-none tracking-[-0.01em] opacity-95 sm:text-xs ${subtitleClass}`}
+          >
+            {subtitle}
+          </span>
+        ) : null}
+      </span>
     </button>
   );
+}
+
+function symbolSizeClass(cell: LayoutCell): string {
+  if (cell.tall) return "text-[2.35rem] sm:text-[3.1rem]";
+  if (cell.key === "0") return "text-[2rem] sm:text-[2.75rem]";
+  if (cell.variant === "digit") return "text-[1.9rem] sm:text-[2.55rem]";
+  return "text-[1.7rem] sm:text-[2.25rem]";
 }
 
 function labelFor(key: CalcKey, mode: YorubaMode): string {
