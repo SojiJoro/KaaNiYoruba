@@ -118,11 +118,16 @@ public enum YorubaNumberEngine {
     // Ẹgbẹ̀rún (1,000) is the classical vigesimal word (igba × 5); million /
     // billion / trillion use the widely-used modern loan terms. Grouping by these
     // and joining with "àti" lets the engine name any value.
+    // Modern Yorùbá borrows the international scale names. Int (64-bit) reaches a
+    // quintillion (~9.2e18); higher scales (sextillion+) need a big-integer type,
+    // which the TypeScript engine provides on the web.
     private static let scaleWords: [(value: Int, word: String)] = [
-        (1_000_000_000_000, "Tirílíọ̀nù"),
-        (1_000_000_000, "Bilíọ̀nù"),
-        (1_000_000, "Mílíọ̀nù"),
-        (1_000, "Ẹgbẹ̀rún"),
+        (1_000_000_000_000_000_000, "Kwíntílíọ̀nù"), // quintillion
+        (1_000_000_000_000_000, "Kwadírílíọ̀nù"), // quadrillion
+        (1_000_000_000_000, "Tirílíọ̀nù"), // trillion
+        (1_000_000_000, "Bílíọ̀nù"), // billion
+        (1_000_000, "Mílíọ̀nù"), // million
+        (1_000, "Ẹgbẹ̀rún"), // thousand
     ]
 
     // MARK: Public API

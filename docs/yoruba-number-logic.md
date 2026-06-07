@@ -222,6 +222,26 @@ dialect-specific (cowrie-counting math: a "bag" `ọkẹ́` = 20,000 cowries; a
 §10**, and reserve the classical large units for the learning/reference screens
 where their cultural logic is the point.
 
+### Borrowed international scale words (engine source of truth)
+
+For large magnitudes modern Yorùbá borrows the international scale names and
+pronounces them Yorùbá-style. The engine groups by these (on BigInt, so any
+magnitude is exact) and joins groups with `ó lé` (traditional) or `àti` (modern):
+
+| Value | Word | | Value | Word |
+|------:|------|-|------:|------|
+| 10⁶ | **Mílíọ̀nù** | | 10²¹ | **Sẹ́kítílíọ̀nù** |
+| 10⁹ | **Bílíọ̀nù** | | 10²⁴ | **Sẹ́ptílíọ̀nù** |
+| 10¹² | **Tirílíọ̀nù** | | 10²⁷ | **Ọ́kítílíọ̀nù** |
+| 10¹⁵ | **Kwadírílíọ̀nù** | | 10³⁰ | **Nónílíọ̀nù** |
+| 10¹⁸ | **Kwíntílíọ̀nù** | | 10³³ | **Dẹ́sílíọ̀nù** |
+
+So `1,000,000` → **Mílíọ̀nù kan**, `1,000,000,000` → **Bílíọ̀nù kan**,
+`1,000,000,000,000` → **Tirílíọ̀nù kan**, … `10³³` → **Dẹ́sílíọ̀nù kan**.
+Each empty place-value group is omitted, so there is never an "Òdo Òdo" run.
+Beyond ~10³⁶ the engine switches to scientific notation
+(`[mantissa] ìgbà mẹ́wàá ní ọ̀nà [exp]`).
+
 ---
 
 ## 10. Modern decimal forms (recommended for results > 200)
