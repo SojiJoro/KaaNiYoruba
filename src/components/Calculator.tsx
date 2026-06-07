@@ -68,6 +68,7 @@ export function Calculator() {
         "*": "×",
         "/": "÷",
         "-": "−",
+        "^": "^",
         Enter: "=",
         "=": "=",
         Backspace: "⌫",
@@ -122,14 +123,14 @@ export function Calculator() {
     <div
       className={`w-full ${
         isCalculator
-          ? "flex h-[100svh] max-w-[430px] flex-col pb-0 sm:h-auto sm:max-w-5xl sm:pb-5"
+          ? "flex min-h-[100svh] max-w-[430px] flex-col pb-4 sm:h-auto sm:min-h-0 sm:max-w-5xl sm:pb-5"
           : "max-w-5xl pb-20 sm:pb-5"
       }`}
     >
       <section
         className={`relative overflow-hidden border border-border/70 bg-background/90 shadow-app backdrop-blur ${
           isCalculator
-            ? "flex min-h-0 flex-1 flex-col rounded-none p-3 sm:block sm:rounded-[2.25rem] sm:p-6 lg:p-7"
+            ? "flex flex-1 flex-col rounded-none p-4 sm:block sm:rounded-[2.25rem] sm:p-6 lg:p-7"
             : "rounded-[1.5rem] p-3 sm:rounded-[2.25rem] sm:p-6 lg:p-7"
         }`}
       >
@@ -138,13 +139,13 @@ export function Calculator() {
 
         <div
           className={`relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start ${
-            isCalculator ? "mt-3 min-h-0 flex-1" : "mt-4"
+            isCalculator ? "mt-4 flex-1" : "mt-4"
           }`}
         >
-          <div className="flex min-w-0 min-h-0 flex-col gap-3">
-            <div className="min-w-0 min-h-0 flex-1">
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="min-w-0 flex-1">
               {tab === "calculator" && (
-                <div className="flex h-full min-h-0 flex-col gap-3">
+                <div className="flex flex-col gap-4">
                   <Display
                     expression={state.expression}
                     result={previewResult}
@@ -223,13 +224,9 @@ function AppHeader({
   return (
     <header className="relative flex shrink-0 flex-row items-center justify-between gap-3 sm:items-start">
       <div className="min-w-0">
-        <h1 className="font-serif text-4xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-6xl">
-          K
-          à
-          <span className="relative inline-block">
-            á
-            <span className="absolute -right-0.5 top-0 h-2 w-2 rounded-full bg-gold" />
-          </span>
+        <h1 className="relative inline-block font-serif text-4xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-6xl">
+          Kàá
+          <span className="absolute -right-1.5 top-0.5 h-1.5 w-1.5 rounded-full bg-gold sm:-right-2 sm:h-2 sm:w-2" />
         </h1>
         <p className="mt-1.5 text-xs font-semibold text-muted sm:mt-2 sm:text-base">
           Yorùbá number &amp; calculator

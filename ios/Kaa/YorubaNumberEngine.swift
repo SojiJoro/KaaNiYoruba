@@ -143,6 +143,7 @@ public enum YorubaNumberEngine {
         case "-", "−": return "yọ"
         case "*", "×": return "ìgbà"
         case "/", "÷": return "pín sí"
+        case "^": return "ní ọ̀nà"
         case "=": return "dọ́gba"
         default: return symbol
         }
@@ -182,7 +183,10 @@ public enum YorubaNumberEngine {
         let remainder = n % scale.value
         let head = "\(scale.word) \(asMultiplier(count, mode: mode))"
         if remainder == 0 { return head }
-        return "\(head) àti \(toWords(remainder, mode: mode))"
+        // Traditional keeps the vigesimal additive particle "ó lé"; modern joins
+        // place-value groups with the decimal "àti".
+        let join = mode == .traditional ? "ó lé" : "àti"
+        return "\(head) \(join) \(toWords(remainder, mode: mode))"
     }
 
     /// 100–999 as "hundred-base + remainder": base-first "ó lé" (traditional) or
@@ -228,7 +232,7 @@ public enum YorubaNumberEngine {
         var buf = ""
         for char in stripped {
             let s = String(char)
-            if "+-−*×/÷".contains(char) {
+            if "+-−*×/÷^".contains(char) {
                 if !buf.isEmpty { out.append(buf); buf = "" }
                 out.append(s)
             } else {

@@ -27,7 +27,7 @@ export function Display({
   const displayExpression = formatExpression(expression);
 
   return (
-    <section className="relative isolate flex min-h-[0] flex-[0.62] flex-col justify-between overflow-hidden rounded-[1.45rem] border border-border bg-warm-cream px-5 py-5 shadow-premium sm:min-h-[210px] sm:flex-none sm:rounded-[2rem] sm:px-6 sm:py-5">
+    <section className="relative isolate flex min-h-[185px] flex-col justify-between overflow-hidden rounded-[1.45rem] border border-border bg-warm-cream px-5 py-5 shadow-premium sm:min-h-[210px] sm:rounded-[2rem] sm:px-6 sm:py-5">
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
       <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-soft-green/10" />
 
@@ -52,8 +52,8 @@ export function Display({
 
       <div className="my-2.5 h-px w-full bg-border sm:my-4" />
 
-      <div className="relative flex min-h-0 flex-1 flex-col justify-end gap-2.5">
-        <div className="min-h-0 flex-1 overflow-y-auto pr-0.5">
+      <div className="relative flex flex-col justify-end gap-2.5">
+        <div className="max-h-[38vh] overflow-y-auto pr-0.5">
           <h2
             aria-live="polite"
             className={`break-words [overflow-wrap:anywhere] font-serif font-black leading-[1.1] tracking-tight ${resultSizeClass(
@@ -89,7 +89,7 @@ function resultSizeClass(text: string): string {
 
 function formatExpression(expression: string): string {
   return expression
-    .replace(/([+−×÷])/g, " $1 ")
+    .replace(/([+−×÷^])/g, " $1 ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -110,7 +110,7 @@ function headlineFor({
     return toYoruba(result, mode);
   }
   if (!expression) return "";
-  const tokens = expression.split(/([+\-−*×/÷])/).filter(Boolean);
+  const tokens = expression.split(/([+\-−*×/÷^])/).filter(Boolean);
   const last = tokens[tokens.length - 1];
   if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(last)) {
     return numericInputToYoruba(last, mode);
@@ -129,7 +129,7 @@ function headlineArabicFor({
     return formatNumber(result);
   }
   if (!expression) return "";
-  const tokens = expression.split(/([+\-−*×/÷])/).filter(Boolean);
+  const tokens = expression.split(/([+\-−*×/÷^])/).filter(Boolean);
   const last = tokens[tokens.length - 1];
   if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(last)) return last;
   return "";

@@ -223,9 +223,19 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
     return `Òdì ${positive}`;
   }
 
-  if (!Number.isSafeInteger(n)) return digitSequenceToYoruba(n.toString(), mode);
+  if (!Number.isSafeInteger(n)) return digitSequenceToYoruba(plainIntegerString(n), mode);
 
   return toWords(n, mode);
+}
+
+/**
+ * Expand a non-negative integer-valued float to a plain digit string.
+ * Large values stringify in scientific notation ("2.5e+46"), which is not a
+ * digit string — so spell it out fully instead of returning nothing.
+ */
+function plainIntegerString(n: number): string {
+  if (Number.isSafeInteger(n)) return n.toString();
+  return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
 }
 
 /**
@@ -244,7 +254,10 @@ function toWords(n: number, mode: YorubaMode): string {
   const remainder = n % scale.value;
   const head = `${scale.word} ${asMultiplier(count, mode)}`;
   if (remainder === 0) return head;
-  return `${head} àti ${toWords(remainder, mode)}`;
+  // Traditional keeps the vigesimal additive particle "ó lé"; modern joins
+  // place-value groups with the decimal "àti".
+  const join = mode === 'traditional' ? 'ó lé' : 'àti';
+  return `${head} ${join} ${toWords(remainder, mode)}`;
 }
 
 /**
@@ -389,6 +402,9 @@ export function operatorWord(symbol: string): string {
     case '/':
     case '÷':
       return 'pín sí';
+    case '^':
+      // "in n ways/places" — x^n read as "x ní ọ̀nà [n]".
+      return 'ní ọ̀nà';
     case '=':
       return 'dọ́gba';
     default:
@@ -404,7 +420,7 @@ export function expressionToYoruba(expr: string, mode: YorubaMode = 'traditional
   // Tokenise on operators while keeping them.
   const tokens = expr
     .replace(/\s+/g, '')
-    .split(/([+\-−*×/÷])/)
+    .split(/([+\-−*×/÷^])/)
     .filter(Boolean);
 
   return tokens
