@@ -225,14 +225,14 @@ function AppHeader({
       <div className="min-w-0">
         <h1 className="font-serif text-4xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-6xl">
           K
+          à
           <span className="relative inline-block">
             á
             <span className="absolute -right-0.5 top-0 h-2 w-2 rounded-full bg-gold" />
           </span>
-          à
         </h1>
-        <p className="mt-1 text-xs font-semibold text-muted sm:mt-1.5 sm:text-base">
-          Yoruba number &amp; calculator
+        <p className="mt-1.5 text-xs font-semibold text-muted sm:mt-2 sm:text-base">
+          Yorùbá number &amp; calculator
         </p>
       </div>
       <ModeToggle mode={mode} onChange={onModeChange} />
