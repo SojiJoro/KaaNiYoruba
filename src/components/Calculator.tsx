@@ -116,17 +116,35 @@ export function Calculator() {
     window.speechSynthesis.speak(utter);
   }, []);
 
+  const isCalculator = tab === "calculator";
+
   return (
-    <div className="w-full max-w-5xl pb-20 sm:pb-5">
-      <section className="relative overflow-hidden rounded-[1.5rem] border border-border/70 bg-background/90 p-3 shadow-app backdrop-blur sm:rounded-[2.25rem] sm:p-6 lg:p-7">
+    <div
+      className={`w-full ${
+        isCalculator
+          ? "flex h-[100svh] max-w-[430px] flex-col pb-0 sm:h-auto sm:max-w-5xl sm:pb-5"
+          : "max-w-5xl pb-20 sm:pb-5"
+      }`}
+    >
+      <section
+        className={`relative overflow-hidden border border-border/70 bg-background/90 shadow-app backdrop-blur ${
+          isCalculator
+            ? "flex min-h-0 flex-1 flex-col rounded-none p-3 sm:block sm:rounded-[2.25rem] sm:p-6 lg:p-7"
+            : "rounded-[1.5rem] p-3 sm:rounded-[2.25rem] sm:p-6 lg:p-7"
+        }`}
+      >
         <div className="pointer-events-none absolute left-8 top-0 h-px w-1/2 bg-gradient-to-r from-gold/60 to-transparent" />
         <AppHeader mode={mode} onModeChange={setMode} />
 
-        <div className="relative mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
-          <div className="flex min-w-0 flex-col gap-3">
-            <div className="min-w-0">
+        <div
+          className={`relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start ${
+            isCalculator ? "mt-3 min-h-0 flex-1" : "mt-4"
+          }`}
+        >
+          <div className="flex min-w-0 min-h-0 flex-col gap-3">
+            <div className="min-w-0 min-h-0 flex-1">
               {tab === "calculator" && (
-                <div className="flex flex-col gap-3">
+                <div className="flex h-full min-h-0 flex-col gap-3">
                   <Display
                     expression={state.expression}
                     result={previewResult}
@@ -190,7 +208,7 @@ export function Calculator() {
         </div>
       </section>
 
-      <BottomNav activeTab={tab} onChange={setTab} />
+      <BottomNav activeTab={tab} onChange={setTab} compact={isCalculator} />
     </div>
   );
 }
@@ -203,9 +221,9 @@ function AppHeader({
   onModeChange: (mode: YorubaMode) => void;
 }) {
   return (
-    <header className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <header className="relative flex shrink-0 flex-row items-center justify-between gap-3 sm:items-start">
       <div className="min-w-0">
-        <h1 className="font-serif text-5xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-6xl">
+        <h1 className="font-serif text-4xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-6xl">
           K
           <span className="relative inline-block">
             á
@@ -213,7 +231,7 @@ function AppHeader({
           </span>
           à
         </h1>
-        <p className="mt-1.5 text-sm font-semibold text-muted sm:text-base">
+        <p className="mt-1 text-xs font-semibold text-muted sm:mt-1.5 sm:text-base">
           Yoruba number &amp; calculator
         </p>
       </div>
@@ -225,14 +243,20 @@ function AppHeader({
 function BottomNav({
   activeTab,
   onChange,
+  compact,
 }: {
   activeTab: Tab;
   onChange: (tab: Tab) => void;
+  compact: boolean;
 }) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-3 bottom-3 z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.35rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-5 sm:mt-5 sm:max-w-xl sm:rounded-[1.75rem]"
+      className={`z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.35rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-5 sm:mt-5 sm:max-w-xl sm:rounded-[1.75rem] ${
+        compact
+          ? "mt-2 w-full shrink-0"
+          : "fixed inset-x-3 bottom-3"
+      }`}
     >
       {TABS.map((item) => (
         <TabButton
