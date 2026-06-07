@@ -58,59 +58,6 @@ const COUNTING_INSIGHTS = [
   },
 ];
 
-const APP_POLISH_ITEMS = [
-  "Single-screen calculator layout",
-  "Safe-area friendly spacing",
-  "Bottom navigation",
-  "Compact header",
-  "Mode segmented control",
-  "Large tap targets",
-  "Clear visual hierarchy",
-  "Rounded app cards",
-  "Soft elevation shadows",
-  "Consistent icon set",
-  "Immediate input feedback",
-  "Live result preview",
-  "Native keyboard support",
-  "Voice pronunciation action",
-  "Accessible aria labels",
-  "Responsive phone width",
-  "Desktop companion panel",
-  "Persistent calculator tab",
-  "History reuse",
-  "History clearing",
-  "Converter utility",
-  "Learn mode quiz",
-  "Score tracking",
-  "Research notes",
-  "External source links",
-  "Traditional mode",
-  "Modern mode",
-  "Yorùbá subtitles on keys",
-  "Cultural color palette",
-  "Textile-inspired background",
-  "Premium display panel",
-  "Operator color contrast",
-  "Error state styling",
-  "Hover states",
-  "Pressed states",
-  "Focus rings",
-  "Scrollable content sections",
-  "Truncated long labels",
-  "Word-wrap display",
-  "Finite history cap",
-  "App-like max width",
-  "No mobile horizontal scroll",
-  "Full-height mobile view",
-  "Sticky desktop nav",
-  "Fixed utility nav",
-  "Reusable guide cards",
-  "Deterministic quiz choices",
-  "Readable source badges",
-  "Warm empty states",
-  "Production build readiness",
-];
-
 export function LearningMode({ mode, onSpeak }: LearningModeProps) {
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -264,35 +211,6 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="rounded-3xl border border-border bg-background/75 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">
-              App checklist
-            </p>
-            <h3 className="mt-1 font-serif text-2xl text-deep-green">
-              50 polish details
-            </h3>
-          </div>
-          <span className="rounded-full bg-pale-green px-3 py-1 text-xs font-bold text-primary-green">
-            {APP_POLISH_ITEMS.length} items
-          </span>
-        </div>
-        <ol className="mt-4 grid gap-2 sm:grid-cols-2">
-          {APP_POLISH_ITEMS.map((item, idx) => (
-            <li
-              key={item}
-              className="flex items-center gap-2 rounded-2xl border border-border bg-warm-cream px-3 py-2 text-sm text-muted shadow-button"
-            >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-green text-[11px] font-bold text-warm-cream">
-                {idx + 1}
-              </span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ol>
       </section>
     </div>
   );

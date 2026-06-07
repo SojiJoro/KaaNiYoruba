@@ -39,36 +39,19 @@ const LAYOUT: LayoutCell[] = [
 
 export function Keypad({ mode, onKey }: KeypadProps) {
   return (
-    <div className="flex w-full flex-col gap-2.5 sm:gap-3.5">
-      <button
-        type="button"
-        onClick={() => onKey("^")}
-        aria-label="Power, ní ọ̀nà"
-        title="ní ọ̀nà — raise to a power"
-        className="flex min-h-[2.85rem] items-center justify-center gap-2 rounded-[1.1rem] border border-border bg-pale-green/55 px-3 text-text-dark shadow-button transition-all hover:-translate-y-0.5 hover:bg-soft-green/20 active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-background sm:min-h-[3.1rem]"
-      >
-        <span className="text-lg font-bold leading-none">
-          x<sup className="text-[0.7em]">n</sup>
-        </span>
-        <span className="text-xs font-semibold text-primary-green">
-          ní ọ̀nà · power
-        </span>
-      </button>
-
-      <section
-        aria-label="Calculator keypad"
-        className="grid w-full grid-cols-4 gap-2.5 sm:gap-3.5"
-      >
-        {LAYOUT.map((cell) => (
-          <KeyButton
-            key={cell.key}
-            cell={cell}
-            mode={mode}
-            onClick={() => onKey(cell.key)}
-          />
-        ))}
-      </section>
-    </div>
+    <section
+      aria-label="Calculator keypad"
+      className="grid w-full grid-cols-4 gap-2.5 sm:gap-3.5"
+    >
+      {LAYOUT.map((cell) => (
+        <KeyButton
+          key={cell.key}
+          cell={cell}
+          mode={mode}
+          onClick={() => onKey(cell.key)}
+        />
+      ))}
+    </section>
   );
 }
 

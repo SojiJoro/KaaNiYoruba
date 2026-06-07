@@ -68,7 +68,6 @@ export function Calculator() {
         "*": "×",
         "/": "÷",
         "-": "−",
-        "^": "^",
         Enter: "=",
         "=": "=",
         Backspace: "⌫",
