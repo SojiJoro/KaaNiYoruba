@@ -113,6 +113,16 @@ Then connect the repo to Vercel — leave Root Directory as the default (`.`) an
 
 ---
 
-## 4. Native speaker review needed
+## 4. Counting logic (source of truth)
+
+The full, researched counting system — vigesimal tens, hundreds, thousands,
+`ọkẹ́` (20,000), the add/subtract rule, the corrected hundreds combiner, and the
+modern decimal layer — lives in **[`docs/yoruba-number-logic.md`](./docs/yoruba-number-logic.md)**.
+Read it before touching the engine; update it when you change the engine.
+
+The product backlog (50 concrete steps toward a shipped app) is in
+**[`docs/app-roadmap-50.md`](./docs/app-roadmap-50.md)**.
+
+## 5. Native speaker review needed
 
 The traditional Yoruba number engine is well-attested for 0–99. For 100–1000 the published sources diverge on combining forms (`lé` vs `ó` linker, vowel elision at hundred boundaries). Entries flagged with `// REVIEW:` in `src/lib/yorubaNumbers.ts` should be verified by a fluent speaker before shipping.

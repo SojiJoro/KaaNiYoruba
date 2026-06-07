@@ -10,6 +10,107 @@ interface LearningModeProps {
 
 const RANGE_END = 20;
 
+const COUNTING_INSIGHTS = [
+  {
+    title: "Base-20 backbone",
+    yoruba: "Ogún ni ìpìlẹ̀",
+    detail:
+      "Traditional Yorùbá numerals are commonly described as vigesimal, so round numbers lean on scores: 40 is two twenties, 60 is three twenties, and 80 is four twenties.",
+    example: "40 → Ogójì • 60 → Ọgọ́ta • 80 → Ọgọ́rin",
+    source: "Omniglot Yoruba numbers",
+    sourceUrl: "https://www.omniglot.com/language/numbers/yoruba.htm",
+  },
+  {
+    title: "Arithmetic builds words",
+    yoruba: "Ìṣirò wà nínú ọ̀rọ̀",
+    detail:
+      "Recent morphology research frames Yorùbá number names as form-meaning constructions that encode arithmetic operations such as addition, subtraction, and multiplication.",
+    example: "21 adds to 20 • 35 subtracts from 40 • 200 groups scores",
+    source: "A Construction Morphology Approach to Yoruba Numerals",
+    sourceUrl: "https://constructions.journals.hhu.de/article/view/549",
+  },
+  {
+    title: "Count back near targets",
+    yoruba: "Dín = count back",
+    detail:
+      "Many forms before the next ten or score use subtractive phrasing, so the app teaches 35 as five less than 40 and 75 as five less than 80.",
+    example: "35 → Márùndínlógójì • 75 → Márùndínlọ́gọ́rin",
+    source: "Linguistic analysis of the structure of Yoruba numerals",
+    sourceUrl: "https://www.tandfonline.com/doi/abs/10.1080/10228195.2013.857362",
+  },
+  {
+    title: "Modern decimal help",
+    yoruba: "Ọ̀nà òde-òní",
+    detail:
+      "Some modern teaching proposals simplify hard subtractive forms with more decimal, additive phrasing. That is why Káà keeps both traditional and modern modes visible.",
+    example: "75 traditional → Márùndínlọ́gọ́rin • modern → Àádọ́rin àti Márùn-ún",
+    source: "Proposal for a Yoruba decimal counting system",
+    sourceUrl: "https://repository.ui.edu.ng/items/6164afe0-3ef5-4e30-9fb1-c303a6e783b6",
+  },
+  {
+    title: "App fallback for every digit",
+    yoruba: "Ka díjítì kọ̀ọ̀kan",
+    detail:
+      "Long IDs, phone numbers, leading zeros, and decimals are not always ordinary counting numbers, so Káà can spell each digit instead of showing raw Arabic numerals.",
+    example: "007 → Òdo Òdo Méje • 12.05 → Méjìlá Ẹsẹ Òdo Márùn-ún",
+    source: "Káà number engine",
+    sourceUrl: "https://www.omniglot.com/language/numbers/yoruba.htm",
+  },
+];
+
+const APP_POLISH_ITEMS = [
+  "Single-screen calculator layout",
+  "Safe-area friendly spacing",
+  "Bottom navigation",
+  "Compact header",
+  "Mode segmented control",
+  "Large tap targets",
+  "Clear visual hierarchy",
+  "Rounded app cards",
+  "Soft elevation shadows",
+  "Consistent icon set",
+  "Immediate input feedback",
+  "Live result preview",
+  "Native keyboard support",
+  "Voice pronunciation action",
+  "Accessible aria labels",
+  "Responsive phone width",
+  "Desktop companion panel",
+  "Persistent calculator tab",
+  "History reuse",
+  "History clearing",
+  "Converter utility",
+  "Learn mode quiz",
+  "Score tracking",
+  "Research notes",
+  "External source links",
+  "Traditional mode",
+  "Modern mode",
+  "Yorùbá subtitles on keys",
+  "Cultural color palette",
+  "Textile-inspired background",
+  "Premium display panel",
+  "Operator color contrast",
+  "Error state styling",
+  "Hover states",
+  "Pressed states",
+  "Focus rings",
+  "Scrollable content sections",
+  "Truncated long labels",
+  "Word-wrap display",
+  "Finite history cap",
+  "App-like max width",
+  "No mobile horizontal scroll",
+  "Full-height mobile view",
+  "Sticky desktop nav",
+  "Fixed utility nav",
+  "Reusable guide cards",
+  "Deterministic quiz choices",
+  "Readable source badges",
+  "Warm empty states",
+  "Production build readiness",
+];
+
 export function LearningMode({ mode, onSpeak }: LearningModeProps) {
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -115,6 +216,84 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
           })}
         </div>
       </div>
+
+      <section className="rounded-3xl border border-border bg-background/75 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">
+              Research notes
+            </p>
+            <h3 className="mt-1 font-serif text-2xl text-deep-green">
+              Yorùbá number counting
+            </h3>
+          </div>
+          <span className="rounded-full bg-pale-green px-3 py-1 text-xs font-bold text-primary-green">
+            20-base
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {COUNTING_INSIGHTS.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-border bg-warm-cream p-4 shadow-button"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h4 className="font-serif text-lg font-semibold text-deep-green">
+                  {item.title}
+                </h4>
+                <span className="text-xs font-bold text-primary-green">
+                  {item.yoruba}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-muted">{item.detail}</p>
+              <p className="mt-3 rounded-2xl bg-pale-green/70 px-3 py-2 font-serif text-sm text-deep-green">
+                {item.example}
+              </p>
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted/80">
+                Source:{" "}
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary-green underline-offset-2 hover:underline"
+                >
+                  {item.source}
+                </a>
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-border bg-background/75 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">
+              App checklist
+            </p>
+            <h3 className="mt-1 font-serif text-2xl text-deep-green">
+              50 polish details
+            </h3>
+          </div>
+          <span className="rounded-full bg-pale-green px-3 py-1 text-xs font-bold text-primary-green">
+            {APP_POLISH_ITEMS.length} items
+          </span>
+        </div>
+        <ol className="mt-4 grid gap-2 sm:grid-cols-2">
+          {APP_POLISH_ITEMS.map((item, idx) => (
+            <li
+              key={item}
+              className="flex items-center gap-2 rounded-2xl border border-border bg-warm-cream px-3 py-2 text-sm text-muted shadow-button"
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-green text-[11px] font-bold text-warm-cream">
+                {idx + 1}
+              </span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
     </div>
   );
 }

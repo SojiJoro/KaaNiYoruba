@@ -24,10 +24,10 @@ import { ModeToggle } from "./ModeToggle";
 type Tab = "calculator" | "history" | "converter" | "learn";
 
 const TABS: Array<{ id: Tab; label: string; icon: string }> = [
-  { id: "calculator", label: "Kálkù", icon: "⌘" },
+  { id: "calculator", label: "Kálkù", icon: "▦" },
   { id: "history", label: "Ìtàn", icon: "◷" },
-  { id: "converter", label: "Yípadà", icon: "⇄" },
-  { id: "learn", label: "Kọ́ ẹ̀kọ́", icon: "✎" },
+  { id: "converter", label: "Yípadà", icon: "▱" },
+  { id: "learn", label: "Kọ́ ẹ̀kọ́", icon: "◈" },
 ];
 
 export function Calculator() {
@@ -116,17 +116,35 @@ export function Calculator() {
     window.speechSynthesis.speak(utter);
   }, []);
 
+  const isCalculator = tab === "calculator";
+
   return (
-    <div className="w-full max-w-5xl pb-24 sm:pb-6">
-      <section className="relative overflow-hidden rounded-[1.75rem] border border-border/80 bg-background/92 p-3 shadow-app backdrop-blur sm:rounded-[2.25rem] sm:p-7 lg:p-8">
+    <div
+      className={`w-full ${
+        isCalculator
+          ? "flex h-[100svh] max-w-[430px] flex-col pb-0 sm:h-auto sm:max-w-5xl sm:pb-5"
+          : "max-w-5xl pb-20 sm:pb-5"
+      }`}
+    >
+      <section
+        className={`relative overflow-hidden border border-border/70 bg-background/90 shadow-app backdrop-blur ${
+          isCalculator
+            ? "flex min-h-0 flex-1 flex-col rounded-none p-3 sm:block sm:rounded-[2.25rem] sm:p-6 lg:p-7"
+            : "rounded-[1.5rem] p-3 sm:rounded-[2.25rem] sm:p-6 lg:p-7"
+        }`}
+      >
         <div className="pointer-events-none absolute left-8 top-0 h-px w-1/2 bg-gradient-to-r from-gold/60 to-transparent" />
         <AppHeader mode={mode} onModeChange={setMode} />
 
-        <div className="relative mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
-          <div className="flex min-w-0 flex-col gap-5">
-            <div className="min-w-0">
+        <div
+          className={`relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start ${
+            isCalculator ? "mt-3 min-h-0 flex-1" : "mt-4"
+          }`}
+        >
+          <div className="flex min-w-0 min-h-0 flex-col gap-3">
+            <div className="min-w-0 min-h-0 flex-1">
               {tab === "calculator" && (
-                <div className="flex flex-col gap-5">
+                <div className="flex h-full min-h-0 flex-col gap-3">
                   <Display
                     expression={state.expression}
                     result={previewResult}
@@ -158,7 +176,7 @@ export function Calculator() {
             </div>
           </div>
 
-          <aside className="hidden rounded-[1.75rem] border border-border bg-warm-cream/75 p-5 shadow-card lg:flex lg:flex-col lg:gap-4">
+          <aside className="hidden rounded-[1.75rem] border border-border bg-warm-cream/80 p-5 shadow-card xl:flex xl:flex-col xl:gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-gold">
                 Live guide
@@ -190,7 +208,7 @@ export function Calculator() {
         </div>
       </section>
 
-      <BottomNav activeTab={tab} onChange={setTab} />
+      <BottomNav activeTab={tab} onChange={setTab} compact={isCalculator} />
     </div>
   );
 }
@@ -203,9 +221,9 @@ function AppHeader({
   onModeChange: (mode: YorubaMode) => void;
 }) {
   return (
-    <header className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <header className="relative flex shrink-0 flex-row items-center justify-between gap-3 sm:items-start">
       <div className="min-w-0">
-        <h1 className="font-serif text-5xl font-black leading-none tracking-[-0.04em] text-deep-green sm:text-7xl">
+        <h1 className="font-serif text-4xl font-black leading-none tracking-[-0.04em] text-primary-green sm:text-6xl">
           K
           <span className="relative inline-block">
             á
@@ -213,7 +231,7 @@ function AppHeader({
           </span>
           à
         </h1>
-        <p className="mt-2 text-base font-semibold text-muted sm:text-lg">
+        <p className="mt-1 text-xs font-semibold text-muted sm:mt-1.5 sm:text-base">
           Yoruba number &amp; calculator
         </p>
       </div>
@@ -225,14 +243,20 @@ function AppHeader({
 function BottomNav({
   activeTab,
   onChange,
+  compact,
 }: {
   activeTab: Tab;
   onChange: (tab: Tab) => void;
+  compact: boolean;
 }) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-3 bottom-3 z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.5rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-6 sm:mt-6 sm:max-w-xl sm:rounded-full"
+      className={`z-30 mx-auto grid max-w-md grid-cols-4 gap-1 rounded-[1.35rem] border border-border bg-warm-cream/95 p-1.5 shadow-floating backdrop-blur sm:sticky sm:bottom-5 sm:mt-5 sm:max-w-xl sm:rounded-[1.75rem] ${
+        compact
+          ? "mt-2 w-full shrink-0"
+          : "fixed inset-x-3 bottom-3"
+      }`}
     >
       {TABS.map((item) => (
         <TabButton
@@ -262,9 +286,9 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group flex min-h-14 flex-col items-center justify-center rounded-full px-2 text-center transition-all ${
+      className={`group flex min-h-12 flex-col items-center justify-center rounded-full px-2 text-center transition-all ${
         active
-          ? "bg-pale-green text-deep-green"
+          ? "bg-pale-green text-primary-green shadow-sm"
           : "text-muted hover:bg-pale-green/60 hover:text-deep-green"
       }`}
     >
