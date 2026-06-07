@@ -254,7 +254,10 @@ function toWords(n: number, mode: YorubaMode): string {
   const remainder = n % scale.value;
   const head = `${scale.word} ${asMultiplier(count, mode)}`;
   if (remainder === 0) return head;
-  return `${head} àti ${toWords(remainder, mode)}`;
+  // Traditional keeps the vigesimal additive particle "ó lé"; modern joins
+  // place-value groups with the decimal "àti".
+  const join = mode === 'traditional' ? 'ó lé' : 'àti';
+  return `${head} ${join} ${toWords(remainder, mode)}`;
 }
 
 /**

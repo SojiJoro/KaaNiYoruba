@@ -64,12 +64,12 @@ const CASES: Case[] = [
   { n: 555, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Márùndínlọ́gọ́ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Márùn-ún' },
   // Thousands and beyond — generated, never digit-spelled
   { n: 1000, trad: 'Ẹgbẹ̀rún kan', modern: 'Ẹgbẹ̀rún kan' },
-  { n: 1001, trad: 'Ẹgbẹ̀rún kan àti Ọ̀kan', modern: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
+  { n: 1001, trad: 'Ẹgbẹ̀rún kan ó lé Ọ̀kan', modern: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
   { n: 558, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Méjìdínlọ́gọ́ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Mẹ́jọ' },
-  { n: 2232, trad: 'Ẹgbẹ̀rún méjì àti Igba ó lé Méjìlélọ́gbọ̀n', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
-  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Mẹ́rìnléláàádọ́rùn', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
+  { n: 2232, trad: 'Ẹgbẹ̀rún méjì ó lé Igba ó lé Méjìlélọ́gbọ̀n', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
+  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta ó lé Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Mẹ́rìnléláàádọ́rùn', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
   { n: 1_000_000, trad: 'Mílíọ̀nù kan', modern: 'Mílíọ̀nù kan' },
-  { n: 1_258_222, trad: 'Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún' },
+  { n: 1_258_222, trad: 'Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún' },
 ];
 
 let pass = 0;
@@ -108,7 +108,7 @@ try {
   assert.equal(numericInputToYoruba('12345678901234567890'), 'Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo');
   assert.equal(numericInputToYoruba('12.05'), 'Méjìlá Ẹsẹ Òdo Márùn-ún');
   assert.equal(toYoruba(1_000_000), 'Mílíọ̀nù kan');
-  assert.equal(numericInputToYoruba('1258222'), 'Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún');
+  assert.equal(numericInputToYoruba('1258222'), 'Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún');
   assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo Ẹsẹ Ọ̀kan');
   // Beyond MAX_SAFE_INTEGER: must still produce words, not blank (no sci-notation).
   assert.equal(toYoruba(1e21).startsWith('Ọ̀kan'), true);

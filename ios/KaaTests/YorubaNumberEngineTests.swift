@@ -65,12 +65,12 @@ final class YorubaNumberEngineTests: XCTestCase {
     func test_thousands_and_beyond() {
         // Generated, never digit-spelled
         XCTAssertEqual(YorubaNumberEngine.toYoruba(1000), "Ẹgbẹ̀rún kan")
-        XCTAssertEqual(YorubaNumberEngine.toYoruba(1001), "Ẹgbẹ̀rún kan àti Ọ̀kan")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(1001), "Ẹgbẹ̀rún kan ó lé Ọ̀kan")
         XCTAssertEqual(YorubaNumberEngine.toYoruba(2000), "Ẹgbẹ̀rún méjì")
         XCTAssertEqual(YorubaNumberEngine.toYoruba(1_000_000), "Mílíọ̀nù kan")
         XCTAssertEqual(
             YorubaNumberEngine.toYoruba(1_258_222),
-            "Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún"
+            "Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún"
         )
     }
 

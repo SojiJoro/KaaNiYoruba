@@ -57,9 +57,10 @@ For 100–999 non-multiples (e.g. 105, 250, 555):
 - **Traditional:** base first, `[hundred] ó lé [remainder]` — e.g. 105 → `Ọgọ́rùn-ún ó lé Márùn-ún`, 555 → `Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Márùndínlọ́gọ́ta`. (This corrected the earlier remainder-first `… ó lé ní …` form.)
 - **Modern:** `[hundred] àti [remainder]` — e.g. 105 → `Ọgọ́rùn-ún àti Márùn-ún`.
 
-For 1,000 and above, the engine peels off the largest scale word, names the multiplier (`kan` for 1, otherwise the lower-cased number word), and recurses on the remainder, joining groups with `àti`:
+For 1,000 and above, the engine peels off the largest scale word, names the multiplier (`kan` for 1, otherwise the lower-cased number word), and recurses on the remainder. The join particle is **mode-dependent**: traditional keeps the vigesimal additive `ó lé` (consistent with the hundreds), modern uses the decimal `àti`:
 
-> 1,258,222 → `Mílíọ̀nù kan àti Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta àti Igba ó lé Méjìlélógún`
+> 1,024 (trad) → `Ẹgbẹ̀rún kan ó lé Mẹ́rìnlélógún` &nbsp;·&nbsp; (modern) → `Ẹgbẹ̀rún kan àti Mẹ́rìnlélógún`
+> 1,258,222 (trad) → `Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún`
 
 Exact vowel elision at the joins (`ó lé` vs `ọ́ lé`) is dialect-variable; see `docs/yoruba-number-logic.md`.
 
