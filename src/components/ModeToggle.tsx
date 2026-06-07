@@ -12,7 +12,7 @@ export function ModeToggle({ mode, onChange }: ModeToggleProps) {
     <div
       role="radiogroup"
       aria-label="Yoruba number mode"
-      className="inline-flex w-full items-center gap-1 rounded-[1.35rem] border border-border bg-warm-cream p-1 shadow-card sm:w-auto"
+      className="inline-flex max-w-[13rem] shrink-0 items-center gap-1 rounded-[1.1rem] border border-border bg-warm-cream p-1 shadow-card sm:max-w-none sm:rounded-[1.35rem]"
     >
       <SegmentButton
         label="Traditional"
@@ -47,14 +47,14 @@ function SegmentButton({
       role="radio"
       aria-checked={active}
       onClick={onClick}
-      className={`flex min-h-11 flex-1 flex-col items-center justify-center rounded-[1.1rem] px-3 py-2 text-xs leading-tight transition-all sm:min-w-28 ${
+      className={`flex min-h-10 flex-1 flex-col items-center justify-center rounded-[0.9rem] px-2 py-1.5 text-[10px] leading-tight transition-all sm:min-h-11 sm:min-w-28 sm:rounded-[1.1rem] sm:px-3 sm:py-2 sm:text-xs ${
         active
           ? "bg-primary-green text-warm-cream shadow-md shadow-primary-green/25"
           : "text-muted hover:bg-pale-green hover:text-deep-green"
       }`}
     >
       <span className="font-bold">{label}</span>
-      <span className="mt-0.5 font-serif text-[11px] opacity-80">
+      <span className="mt-0.5 font-serif text-[9px] opacity-80 sm:text-[11px]">
         {sublabel}
       </span>
     </button>

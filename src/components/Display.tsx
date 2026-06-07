@@ -27,14 +27,14 @@ export function Display({
   const displayExpression = formatExpression(expression);
 
   return (
-    <section className="relative isolate flex min-h-[164px] flex-col justify-between overflow-hidden rounded-[1.45rem] border border-border bg-warm-cream px-4 py-4 shadow-premium sm:min-h-[210px] sm:rounded-[2rem] sm:px-6 sm:py-5">
+    <section className="relative isolate flex min-h-[0] flex-[0.9] flex-col justify-between overflow-hidden rounded-[1.45rem] border border-border bg-warm-cream px-4 py-4 shadow-premium sm:min-h-[210px] sm:flex-none sm:rounded-[2rem] sm:px-6 sm:py-5">
       <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
       <div className="pointer-events-none absolute -right-16 -top-20 h-36 w-36 rounded-full bg-soft-green/10" />
 
       <div className="relative flex items-start justify-between gap-3">
         <p
           aria-label="Expression in Arabic numerals"
-          className="min-h-6 min-w-0 flex-1 break-words font-mono text-base font-semibold tracking-tight text-muted sm:text-lg"
+          className="min-h-5 min-w-0 flex-1 break-words font-mono text-sm font-semibold tracking-tight text-muted sm:min-h-6 sm:text-lg"
         >
           {displayExpression || " "}
         </p>
@@ -43,20 +43,20 @@ export function Display({
           type="button"
           onClick={() => onSpeak?.(headlineYoruba || "")}
           aria-label="Gbọ́ pípè"
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-primary-green text-warm-cream shadow-button transition hover:-translate-y-0.5 hover:bg-deep-green focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-warm-cream sm:h-12 sm:w-12"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-primary-green text-warm-cream shadow-button transition hover:-translate-y-0.5 hover:bg-deep-green focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-warm-cream sm:h-12 sm:w-12"
           title="Gbọ́ pípè (Hear pronunciation)"
         >
           <SpeakerIcon />
         </button>
       </div>
 
-      <div className="my-3 h-px w-full bg-border sm:my-4" />
+      <div className="my-2 h-px w-full bg-border sm:my-4" />
 
       <div className="relative flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2
             aria-live="polite"
-            className={`break-words font-serif text-[clamp(1.65rem,8vw,2.55rem)] font-black leading-[1.02] tracking-tight [overflow-wrap:anywhere] sm:text-[clamp(2.25rem,5vw,4rem)] ${
+            className={`break-words font-serif text-[clamp(1.35rem,7vw,2.35rem)] font-black leading-[1.02] tracking-tight [overflow-wrap:anywhere] sm:text-[clamp(2.25rem,5vw,4rem)] ${
               error ? "text-error" : "text-deep-green"
             }`}
           >
@@ -65,7 +65,7 @@ export function Display({
         </div>
         <div
           aria-label="Result in Arabic numerals"
-          className="max-w-[35%] shrink-0 overflow-hidden text-ellipsis rounded-2xl border border-border bg-background/80 px-3 py-2 text-right font-mono text-2xl font-bold text-muted shadow-sm sm:text-4xl"
+          className="max-w-[35%] shrink-0 overflow-hidden text-ellipsis rounded-2xl border border-border bg-background/80 px-2 py-1.5 text-right font-mono text-xl font-bold text-muted shadow-sm sm:px-3 sm:py-2 sm:text-4xl"
         >
           {headlineArabic || " "}
         </div>
