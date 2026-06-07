@@ -223,19 +223,29 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
     return `Òdì ${positive}`;
   }
 
-  if (!Number.isSafeInteger(n)) return digitSequenceToYoruba(plainIntegerString(n), mode);
+  // Beyond the exact-integer range a float keeps only ~16 significant digits;
+  // spelling it digit-by-digit would invent a tail of zeros ("Òdo Òdo …").
+  // Read it as scientific notation instead, the way a calculator overflows.
+  if (!Number.isSafeInteger(n)) return scientificToYoruba(n, mode);
 
   return toWords(n, mode);
 }
 
 /**
- * Expand a non-negative integer-valued float to a plain digit string.
- * Large values stringify in scientific notation ("2.5e+46"), which is not a
- * digit string — so spell it out fully instead of returning nothing.
+ * Render a value too large (or small) to name exactly as Yorùbá scientific
+ * notation: "[mantissa] ìgbà mẹ́wàá ní ọ̀nà [exponent]" — literally
+ * "mantissa times ten to the power exponent".
  */
-function plainIntegerString(n: number): string {
-  if (Number.isSafeInteger(n)) return n.toString();
-  return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+function scientificToYoruba(n: number, mode: YorubaMode): string {
+  const [mantissaRaw, expRaw] = n.toExponential(6).split('e');
+  const mantissa = mantissaRaw.includes('.')
+    ? mantissaRaw.replace(/0+$/, '').replace(/\.$/, '')
+    : mantissaRaw;
+  const exp = Number(expRaw);
+  const mantissaWords = numericInputToYoruba(mantissa, mode);
+  const expWords = toYoruba(Math.abs(exp), mode);
+  const expPhrase = exp < 0 ? `Òdì ${expWords}` : expWords;
+  return `${mantissaWords} ìgbà mẹ́wàá ní ọ̀nà ${expPhrase}`;
 }
 
 /**
