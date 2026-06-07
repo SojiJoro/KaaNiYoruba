@@ -1,4 +1,4 @@
-// Káà — App entry
+// Kàá — App entry
 
 import SwiftUI
 

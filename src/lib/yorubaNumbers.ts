@@ -1,4 +1,4 @@
-// Káà — Yoruba Number Engine
+// Kàá — Yoruba Number Engine
 // ---------------------------------------------------------------------------
 // Converts numbers into Yoruba word forms and can spell arbitrary digit strings.
 // Two modes are supported:

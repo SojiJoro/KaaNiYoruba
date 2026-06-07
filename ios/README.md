@@ -1,4 +1,4 @@
-# Káà — iOS
+# Kàá — iOS
 
 SwiftUI app for iPhone, iOS 16+. Shares the Yoruba number engine semantics with the web app, hand-ported to Swift.
 
@@ -40,7 +40,7 @@ The `ios/Kaa/` folder ships as plain Swift source — not a checked-in `.xcodepr
 
 ### Capabilities & assets
 
-- **Display Name:** `Káà`. Set in Target → General → Identity → Display Name. iOS will render the diacritic correctly.
+- **Display Name:** `Kàá`. Set in Target → General → Identity → Display Name. iOS will render the diacritic correctly.
 - **Status bar:** light content in dark mode (handled automatically by SwiftUI).
 - **App icon:** drop a 1024×1024 master into the `AppIcon` image set inside `Assets.xcassets`. The recommended icon concept is a deep brown `2` overlaid by a soft moss `Méjì` wordmark on a warm off-white field.
 - **Voice for audio button:** the placeholder uses `AVSpeechSynthesisVoice(language: "yo-NG")` if present, otherwise falls back to `en-NG`. iOS does not currently ship a native Yoruba voice on all SKUs — replace with bundled recordings for production quality (drop `.m4a` files into a `Sounds` folder and update `speak()` in `CalculatorViewModel.swift`).

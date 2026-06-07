@@ -1,4 +1,4 @@
-// Káà — Yoruba number engine test cases
+// Kàá — Yoruba number engine test cases
 // ---------------------------------------------------------------------------
 // Runnable as a plain Node script (`node --import tsx src/lib/yorubaNumbers.test.ts`)
 // or under any test runner that recognises `assert`-based files. The shape is
@@ -119,5 +119,5 @@ try {
   console.error(' ✗', (e as Error).message);
 }
 
-console.log(`Káà tests — ${pass} passed, ${fail} failed`);
+console.log(`Kàá tests — ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

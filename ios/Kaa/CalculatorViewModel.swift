@@ -1,4 +1,4 @@
-// Káà — Calculator view-model
+// Kàá — Calculator view-model
 // ---------------------------------------------------------------------------
 // Mirrors src/lib/calculator.ts (in the web app at the repo root). Owns the
 // expression string, evaluated

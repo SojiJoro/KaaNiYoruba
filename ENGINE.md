@@ -7,7 +7,7 @@
 > *implementation*; that file describes what the implementation should be.
 > See also the product backlog in [`docs/app-roadmap-50.md`](./docs/app-roadmap-50.md).
 
-This document explains how Káà converts an Arabic integer into a Yoruba word. The same algorithm is implemented twice — once in TypeScript (`src/lib/yorubaNumbers.ts`) and once in Swift (`ios/Kaa/YorubaNumberEngine.swift`) — and both pass an identical test corpus.
+This document explains how Kàá converts an Arabic integer into a Yoruba word. The same algorithm is implemented twice — once in TypeScript (`src/lib/yorubaNumbers.ts`) and once in Swift (`ios/Kaa/YorubaNumberEngine.swift`) — and both pass an identical test corpus.
 
 ## Why this isn't a simple lookup
 

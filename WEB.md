@@ -1,4 +1,4 @@
-# Káà — Web
+# Kàá — Web
 
 Next.js 14 (App Router) + TypeScript + Tailwind. Lives at the repo root so Vercel auto-detects it as a Next.js project with zero configuration.
 

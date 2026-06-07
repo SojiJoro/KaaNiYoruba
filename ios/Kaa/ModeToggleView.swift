@@ -1,4 +1,4 @@
-// Káà — Traditional / Modern mode segment control
+// Kàá — Traditional / Modern mode segment control
 
 import SwiftUI
 

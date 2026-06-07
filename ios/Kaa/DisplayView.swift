@@ -1,4 +1,4 @@
-// Káà — Display view
+// Kàá — Display view
 // ---------------------------------------------------------------------------
 // Renders the current expression (Arabic + Yoruba) plus a headline Yoruba
 // result and a tiny Arabic numeral right-aligned.

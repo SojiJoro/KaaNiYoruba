@@ -1,6 +1,6 @@
-# Káà — Yoruba Number & Calculator App
+# Kàá — Yoruba Number & Calculator App
 
-A calculator that teaches and preserves Yoruba counting logic. Káà is not a translation of a calculator — it is a Yoruba-first numeric experience. Every digit, expression, and result is rendered in proper Yoruba with diacritics intact, alongside small Arabic numerals for reference.
+A calculator that teaches and preserves Yoruba counting logic. Kàá is not a translation of a calculator — it is a Yoruba-first numeric experience. Every digit, expression, and result is rendered in proper Yoruba with diacritics intact, alongside small Arabic numerals for reference.
 
 This repository contains two implementations sharing the same number engine logic:
 
@@ -13,7 +13,7 @@ This repository contains two implementations sharing the same number engine logi
 
 ### 1.1 Core concept
 
-Káà ("Káà" meaning "house/room" — a cultural home for numbers) is a calculator that:
+Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calculator that:
 
 1. Renders every tapped number with its Yoruba word directly beneath it.
 2. Renders every operator with its Yoruba word (`pẹ̀lú`, `yọ`, `ìgbà`, `pín sí`).
@@ -60,7 +60,7 @@ Káà ("Káà" meaning "house/room" — a cultural home for numbers) is a calcul
 
 ```
 ┌──────────────────────────────────────┐
-│  Káà            ●Trad ○Modern  🎧    │ ← top bar: mode toggle + audio
+│  Kàá            ●Trad ○Modern  🎧    │ ← top bar: mode toggle + audio
 ├──────────────────────────────────────┤
 │                                      │
 │   2 + 2                              │ ← expression line (Arabic, small)

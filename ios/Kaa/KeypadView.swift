@@ -1,4 +1,4 @@
-// Káà — Keypad
+// Kàá — Keypad
 // ---------------------------------------------------------------------------
 // 4-column grid of large, accessible calculator buttons. Uses SwiftUI Grid
 // (iOS 16+) so the wide "0" key can claim two columns natively.

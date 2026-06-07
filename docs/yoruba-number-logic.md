@@ -1,6 +1,6 @@
 # Yorùbá Number Logic — Memory & Source of Truth
 
-> **Status:** Canonical reference for Káà's number engine.
+> **Status:** Canonical reference for Kàá's number engine.
 > This file is the *memory* of the project: the place where the counting logic
 > is researched, written down, and kept. Before changing
 > `src/lib/yorubaNumbers.ts` or `ios/Kaa/YorubaNumberEngine.swift`, read this
@@ -242,7 +242,7 @@ parts with **`àti`** ("and"):
 1,234 Ẹgbẹ̀rún (kan) àti Igba àti Mẹ́rìnlélọ́gbọ̀n
 ```
 
-This is why Káà ships **two modes**:
+This is why Kàá ships **two modes**:
 
 * **Traditional** — vigesimal + subtractive (`§7`, `§8`); the cultural system.
 * **Modern** — decimal-additive with `àti`; how most people read big numbers

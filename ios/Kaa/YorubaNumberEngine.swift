@@ -1,4 +1,4 @@
-// Káà — Yoruba Number Engine (Swift port)
+// Kàá — Yoruba Number Engine (Swift port)
 // ---------------------------------------------------------------------------
 // Identical semantics to src/lib/yorubaNumbers.ts (web app, repo root).
 // Hand-verified 0–99 in
