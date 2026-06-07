@@ -223,9 +223,19 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
     return `Òdì ${positive}`;
   }
 
-  if (!Number.isSafeInteger(n)) return digitSequenceToYoruba(n.toString(), mode);
+  if (!Number.isSafeInteger(n)) return digitSequenceToYoruba(plainIntegerString(n), mode);
 
   return toWords(n, mode);
+}
+
+/**
+ * Expand a non-negative integer-valued float to a plain digit string.
+ * Large values stringify in scientific notation ("2.5e+46"), which is not a
+ * digit string — so spell it out fully instead of returning nothing.
+ */
+function plainIntegerString(n: number): string {
+  if (Number.isSafeInteger(n)) return n.toString();
+  return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
 }
 
 /**

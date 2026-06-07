@@ -225,7 +225,11 @@ function evalRPN(rpn: Token[]): number {
 
 export function formatNumber(n: number): string {
   if (!Number.isFinite(n)) return '—';
-  if (Number.isInteger(n)) return n.toString();
+  // Use plain (non-scientific) notation so very large integers stay readable
+  // and line up with the spelled-out Yoruba headline.
+  if (Number.isInteger(n)) {
+    return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+  }
   // Trim trailing zeros and cap to 6 decimal places.
   return parseFloat(n.toFixed(6)).toString();
 }
