@@ -62,15 +62,6 @@ struct ConverterView: View {
                         .minimumScaleFactor(0.5)
                 }
                 Spacer()
-                Button { vm.speak(yoruba) } label: {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(KaaTheme.moss)
-                        .padding(12)
-                        .background(KaaTheme.moss.opacity(0.18))
-                        .clipShape(Circle())
-                }
-                .accessibilityLabel("Gbọ́ pípè")
             }
 
             Text("Àtọwọ́dọ́wọ́ (Traditional) lo èdè Yorùbá pẹ̀lú ìṣirò kí-kọ́. Òde-òní (Modern) nlo àfikún kàn nìkan.")

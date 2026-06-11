@@ -45,11 +45,7 @@ ios/
 
 ### Environment variables
 
-None required for the MVP. When recorded audio clips are wired up, add:
-
-| Key | Purpose |
-|---|---|
-| `NEXT_PUBLIC_AUDIO_CDN` | Base URL of recorded Yoruba pronunciations |
+None required for the MVP.
 
 ## Project structure
 

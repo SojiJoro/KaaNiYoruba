@@ -43,7 +43,6 @@ The `ios/Kaa/` folder ships as plain Swift source — not a checked-in `.xcodepr
 - **Display Name:** `Kàá`. Set in Target → General → Identity → Display Name. iOS will render the diacritic correctly.
 - **Status bar:** light content in dark mode (handled automatically by SwiftUI).
 - **App icon:** drop a 1024×1024 master into the `AppIcon` image set inside `Assets.xcassets`. The recommended icon concept is a deep brown `2` overlaid by a soft moss `Méjì` wordmark on a warm off-white field.
-- **Voice for audio button:** the placeholder uses `AVSpeechSynthesisVoice(language: "yo-NG")` if present, otherwise falls back to `en-NG`. iOS does not currently ship a native Yoruba voice on all SKUs — replace with bundled recordings for production quality (drop `.m4a` files into a `Sounds` folder and update `speak()` in `CalculatorViewModel.swift`).
 
 ### Folder layout
 
@@ -71,5 +70,5 @@ ios/
 Currently the Yoruba strings live inline in Swift source so the diacritics are version-controlled directly. To make the strings translatable in the future:
 
 1. Add an `en.lproj/Localizable.strings` and a `yo.lproj/Localizable.strings`.
-2. Replace literals (e.g. `"Gbọ́ pípè"`) with `NSLocalizedString(...)`.
+2. Replace user-facing literals with `NSLocalizedString(...)`.
 3. In Target → Info → Localizations, add **Yoruba (yo)**.

@@ -32,8 +32,7 @@ Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calcul
 | 6 | Traditional Yoruba mode (subtractive) | Implemented (verified 0–99 table; 100+ generated, join particle pending native review) |
 | 7 | Modern Yoruba mode (additive only) | Implemented |
 | 8 | History of calculations | Implemented |
-| 9 | Audio pronunciation placeholder | Implemented (button + hook for TTS/recorded audio) |
-| 10 | Learning mode (children) | Implemented (0–20 flashcards with quiz) |
+| 9 | Learning mode (children) | Implemented (0–20 flashcards with quiz) |
 
 ### 1.3 Yoruba operator vocabulary
 
@@ -60,7 +59,7 @@ Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calcul
 
 ```
 ┌──────────────────────────────────────┐
-│  Kàá            ●Trad ○Modern  🎧    │ ← top bar: mode toggle + audio
+│  Kàá            ●Trad ○Modern       │ ← top bar: mode toggle
 ├──────────────────────────────────────┤
 │                                      │
 │   2 + 2                              │ ← expression line (Arabic, small)
