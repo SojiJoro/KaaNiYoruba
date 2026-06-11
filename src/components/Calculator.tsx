@@ -20,6 +20,7 @@ import { History, type HistoryEntry } from "./History";
 import { Keypad } from "./Keypad";
 import { LearningMode } from "./LearningMode";
 import { ModeToggle } from "./ModeToggle";
+import { ThemeToggle } from "./ThemeToggle";
 
 type Tab = "calculator" | "history" | "converter" | "learn";
 
@@ -30,11 +31,34 @@ const TABS: Array<{ id: Tab; label: string; icon: string }> = [
   { id: "learn", label: "Kọ́ ẹ̀kọ́", icon: "◈" },
 ];
 
+const HISTORY_KEY = "kaa-history";
+
 export function Calculator() {
   const [state, setState] = useState<CalcState>(initialState);
   const [mode, setMode] = useState<YorubaMode>("traditional");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [tab, setTab] = useState<Tab>("calculator");
+
+  // History survives reloads (and offline restarts) via localStorage.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (raw) setHistory(JSON.parse(raw));
+    } catch {
+      // Corrupt or unavailable storage: start fresh.
+    }
+    setHistoryLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!historyLoaded) return;
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+    } catch {
+      // Private browsing: history just won't persist.
+    }
+  }, [history, historyLoaded]);
 
   const handleKey = useCallback(
     (key: CalcKey) => {
@@ -189,6 +213,15 @@ export function Calculator() {
                 value="Switch between traditional and modern phrasing"
               />
             </div>
+
+            <div className="mt-auto flex flex-col gap-1 border-t border-border pt-4 text-sm">
+              <a href="/onka" className="font-semibold text-primary-green hover:underline">
+                How Yorùbá numbers work →
+              </a>
+              <a href="/about" className="font-semibold text-primary-green hover:underline">
+                About Kàá →
+              </a>
+            </div>
           </aside>
         </div>
       </section>
@@ -216,7 +249,10 @@ function AppHeader({
           Yorùbá number &amp; calculator
         </p>
       </div>
-      <ModeToggle mode={mode} onChange={onModeChange} />
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <ModeToggle mode={mode} onChange={onModeChange} />
+      </div>
     </header>
   );
 }

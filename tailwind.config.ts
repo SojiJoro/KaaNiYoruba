@@ -1,41 +1,44 @@
 import type { Config } from "tailwindcss";
 
+// Core tokens map to CSS variables so the dark theme (set via
+// [data-theme="dark"] in globals.css) restyles everything without dark:
+// variants scattered through the components.
 const config: Config = {
   content: ["./src/app/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}"],
-  darkMode: "media",
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
-        background: "#F8F4EC",
-        "primary-green": "#0C5A39",
-        "deep-green": "#064126",
-        "soft-green": "#67A47F",
-        "pale-green": "#EEF2EC",
-        "warm-cream": "#FFFDF8",
-        border: "#E8DCCB",
-        "text-dark": "#1B1F23",
-        muted: "#6F675D",
-        gold: "#B79762",
-        error: "#B8623F",
+        background: "var(--background)",
+        "primary-green": "var(--primary-green)",
+        "deep-green": "var(--deep-green)",
+        "soft-green": "var(--soft-green)",
+        "pale-green": "var(--pale-green)",
+        "warm-cream": "var(--warm-cream)",
+        border: "var(--border)",
+        "text-dark": "var(--text-dark)",
+        muted: "var(--muted)",
+        gold: "var(--gold)",
+        error: "var(--error)",
         paper: {
-          DEFAULT: "#F8F4EC",
+          DEFAULT: "var(--background)",
           dark: "#EFE7DB",
         },
         cream: {
-          DEFAULT: "#FFFDF7",
+          DEFAULT: "var(--warm-cream)",
         },
         moss: {
-          DEFAULT: "#67A47F",
-          dark: "#0C5A39",
+          DEFAULT: "var(--soft-green)",
+          dark: "var(--primary-green)",
           light: "#E3EEE6",
         },
         cocoa: {
-          DEFAULT: "#1B1F23",
-          light: "#6F675D",
-          dark: "#064126",
+          DEFAULT: "var(--text-dark)",
+          light: "var(--muted)",
+          dark: "var(--deep-green)",
         },
         rust: {
-          DEFAULT: "#B8623F",
+          DEFAULT: "var(--error)",
         },
       },
       boxShadow: {
