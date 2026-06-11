@@ -69,7 +69,7 @@ export function ConverterPanel({ mode }: ConverterPanelProps) {
       <p className="border-t border-border pt-3 text-xs leading-relaxed text-muted">
         Àtọwọ́dọ́wọ́ (Traditional) lo èdè Yorùbá pẹ̀lú ìṣirò
         vigesimal/subtractive. Òde-òní (Modern) nlo àfikún kàn nìkan.
-        Desímàlì lo “Ẹsẹ” lẹ́yìn iye odidi, lẹ́yìn náà a ka díjítì
+        Desímàlì lo “ààmì” lẹ́yìn iye odidi, lẹ́yìn náà a ka díjítì
         kọ̀ọ̀kan.
         {!isValid
           ? " Only digits, an optional sign, grouping commas, and one decimal point are supported."
