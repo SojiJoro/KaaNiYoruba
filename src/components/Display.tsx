@@ -12,7 +12,6 @@ interface DisplayProps {
   result: number | null;
   error: string | null;
   mode: YorubaMode;
-  onSpeak?: (text: string) => void;
 }
 
 export function Display({
@@ -20,7 +19,6 @@ export function Display({
   result,
   error,
   mode,
-  onSpeak,
 }: DisplayProps) {
   const headlineYoruba = headlineFor({ expression, result, error, mode });
   const headlineArabic = headlineArabicFor({ expression, result });
@@ -38,16 +36,6 @@ export function Display({
         >
           {displayExpression || " "}
         </p>
-
-        <button
-          type="button"
-          onClick={() => onSpeak?.(headlineYoruba || "")}
-          aria-label="Gbọ́ pípè"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-primary-green text-warm-cream shadow-button transition hover:-translate-y-0.5 hover:bg-deep-green focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2 focus:ring-offset-warm-cream sm:h-12 sm:w-12"
-          title="Gbọ́ pípè (Hear pronunciation)"
-        >
-          <SpeakerIcon />
-        </button>
       </div>
 
       <div className="my-2.5 h-px w-full bg-border sm:my-4" />
@@ -138,23 +126,4 @@ function headlineArabicFor({
   const last = tokens[tokens.length - 1];
   if (/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(last)) return last;
   return "";
-}
-
-function SpeakerIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-    </svg>
-  );
 }

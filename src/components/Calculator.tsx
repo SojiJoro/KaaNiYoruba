@@ -106,16 +106,6 @@ export function Calculator() {
     return value;
   }, [state]);
 
-  const handleSpeak = useCallback((text: string) => {
-    if (!text) return;
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "yo-NG";
-    utter.rate = 0.85;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utter);
-  }, []);
-
   const isCalculator = tab === "calculator";
 
   return (
@@ -150,7 +140,6 @@ export function Calculator() {
                     result={previewResult}
                     error={state.error}
                     mode={mode}
-                    onSpeak={handleSpeak}
                   />
                   <Keypad mode={mode} onKey={handleKey} />
                 </div>
@@ -168,10 +157,10 @@ export function Calculator() {
               )}
 
               {tab === "converter" && (
-                <ConverterPanel mode={mode} onSpeak={handleSpeak} />
+                <ConverterPanel mode={mode} />
               )}
               {tab === "learn" && (
-                <LearningMode mode={mode} onSpeak={handleSpeak} />
+                <LearningMode mode={mode} />
               )}
             </div>
           </div>
@@ -198,10 +187,6 @@ export function Calculator() {
               <GuideCard
                 label="Modes"
                 value="Switch between traditional and modern phrasing"
-              />
-              <GuideCard
-                label="Audio"
-                value="Tap the speaker to hear the current word"
               />
             </div>
           </aside>

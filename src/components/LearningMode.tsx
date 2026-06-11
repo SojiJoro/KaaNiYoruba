@@ -5,7 +5,6 @@ import { toYoruba, type YorubaMode } from "@/lib/yorubaNumbers";
 
 interface LearningModeProps {
   mode: YorubaMode;
-  onSpeak: (text: string) => void;
 }
 
 const RANGE_END = 20;
@@ -58,7 +57,7 @@ const COUNTING_INSIGHTS = [
   },
 ];
 
-export function LearningMode({ mode, onSpeak }: LearningModeProps) {
+export function LearningMode({ mode }: LearningModeProps) {
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [score, setScore] = useState({ right: 0, total: 0 });
@@ -125,13 +124,6 @@ export function LearningMode({ mode, onSpeak }: LearningModeProps) {
             </button>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => onSpeak(correct)}
-          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary-green hover:underline"
-        >
-          <SpeakerIcon /> Gbọ́ pípè
-        </button>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -233,23 +225,4 @@ function buildChoices(n: number, correct: string, mode: YorubaMode): string[] {
   const arr = Array.from(set);
   arr.sort((a, b) => seed(a.length, n) - seed(b.length, n));
   return arr;
-}
-
-function SpeakerIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-    </svg>
-  );
 }

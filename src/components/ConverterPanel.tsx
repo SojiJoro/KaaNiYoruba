@@ -9,10 +9,9 @@ import {
 
 interface ConverterPanelProps {
   mode: YorubaMode;
-  onSpeak: (text: string) => void;
 }
 
-export function ConverterPanel({ mode, onSpeak }: ConverterPanelProps) {
+export function ConverterPanel({ mode }: ConverterPanelProps) {
   const [value, setValue] = useState("25");
   const yoruba = numericInputToYoruba(value, mode);
   const digitYoruba = digitSequenceToYoruba(value, mode);
@@ -47,14 +46,6 @@ export function ConverterPanel({ mode, onSpeak }: ConverterPanelProps) {
             {yoruba || (value.trim() ? "Nọ́mbà yìí kò pé" : "—")}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => onSpeak(yoruba)}
-          className="rounded-full bg-primary-green p-3 text-warm-cream shadow-lg shadow-primary-green/20 transition hover:bg-deep-green"
-          aria-label="Gbọ́ pípè"
-        >
-          <SpeakerIcon />
-        </button>
       </div>
 
       <div className="rounded-3xl border border-border bg-background/70 p-5">
@@ -85,24 +76,5 @@ export function ConverterPanel({ mode, onSpeak }: ConverterPanelProps) {
           : ""}
       </p>
     </div>
-  );
-}
-
-function SpeakerIcon() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-    </svg>
   );
 }
