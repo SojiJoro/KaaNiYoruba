@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   numericInputToYoruba,
   toYoruba,
@@ -52,15 +53,50 @@ export function Display({
           </h2>
         </div>
         {headlineArabic ? (
-          <div
-            aria-label="Result in Arabic numerals"
-            className="max-w-full self-end overflow-x-auto whitespace-nowrap rounded-xl border border-border bg-background/80 px-3 py-1 text-right font-mono text-base font-bold text-muted shadow-sm sm:text-2xl"
-          >
-            {headlineArabic}
+          <div className="flex items-center justify-end gap-2 self-end">
+            <CopyButton yoruba={headlineYoruba} arabic={headlineArabic} />
+            <div
+              aria-label="Result in Arabic numerals"
+              className="max-w-full overflow-x-auto whitespace-nowrap rounded-xl border border-border bg-background/80 px-3 py-1 text-right font-mono text-base font-bold text-muted shadow-sm sm:text-2xl"
+            >
+              {headlineArabic}
+            </div>
           </div>
         ) : null}
       </div>
     </section>
+  );
+}
+
+/** Copies the result as "Yorùbá (numeral)" — both scripts travel together. */
+function CopyButton({ yoruba, arabic }: { yoruba: string; arabic: string }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  return (
+    <button
+      type="button"
+      aria-label="Copy result"
+      title="Ṣe àdàkọ (copy)"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(
+            yoruba ? `${yoruba} (${arabic})` : arabic,
+          );
+          setCopied(true);
+        } catch {
+          // Clipboard unavailable (e.g. insecure context): silently skip.
+        }
+      }}
+      className="rounded-full border border-border bg-background/80 px-2.5 py-1 text-xs font-bold text-muted transition-colors hover:text-gold"
+    >
+      {copied ? "✓" : "⧉"}
+    </button>
   );
 }
 

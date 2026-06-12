@@ -122,6 +122,12 @@ Read it before touching the engine; update it when you change the engine.
 The product backlog (50 concrete steps toward a shipped app) is in
 **[`docs/app-roadmap-50.md`](./docs/app-roadmap-50.md)**.
 
-## 5. Native speaker review needed
+## 5. Native speaker review
 
-The traditional Yoruba number engine is well-attested for 0–99. For 100–1000 the published sources diverge on combining forms (`lé` vs `ó` linker, vowel elision at hundred boundaries). Entries flagged with `// REVIEW:` in `src/lib/yorubaNumbers.ts` should be verified by a fluent speaker before shipping.
+The traditional engine is well-attested for 0–99. For 100–1,000 published sources diverge on combining forms (`ó lé` vs `ó dín` cut-over, vowel elision at hundred boundaries); those spots carry `// REVIEW:` comments in both engines.
+
+To review, run `npm run review-packet` — it writes `docs/review/yoruba-review-packet.csv`, a spreadsheet of every generated form (with the contested ones flagged) plus columns for corrections. A fluent speaker can work through it in one sitting; corrections go into `shared/yoruba-language-pack.json` (the single source of truth for the web and iOS engines — regenerate with `npm run generate`).
+
+### Ìmúdájú — verified by
+
+*This section credits the fluent speakers who have verified the engine's output. Awaiting first review.*

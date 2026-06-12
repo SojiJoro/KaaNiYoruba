@@ -62,16 +62,57 @@ final class YorubaNumberEngineTests: XCTestCase {
         XCTAssertEqual(YorubaNumberEngine.toYoruba(250, mode: .modern), "Ọgọ́rùn-ún méjì àti Àádọ́ta")
     }
 
+    func test_o_din_subtractive_joins() {
+        // Just under the next hundred reads "ó dín" (doc §11, §15)
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(199), "Igba ó dín Ọ̀kan")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(595), "Ẹgbẹ̀ta ó dín Márùn-ún")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(995), "Ẹgbẹ̀rún ó dín Márùn-ún")
+    }
+
+    func test_classical_units() {
+        // Exact classical values only (doc §9, §15)
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(2000), "Ẹgbàá")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(4000), "Ẹgbàájì")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(20000), "Ọkẹ́ kan")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(40000), "Ọkẹ́ méjì")
+        XCTAssertEqual(YorubaNumberEngine.toYoruba(2000, mode: .modern), "Ẹgbẹ̀rún méjì")
+    }
+
     func test_thousands_and_beyond() {
         // Generated, never digit-spelled
         XCTAssertEqual(YorubaNumberEngine.toYoruba(1000), "Ẹgbẹ̀rún kan")
         XCTAssertEqual(YorubaNumberEngine.toYoruba(1001), "Ẹgbẹ̀rún kan ó lé Ọ̀kan")
-        XCTAssertEqual(YorubaNumberEngine.toYoruba(2000), "Ẹgbẹ̀rún méjì")
         XCTAssertEqual(YorubaNumberEngine.toYoruba(1_000_000), "Mílíọ̀nù kan")
         XCTAssertEqual(
             YorubaNumberEngine.toYoruba(1_258_222),
             "Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún"
         )
+    }
+
+    func test_ordinals() {
+        XCTAssertEqual(YorubaNumberEngine.toYorubaOrdinal(1), "Àkọ́kọ́")
+        XCTAssertEqual(YorubaNumberEngine.toYorubaOrdinal(2), "Ìkejì")
+        XCTAssertEqual(YorubaNumberEngine.toYorubaOrdinal(10), "Ìkẹwàá")
+        XCTAssertEqual(YorubaNumberEngine.toYorubaOrdinal(11), "Ipò mọ́kànlá")
+    }
+
+    func test_naira() {
+        XCTAssertEqual(YorubaNumberEngine.nairaToYoruba(500), "náírà ẹ̀ẹ́dẹ́gbẹ̀ta")
+        XCTAssertEqual(YorubaNumberEngine.nairaToYoruba(12.5), "náírà méjìlá àti kọ́bọ̀ àádọ́ta")
+    }
+
+    func test_property_unique_names_0_to_9999() {
+        // Uniqueness is the round-trip property — if two numbers shared a name,
+        // Yorùbá → number would be ambiguous. Mirrors the web property test.
+        for mode in [YorubaMode.traditional, .modern] {
+            var seen: [String: Int] = [:]
+            for n in 0...9999 {
+                let word = YorubaNumberEngine.toYoruba(n, mode: mode)
+                XCTAssertFalse(word.isEmpty, "\(mode)(\(n)) is empty")
+                XCTAssertNil(seen[word], "\(mode): \(n) and \(seen[word]!) share \"\(word)\"")
+                seen[word] = n
+            }
+        }
     }
 
     func test_operator_words() {
