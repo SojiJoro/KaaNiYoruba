@@ -207,5 +207,73 @@ for (const mode of ['traditional', 'modern'] as const) {
   });
 }
 
+
+// ---- Syllable splitter (powers the spelling games) --------------------------
+import { splitSyllables, spellTarget } from './syllables';
+
+check('syllables', () => {
+  assert.deepEqual(splitSyllables('Méjì'), ['Mé', 'jì']);
+  assert.deepEqual(splitSyllables('Ọ̀kan'), ['Ọ̀', 'kan']);
+  assert.deepEqual(splitSyllables('Ogún'), ['O', 'gún']);
+  assert.deepEqual(splitSyllables('Ọgbọ̀n'), ['Ọ', 'gbọ̀n']);
+  assert.deepEqual(splitSyllables('Márùn-ún'), ['Má', 'rùn', 'ún']);
+  assert.deepEqual(splitSyllables('Mọ́kànlélógún'), ['Mọ́', 'kàn', 'lé', 'ló', 'gún']);
+  assert.deepEqual(splitSyllables('Àádọ́ta'), ['À', 'á', 'dọ́', 'ta']);
+  assert.deepEqual(splitSyllables('Ẹgbẹ̀rún'), ['Ẹ', 'gbẹ̀', 'rún']);
+  assert.deepEqual(splitSyllables('Mẹ́wàá'), ['Mẹ́', 'wà', 'á']);
+  // Round-trip: rebuilding the tiles must reproduce the word for every name
+  // the spelling games can serve (0–100 plus the hundred anchors).
+  for (let n = 0; n <= 100; n++) {
+    const word = toYoruba(n, 'traditional');
+    assert.equal(
+      splitSyllables(word).join('').normalize('NFC'),
+      spellTarget(word).normalize('NFC'),
+      `syllable round-trip failed for ${n}: ${word}`,
+    );
+  }
+  for (const n of [200, 300, 400, 500, 600, 700, 800, 900, 1000]) {
+    const word = toYoruba(n, 'traditional');
+    assert.equal(
+      splitSyllables(word).join('').normalize('NFC'),
+      spellTarget(word).normalize('NFC'),
+      `syllable round-trip failed for ${n}: ${word}`,
+    );
+  }
+});
+
+
+// ---- Learn engine: every level in every age group must build clean sessions
+import { AGE_GROUPS, LEVELS, buildSession, exerciseNumber } from './learn';
+
+check('learn sessions generate cleanly', () => {
+  for (const group of AGE_GROUPS) {
+    for (const level of LEVELS[group.id]) {
+      for (const mode of ['traditional', 'modern'] as const) {
+        for (let seed = 1; seed <= 25; seed++) {
+          const session = buildSession(group.id, level, mode, seed % 3 === 0 ? [7, 12] : [], seed);
+          assert.equal(session.length, 8, `${group.id}/${level.id} session length`);
+          for (const ex of session) {
+            exerciseNumber(ex); // must not throw
+            if ('options' in ex) {
+              assert.ok(ex.options.length >= 2, `${group.id}/${level.id} ${ex.kind} has too few options`);
+              assert.equal(new Set(ex.options).size, ex.options.length, `${group.id}/${level.id} ${ex.kind} duplicate options`);
+            }
+            if (ex.kind === 'spell') {
+              assert.ok(ex.syllables.length >= 2, `${group.id}/${level.id} spell word too short: ${ex.word}`);
+              assert.equal(ex.syllables.join('').normalize('NFC'), ex.word.normalize('NFC'), `spell tiles mismatch for ${ex.word}`);
+            }
+            if (ex.kind === 'pick-word') {
+              assert.ok(ex.options.includes(ex.correct), `pick-word options missing answer for ${ex.n}`);
+            }
+            if (ex.kind === 'match') {
+              assert.ok(ex.pairs.length >= 2, `${group.id}/${level.id} match has too few pairs`);
+            }
+          }
+        }
+      }
+    }
+  }
+});
+
 console.log(`Kàá tests — ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
