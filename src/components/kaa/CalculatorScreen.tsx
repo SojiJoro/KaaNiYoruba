@@ -23,7 +23,7 @@ import {
   type YorubaMode,
 } from "@/lib/yorubaNumbers";
 import { SpeakerGlyph } from "./shared";
-import type { HistoryEntry, KeypadStyle } from "./types";
+import { VOICE_ENABLED, type HistoryEntry, type KeypadStyle } from "./types";
 
 // ---------- Display ----------------------------------------------------------
 
@@ -59,14 +59,16 @@ function KaaDisplay({
     <section className="display-card" aria-live="polite">
       <div className="display-top">
         <span className="display-expr">{expr}</span>
-        <button
-          type="button"
-          className="speak-btn"
-          aria-label="Gbọ́ pípè (hear it)"
-          onClick={() => onSpeak(yorubaPhrase)}
-        >
-          <SpeakerGlyph size={18} />
-        </button>
+        {VOICE_ENABLED && (
+          <button
+            type="button"
+            className="speak-btn"
+            aria-label="Gbọ́ pípè (hear it)"
+            onClick={() => onSpeak(yorubaPhrase)}
+          >
+            <SpeakerGlyph size={18} />
+          </button>
+        )}
       </div>
       <p className="display-yoruba">{error ? error : yorubaPhrase || "—"}</p>
       {preview !== null && (

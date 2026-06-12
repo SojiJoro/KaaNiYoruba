@@ -1,5 +1,10 @@
 import type { YorubaMode } from "@/lib/yorubaNumbers";
 
+// Voice UI is parked until native Yorùbá recordings are ready. The speech
+// backend (src/lib/speech.ts and the onSpeak plumbing) stays wired up —
+// flip this to true to bring the speak buttons and the Ohùn setting back.
+export const VOICE_ENABLED: boolean = false;
+
 export type Screen = "calc" | "history" | "convert" | "learn" | "settings";
 
 export interface HistoryEntry {

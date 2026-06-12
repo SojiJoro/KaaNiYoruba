@@ -1,7 +1,12 @@
 "use client";
 
 import { Switch } from "./shared";
-import type { KaaSettings, KeypadStyle, PaletteId } from "./types";
+import {
+  VOICE_ENABLED,
+  type KaaSettings,
+  type KeypadStyle,
+  type PaletteId,
+} from "./types";
 
 // Swatches mirror the palette hero colors defined in globals.css.
 const PALETTES: Array<{ id: PaletteId; name: string; swatch: string[] }> = [
@@ -126,12 +131,14 @@ export function SettingsScreen({
               onChange={(e) => setSetting("pattern", Number(e.target.value))}
             />
           </SettingRow>
-          <SettingRow label="Ohùn" en="Speak results aloud">
-            <Switch
-              on={settings.sound}
-              onToggle={() => setSetting("sound", !settings.sound)}
-            />
-          </SettingRow>
+          {VOICE_ENABLED && (
+            <SettingRow label="Ohùn" en="Speak results aloud">
+              <Switch
+                on={settings.sound}
+                onToggle={() => setSetting("sound", !settings.sound)}
+              />
+            </SettingRow>
+          )}
         </div>
       </section>
 

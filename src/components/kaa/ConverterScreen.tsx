@@ -7,6 +7,7 @@ import {
   type YorubaMode,
 } from "@/lib/yorubaNumbers";
 import { SpeakerGlyph } from "./shared";
+import { VOICE_ENABLED } from "./types";
 
 const EXAMPLES = ["75", "200", "1000", "0803", "12.05"];
 
@@ -49,14 +50,16 @@ export function ConverterScreen({
       <section className="convert-result">
         <div className="convert-result-head">
           <span className="eyebrow">Yorùbá</span>
-          <button
-            type="button"
-            className="speak-btn"
-            aria-label="Gbọ́ pípè (hear it)"
-            onClick={() => yoruba && onSpeak(yoruba)}
-          >
-            <SpeakerGlyph size={18} />
-          </button>
+          {VOICE_ENABLED && (
+            <button
+              type="button"
+              className="speak-btn"
+              aria-label="Gbọ́ pípè (hear it)"
+              onClick={() => yoruba && onSpeak(yoruba)}
+            >
+              <SpeakerGlyph size={18} />
+            </button>
+          )}
         </div>
         <p className="convert-words">
           {yoruba || (empty ? "—" : "Nọ́mbà yìí kò pé")}
@@ -68,14 +71,16 @@ export function ConverterScreen({
           <span className="eyebrow">
             Díjítì kọ̀ọ̀kan <i>digit by digit</i>
           </span>
-          <button
-            type="button"
-            className="speak-btn small"
-            aria-label="Gbọ́ díjítì kọ̀ọ̀kan"
-            onClick={() => digitYoruba && onSpeak(digitYoruba)}
-          >
-            <SpeakerGlyph size={15} />
-          </button>
+          {VOICE_ENABLED && (
+            <button
+              type="button"
+              className="speak-btn small"
+              aria-label="Gbọ́ díjítì kọ̀ọ̀kan"
+              onClick={() => digitYoruba && onSpeak(digitYoruba)}
+            >
+              <SpeakerGlyph size={15} />
+            </button>
+          )}
         </div>
         <p className="convert-digit-words">{digitYoruba || "—"}</p>
         <p className="convert-note">
