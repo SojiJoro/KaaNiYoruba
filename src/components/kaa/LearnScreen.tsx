@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { toYoruba, type YorubaMode } from "@/lib/yorubaNumbers";
 import { SpeakerGlyph } from "./shared";
+import { VOICE_ENABLED } from "./types";
 
 const LEARN_RANGE_END = 20;
 
@@ -165,9 +166,11 @@ export function LearnScreen({
           )}
         </div>
         <div className="learn-card-actions">
-          <button type="button" className="ghost-btn" onClick={() => onSpeak(correct)}>
-            <SpeakerGlyph size={14} /> Gbọ́ pípè
-          </button>
+          {VOICE_ENABLED && (
+            <button type="button" className="ghost-btn" onClick={() => onSpeak(correct)}>
+              <SpeakerGlyph size={14} /> Gbọ́ pípè
+            </button>
+          )}
           <button type="button" className="primary-btn" onClick={next}>
             Tókàn →
           </button>

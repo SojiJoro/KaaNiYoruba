@@ -35,7 +35,7 @@ Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calcul
 | 9 | Learning mode (children) | Implemented (0–20 flashcards with quiz) |
 | 10 | Onboarding welcome tour | Implemented (3 steps, counting-mode choice) |
 | 11 | Settings (Ètò) | Implemented (counting system, palette, keypad style, pattern, dark mode, sound, data) |
-| 12 | Voice pronunciation | Implemented (Web Speech API, prefers a Yorùbá voice) |
+| 12 | Voice pronunciation | UI disabled until native recordings are done (speech backend kept; flip `VOICE_ENABLED` to restore) |
 
 ### 1.3 Yoruba operator vocabulary
 

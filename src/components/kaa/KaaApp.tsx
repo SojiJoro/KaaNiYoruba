@@ -16,6 +16,7 @@ import {
   ONBOARD_KEY,
   SCREEN_KEY,
   SETTINGS_KEY,
+  VOICE_ENABLED,
   loadJSON,
   type HistoryEntry,
   type KaaSettings,
@@ -144,7 +145,7 @@ export function KaaApp() {
 
   const speak = useCallback(
     (text: string) => {
-      if (settings.sound) speakYoruba(text);
+      if (VOICE_ENABLED && settings.sound) speakYoruba(text);
     },
     [settings.sound],
   );
