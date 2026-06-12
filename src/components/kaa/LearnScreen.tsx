@@ -1,11 +1,104 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { toYoruba, type YorubaMode } from "@/lib/yorubaNumbers";
+import { useEffect, useMemo, useState } from "react";
+import { explainNumber, toYoruba, type YorubaMode } from "@/lib/yorubaNumbers";
 import { SpeakerGlyph } from "./shared";
 import { VOICE_ENABLED } from "./types";
 
-const LEARN_RANGE_END = 20;
+// ---- Levels: units → teens → the dín rule → tens → hundred anchors ---------
+
+interface Level {
+  id: string;
+  title: string;
+  subtitle: string;
+  pool: number[];
+}
+
+const range = (from: number, to: number, step = 1) => {
+  const out: number[] = [];
+  for (let n = from; n <= to; n += step) out.push(n);
+  return out;
+};
+
+const LEVELS: Level[] = [
+  { id: "units", title: "Àwọn ìpìlẹ̀", subtitle: "Units 0–10", pool: range(0, 10) },
+  { id: "teens", title: "Lé àti dín", subtitle: "Teens 11–20", pool: range(11, 20) },
+  {
+    id: "din-rule",
+    title: "Òfin dín",
+    subtitle: "The subtraction rule, 21–40",
+    pool: range(21, 40),
+  },
+  {
+    id: "tens",
+    title: "Ogún-ogún",
+    subtitle: "Round tens to 100",
+    pool: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+  },
+  {
+    id: "hundreds",
+    title: "Igba àti ẹgbẹ̀-",
+    subtitle: "Hundred anchors",
+    pool: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+  },
+];
+
+// ---- Local progress: per-level scores and a daily streak --------------------
+
+interface Progress {
+  scores: Record<string, { right: number; total: number }>;
+  streak: number;
+  lastDay: string; // YYYY-MM-DD
+}
+
+const PROGRESS_KEY = "kaa-learn-progress";
+
+function loadProgress(): Progress {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // fall through to a fresh start
+  }
+  return { scores: {}, streak: 0, lastDay: "" };
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function bumpStreak(p: Progress): Progress {
+  const day = today();
+  if (p.lastDay === day) return p;
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  return { ...p, streak: p.lastDay === yesterday ? p.streak + 1 : 1, lastDay: day };
+}
+
+// ---- Quiz helpers -----------------------------------------------------------
+
+type QuizKind = "pick-word" | "type-number";
+
+// Deterministic pseudo-shuffle so the same card always shows the same options
+// (no hydration-unsafe Math.random in render).
+function buildChoices(
+  n: number,
+  correct: string,
+  mode: YorubaMode,
+  pool: number[],
+): string[] {
+  const set = new Set<string>([correct]);
+  const others = pool.filter((i) => i !== n);
+  const seed = (a: number, b: number) => ((a * 9301 + b * 49297) % 233280) / 233280;
+  others.sort((a, b) => seed(a, n) - seed(b, n));
+  let i = 0;
+  while (set.size < 4 && i < others.length) {
+    set.add(toYoruba(others[i], mode));
+    i++;
+  }
+  const arr = Array.from(set);
+  arr.sort((a, b) => seed(a.length, n) - seed(b.length, n));
+  return arr;
+}
 
 const LEARN_INSIGHTS = [
   {
@@ -74,31 +167,7 @@ const APP_POLISH_ITEMS = [
   "Production build readiness",
 ];
 
-// Deterministic pseudo-shuffle so the quiz shows stable choices per number
-// (no hydration-unsafe Math.random in render).
-function seededSort(pool: number[], n: number): number[] {
-  const seed = (a: number, b: number) => ((a * 9301 + b * 49297) % 233280) / 233280;
-  return [...pool].sort((a, b) => seed(a, n) - seed(b, n));
-}
-
-function buildChoices(
-  n: number,
-  correct: string,
-  mode: YorubaMode,
-  end: number,
-): string[] {
-  const set = new Set<string>([correct]);
-  const pool: number[] = [];
-  for (let i = 0; i <= end; i++) if (i !== n) pool.push(i);
-  const shuffled = seededSort(pool, n);
-  let i = 0;
-  while (set.size < 4 && i < shuffled.length) {
-    set.add(toYoruba(shuffled[i], mode));
-    i++;
-  }
-  const seed = (a: number, b: number) => ((a * 9301 + b * 49297) % 233280) / 233280;
-  return Array.from(set).sort((a, b) => seed(a.length, n) - seed(b.length, n));
-}
+// ---- Screen -------------------------------------------------------------------
 
 export function LearnScreen({
   mode,
@@ -107,33 +176,85 @@ export function LearnScreen({
   mode: YorubaMode;
   onSpeak: (text: string) => void;
 }) {
-  const rangeEnd = LEARN_RANGE_END;
-  const [index, setIndex] = useState(0);
+  const [levelId, setLevelId] = useState(LEVELS[0].id);
+  const [questionSeed, setQuestionSeed] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [score, setScore] = useState({ right: 0, total: 0 });
   const [quizChoice, setQuizChoice] = useState<string | null>(null);
+  const [typed, setTyped] = useState("");
+  const [progress, setProgress] = useState<Progress>({
+    scores: {},
+    streak: 0,
+    lastDay: "",
+  });
 
-  const correct = useMemo(() => toYoruba(index, mode), [index, mode]);
+  useEffect(() => {
+    setProgress(loadProgress());
+  }, []);
+
+  const level = LEVELS.find((l) => l.id === levelId)!;
+  const n = level.pool[questionSeed % level.pool.length];
+  // Every third card flips the direction: word shown, number typed.
+  const kind: QuizKind = questionSeed % 3 === 2 ? "type-number" : "pick-word";
+
+  const correct = useMemo(() => toYoruba(n, mode), [n, mode]);
   const choices = useMemo(
-    () => buildChoices(index, correct, mode, rangeEnd),
-    [index, correct, mode, rangeEnd],
+    () => buildChoices(n, correct, mode, level.pool),
+    [n, correct, mode, level.pool],
   );
+  const explanation = revealed ? explainNumber(n) : null;
 
-  const next = () => {
-    setIndex((i) => (i + 1) % (rangeEnd + 1));
+  const record = (right: boolean) => {
+    setProgress((p) => {
+      const prev = p.scores[level.id] ?? { right: 0, total: 0 };
+      const next = bumpStreak({
+        ...p,
+        scores: {
+          ...p.scores,
+          [level.id]: {
+            right: prev.right + (right ? 1 : 0),
+            total: prev.total + 1,
+          },
+        },
+      });
+      try {
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(next));
+      } catch {
+        // Private browsing: progress just won't persist.
+      }
+      return next;
+    });
+  };
+
+  const nextQuestion = () => {
+    setQuestionSeed((s) => s + 1);
     setRevealed(false);
     setQuizChoice(null);
+    setTyped("");
   };
 
-  const handleQuiz = (choice: string) => {
-    if (quizChoice) return;
+  const selectLevel = (id: string) => {
+    setLevelId(id);
+    setQuestionSeed(0);
+    setRevealed(false);
+    setQuizChoice(null);
+    setTyped("");
+  };
+
+  const handlePick = (choice: string) => {
+    if (quizChoice || revealed) return;
     setQuizChoice(choice);
     setRevealed(true);
-    setScore((s) => ({
-      right: s.right + (choice === correct ? 1 : 0),
-      total: s.total + 1,
-    }));
+    record(choice === correct);
   };
+
+  const handleTyped = () => {
+    if (revealed) return;
+    setRevealed(true);
+    record(Number(typed.trim()) === n);
+  };
+
+  const score = progress.scores[level.id] ?? { right: 0, total: 0 };
+  const pct = score.total ? Math.round((100 * score.right) / score.total) : 0;
 
   return (
     <div className="screen screen-learn">
@@ -141,20 +262,57 @@ export function LearnScreen({
         <div>
           <h1 className="screen-title">Kọ́ ẹ̀kọ́</h1>
           <p className="screen-sub">
-            Learn the numbers 0–{rangeEnd} — guess, reveal, listen
+            {level.subtitle} — guess, reveal, learn the why
           </p>
         </div>
-        <span className="score-pill" aria-label="Score">
-          {score.right}
-          <i>/{score.total}</i>
-        </span>
+        <div className="learn-head-pills">
+          {progress.streak > 0 && (
+            <span className="streak-pill" title="Ọjọ́ ìtẹ̀síwájú (daily streak)">
+              ✶ {progress.streak}
+            </span>
+          )}
+          <span className="score-pill" aria-label="Score">
+            {score.right}
+            <i>/{score.total}</i>
+            {score.total > 0 && <i> · {pct}%</i>}
+          </span>
+        </div>
       </header>
 
+      <div className="chip-row learn-levels" role="tablist" aria-label="Levels">
+        {LEVELS.map((l) => {
+          const s = progress.scores[l.id];
+          const mastered = s && s.total >= 10 && s.right / s.total >= 0.8;
+          return (
+            <button
+              key={l.id}
+              type="button"
+              role="tab"
+              aria-selected={l.id === levelId}
+              title={l.subtitle}
+              className={"chip" + (l.id === levelId ? " chip-on" : "")}
+              onClick={() => selectLevel(l.id)}
+            >
+              {mastered ? "✓ " : ""}
+              {l.title}
+            </button>
+          );
+        })}
+      </div>
+
       <section className="learn-card">
-        <div className="learn-number">{index}</div>
+        {kind === "pick-word" ? (
+          <div className="learn-number">{n}</div>
+        ) : (
+          <div className="learn-word-q">{correct}</div>
+        )}
         <div className="learn-answer">
           {revealed ? (
-            <span className="learn-word">{correct}</span>
+            kind === "pick-word" ? (
+              <span className="learn-word">{correct}</span>
+            ) : (
+              <span className="learn-answer-num">{n}</span>
+            )
           ) : (
             <button
               type="button"
@@ -171,39 +329,103 @@ export function LearnScreen({
               <SpeakerGlyph size={14} /> Gbọ́ pípè
             </button>
           )}
-          <button type="button" className="primary-btn" onClick={next}>
+          <button type="button" className="primary-btn" onClick={nextQuestion}>
             Tókàn →
           </button>
         </div>
       </section>
 
+      {explanation && (
+        <p className="explain-card">
+          <b>Kí ló dé? </b>
+          <span className="explain-sum">{explanation.summary}</span>
+          {" — "}
+          {explanation.relation === "subtract" ? (
+            <>
+              <span className="explain-word">{explanation.parts[0].word}</span>{" "}
+              short of{" "}
+              <span className="explain-word">{explanation.anchor.word}</span>.
+            </>
+          ) : (
+            <>
+              <span className="explain-word">{explanation.anchor.word}</span>{" "}
+              plus <span className="explain-word">{explanation.parts[0].word}</span>.
+            </>
+          )}
+        </p>
+      )}
+
       <section className="quiz">
-        <span className="eyebrow">
-          Yan ìdáhùn tó tọ́ <i>pick the right answer</i>
-        </span>
-        <div className="quiz-grid">
-          {choices.map((c) => {
-            const isPicked = quizChoice === c;
-            const isCorrect = c === correct;
-            const cls =
-              revealed && isCorrect
-                ? " quiz-right"
-                : revealed && isPicked && !isCorrect
-                  ? " quiz-wrong"
-                  : "";
-            return (
+        {kind === "pick-word" ? (
+          <>
+            <span className="eyebrow">
+              Yan ìdáhùn tó tọ́ <i>pick the right answer</i>
+            </span>
+            <div className="quiz-grid">
+              {choices.map((c) => {
+                const isPicked = quizChoice === c;
+                const isCorrect = c === correct;
+                const cls =
+                  revealed && isCorrect
+                    ? " quiz-right"
+                    : revealed && isPicked && !isCorrect
+                      ? " quiz-wrong"
+                      : "";
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    disabled={revealed}
+                    className={"quiz-choice" + cls}
+                    onClick={() => handlePick(c)}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="eyebrow">
+              Tẹ nọ́mbà náà <i>type the number</i>
+            </span>
+            <form
+              className="quiz-type"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleTyped();
+              }}
+            >
+              <input
+                type="text"
+                inputMode="numeric"
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                disabled={revealed}
+                aria-label="Your answer in digits"
+              />
               <button
-                key={c}
-                type="button"
-                disabled={!!quizChoice}
-                className={"quiz-choice" + cls}
-                onClick={() => handleQuiz(c)}
+                type="submit"
+                className="primary-btn"
+                disabled={revealed || typed.trim() === ""}
               >
-                {c}
+                Dán wò
               </button>
-            );
-          })}
-        </div>
+            </form>
+            {revealed && (
+              <p
+                className={
+                  "quiz-feedback " + (Number(typed.trim()) === n ? "ok" : "err")
+                }
+              >
+                {Number(typed.trim()) === n
+                  ? "Ó dára! Correct."
+                  : `Rárá — ìdáhùn ni ${n}.`}
+              </p>
+            )}
+          </>
+        )}
       </section>
 
       <section className="insights">
