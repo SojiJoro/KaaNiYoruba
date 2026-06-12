@@ -33,6 +33,9 @@ Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calcul
 | 7 | Modern Yoruba mode (additive only) | Implemented |
 | 8 | History of calculations | Implemented |
 | 9 | Learning mode (children) | Implemented (0–20 flashcards with quiz) |
+| 10 | Onboarding welcome tour | Implemented (3 steps, counting-mode choice) |
+| 11 | Settings (Ètò) | Implemented (counting system, palette, keypad style, pattern, dark mode, sound, data) |
+| 12 | Voice pronunciation | Implemented (Web Speech API, prefers a Yorùbá voice) |
 
 ### 1.3 Yoruba operator vocabulary
 
@@ -44,14 +47,15 @@ Kàá ("Kàá" meaning "house/room" — a cultural home for numbers) is a calcul
 | `÷`    | `pín sí` | divide into |
 | `=`    | `dọ́gba` | equals |
 
-### 1.4 Design direction
+### 1.4 Design direction — "Adire Indigo"
 
-- **Background:** warm off-white `#FAF7F0`
-- **Primary text:** deep brown `#3D2417`
-- **Accent:** soft green `#7A9E7E` (operators, result emphasis)
-- **Pattern:** subtle adire/aso-oke-inspired SVG motif at low opacity
-- **Typography:** geometric sans for digits, humanist serif option for Yoruba words on result screens
-- Dark mode reverses the brown background, lifts text to warm cream `#F5EBDF`, keeps the green accent.
+- **Background:** warm cream `#F3EEE3`
+- **Primary:** deep indigo `#25307A` (Yorùbá words, nav, emphasis)
+- **Accent:** burnt clay `#BC5429` (equals key, speak buttons, highlights)
+- **Pattern:** subtle adire dot-grid veil at low opacity (intensity adjustable in Ètò)
+- **Typography:** Gentium Book Plus for Yorùbá words (renders tone marks beautifully), IBM Plex Sans for UI, IBM Plex Mono for numerals
+- Dark mode deepens the indigo night palette; two alternate palettes (Forest Heritage, Clay & Ember) ship as settings.
+- Yorùbá stays primary throughout; English is the quiet subtitle.
 
 ---
 

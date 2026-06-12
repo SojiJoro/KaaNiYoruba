@@ -4,13 +4,29 @@
   "description": "A calculator that teaches and preserves Yorùbá counting logic. Every number in proper Yorùbá with diacritics, alongside Arabic numerals.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F8F4EC",
-  "theme_color": "#0C5A39",
+  "background_color": "#F3EEE3",
+  "theme_color": "#25307A",
   "lang": "yo",
-  "categories": ["education", "utilities"],
+  "categories": [
+    "education",
+    "utilities"
+  ],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
