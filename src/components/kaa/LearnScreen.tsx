@@ -1,105 +1,26 @@
 "use client";
 
+// Kọ́ Ẹ̀kọ́ — the learning game, fitted to the Kàá design.
+// Pick an age track, work a level's 8-question session (built and rated by the
+// engine in src/lib/learn.ts), and watch stars + a daily streak accumulate.
+// The research-backed design is written up in docs/learning-design.md.
+
 import { useEffect, useMemo, useState } from "react";
-import { explainNumber, toYoruba, type YorubaMode } from "@/lib/yorubaNumbers";
-import { SpeakerGlyph } from "./shared";
-import { VOICE_ENABLED } from "./types";
+import type { YorubaMode } from "@/lib/yorubaNumbers";
+import {
+  AGE_GROUPS,
+  LEVELS,
+  applySessionResult,
+  loadLearnProgress,
+  saveLearnProgress,
+  type AgeGroup,
+  type LearnProgress,
+  type LevelDef,
+} from "@/lib/learn";
+import { Session } from "../learn/Session";
 
-// ---- Levels: units → teens → the dín rule → tens → hundred anchors ---------
-
-interface Level {
-  id: string;
-  title: string;
-  subtitle: string;
-  pool: number[];
-}
-
-const range = (from: number, to: number, step = 1) => {
-  const out: number[] = [];
-  for (let n = from; n <= to; n += step) out.push(n);
-  return out;
-};
-
-const LEVELS: Level[] = [
-  { id: "units", title: "Àwọn ìpìlẹ̀", subtitle: "Units 0–10", pool: range(0, 10) },
-  { id: "teens", title: "Lé àti dín", subtitle: "Teens 11–20", pool: range(11, 20) },
-  {
-    id: "din-rule",
-    title: "Òfin dín",
-    subtitle: "The subtraction rule, 21–40",
-    pool: range(21, 40),
-  },
-  {
-    id: "tens",
-    title: "Ogún-ogún",
-    subtitle: "Round tens to 100",
-    pool: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-  },
-  {
-    id: "hundreds",
-    title: "Igba àti ẹgbẹ̀-",
-    subtitle: "Hundred anchors",
-    pool: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
-  },
-];
-
-// ---- Local progress: per-level scores and a daily streak --------------------
-
-interface Progress {
-  scores: Record<string, { right: number; total: number }>;
-  streak: number;
-  lastDay: string; // YYYY-MM-DD
-}
-
-const PROGRESS_KEY = "kaa-learn-progress";
-
-function loadProgress(): Progress {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    // fall through to a fresh start
-  }
-  return { scores: {}, streak: 0, lastDay: "" };
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function bumpStreak(p: Progress): Progress {
-  const day = today();
-  if (p.lastDay === day) return p;
-  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-  return { ...p, streak: p.lastDay === yesterday ? p.streak + 1 : 1, lastDay: day };
-}
-
-// ---- Quiz helpers -----------------------------------------------------------
-
-type QuizKind = "pick-word" | "type-number";
-
-// Deterministic pseudo-shuffle so the same card always shows the same options
-// (no hydration-unsafe Math.random in render).
-function buildChoices(
-  n: number,
-  correct: string,
-  mode: YorubaMode,
-  pool: number[],
-): string[] {
-  const set = new Set<string>([correct]);
-  const others = pool.filter((i) => i !== n);
-  const seed = (a: number, b: number) => ((a * 9301 + b * 49297) % 233280) / 233280;
-  others.sort((a, b) => seed(a, n) - seed(b, n));
-  let i = 0;
-  while (set.size < 4 && i < others.length) {
-    set.add(toYoruba(others[i], mode));
-    i++;
-  }
-  const arr = Array.from(set);
-  arr.sort((a, b) => seed(a.length, n) - seed(b.length, n));
-  return arr;
-}
-
+// Research notes carried over from the previous Learn screen — kept so the
+// "why" behind the numbers stays one scroll away from the practice.
 const LEARN_INSIGHTS = [
   {
     title: "Base-20 backbone",
@@ -138,131 +59,96 @@ const LEARN_INSIGHTS = [
     sourceUrl:
       "https://repository.ui.edu.ng/items/6164afe0-3ef5-4e30-9fb1-c303a6e783b6",
   },
-  {
-    title: "App fallback for every digit",
-    yoruba: "Ka díjítì kọ̀ọ̀kan",
-    detail:
-      "Long IDs, phone numbers, leading zeros, and decimals are not always ordinary counting numbers, so Kàá can spell each digit instead of showing raw Arabic numerals.",
-    example: "007 → Òdo Òdo Méje • 12.05 → Méjìlá ààmì Òdo Márùn-ún",
-    source: "Kàá number engine",
-    sourceUrl: "https://www.omniglot.com/language/numbers/yoruba.htm",
-  },
 ];
 
-const APP_POLISH_ITEMS = [
-  "Single-screen calculator layout", "Safe-area friendly spacing", "Bottom navigation",
-  "Compact header", "Mode segmented control", "Large tap targets", "Clear visual hierarchy",
-  "Rounded app cards", "Soft elevation shadows", "Consistent icon set", "Immediate input feedback",
-  "Live result preview", "Native keyboard support", "Voice pronunciation action",
-  "Accessible aria labels", "Responsive phone width", "Desktop companion panel",
-  "Persistent calculator tab", "History reuse", "History clearing", "Converter utility",
-  "Learn mode quiz", "Score tracking", "Research notes", "External source links",
-  "Traditional mode", "Modern mode", "Yorùbá subtitles on keys", "Cultural color palette",
-  "Textile-inspired background", "Premium display panel", "Operator color contrast",
-  "Error state styling", "Hover states", "Pressed states", "Focus rings",
-  "Scrollable content sections", "Truncated long labels", "Word-wrap display",
-  "Finite history cap", "App-like max width", "No mobile horizontal scroll",
-  "Full-height mobile view", "Sticky desktop nav", "Fixed utility nav", "Reusable guide cards",
-  "Deterministic quiz choices", "Readable source badges", "Warm empty states",
-  "Production build readiness",
-];
+function StarRow({ stars }: { stars: number }) {
+  return (
+    <span
+      className="text-sm tracking-widest text-gold"
+      aria-label={`${stars} of 3 stars`}
+    >
+      {"★".repeat(stars)}
+      <span className="text-border">{"★".repeat(3 - stars)}</span>
+    </span>
+  );
+}
 
-// ---- Screen -------------------------------------------------------------------
-
-export function LearnScreen({
-  mode,
-  onSpeak,
-}: {
-  mode: YorubaMode;
-  onSpeak: (text: string) => void;
-}) {
-  const [levelId, setLevelId] = useState(LEVELS[0].id);
-  const [questionSeed, setQuestionSeed] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [quizChoice, setQuizChoice] = useState<string | null>(null);
-  const [typed, setTyped] = useState("");
-  const [progress, setProgress] = useState<Progress>({
-    scores: {},
+export function LearnScreen({ mode }: { mode: YorubaMode }) {
+  const [progress, setProgress] = useState<LearnProgress>({
+    age: null,
+    levels: {},
+    review: {},
     streak: 0,
     lastDay: "",
   });
+  const [age, setAge] = useState<AgeGroup | null>(null);
+  const [activeLevel, setActiveLevel] = useState<LevelDef | null>(null);
 
+  // Restore saved progress after mount (SSR renders the empty default).
   useEffect(() => {
-    setProgress(loadProgress());
+    const p = loadLearnProgress();
+    setProgress(p);
+    setAge(p.age);
   }, []);
 
-  const level = LEVELS.find((l) => l.id === levelId)!;
-  const n = level.pool[questionSeed % level.pool.length];
-  // Every third card flips the direction: word shown, number typed.
-  const kind: QuizKind = questionSeed % 3 === 2 ? "type-number" : "pick-word";
-
-  const correct = useMemo(() => toYoruba(n, mode), [n, mode]);
-  const choices = useMemo(
-    () => buildChoices(n, correct, mode, level.pool),
-    [n, correct, mode, level.pool],
+  const ageInfo = useMemo(
+    () => AGE_GROUPS.find((g) => g.id === age) ?? null,
+    [age],
   );
-  const explanation = revealed ? explainNumber(n) : null;
+  const reviewNumbers = age ? progress.review[age] ?? [] : [];
 
-  const record = (right: boolean) => {
-    setProgress((p) => {
-      const prev = p.scores[level.id] ?? { right: 0, total: 0 };
-      const next = bumpStreak({
-        ...p,
-        scores: {
-          ...p.scores,
-          [level.id]: {
-            right: prev.right + (right ? 1 : 0),
-            total: prev.total + 1,
-          },
-        },
-      });
-      try {
-        localStorage.setItem(PROGRESS_KEY, JSON.stringify(next));
-      } catch {
-        // Private browsing: progress just won't persist.
-      }
-      return next;
-    });
+  const handleComplete = (
+    correct: number,
+    missed: number[],
+    cleared: number[],
+  ) => {
+    if (!age || !activeLevel) return;
+    const next = applySessionResult(
+      progress,
+      age,
+      activeLevel.id,
+      correct,
+      missed,
+      cleared,
+    );
+    setProgress(next);
+    saveLearnProgress(next);
   };
 
-  const nextQuestion = () => {
-    setQuestionSeed((s) => s + 1);
-    setRevealed(false);
-    setQuizChoice(null);
-    setTyped("");
+  const selectAge = (id: AgeGroup) => {
+    setAge(id);
+    setActiveLevel(null);
+    const next = { ...progress, age: id };
+    setProgress(next);
+    saveLearnProgress(next);
   };
 
-  const selectLevel = (id: string) => {
-    setLevelId(id);
-    setQuestionSeed(0);
-    setRevealed(false);
-    setQuizChoice(null);
-    setTyped("");
-  };
+  // ---- A session is running: hand the whole screen to it -------------------
+  if (age && activeLevel) {
+    return (
+      <div className="screen screen-learn">
+        <Session
+          age={age}
+          level={activeLevel}
+          mode={mode}
+          reviewNumbers={reviewNumbers}
+          onComplete={handleComplete}
+          onExit={() => setActiveLevel(null)}
+        />
+      </div>
+    );
+  }
 
-  const handlePick = (choice: string) => {
-    if (quizChoice || revealed) return;
-    setQuizChoice(choice);
-    setRevealed(true);
-    record(choice === correct);
-  };
-
-  const handleTyped = () => {
-    if (revealed) return;
-    setRevealed(true);
-    record(Number(typed.trim()) === n);
-  };
-
-  const score = progress.scores[level.id] ?? { right: 0, total: 0 };
-  const pct = score.total ? Math.round((100 * score.right) / score.total) : 0;
-
+  // ---- Selection: pick a track, then a level -------------------------------
   return (
     <div className="screen screen-learn">
       <header className="screen-head">
         <div>
           <h1 className="screen-title">Kọ́ ẹ̀kọ́</h1>
           <p className="screen-sub">
-            {level.subtitle} — guess, reveal, learn the why
+            {ageInfo
+              ? `${ageInfo.yoruba} · ${ageInfo.ages} — ${ageInfo.tagline}`
+              : "Yan ẹgbẹ́ rẹ — choose a track to start playing"}
           </p>
         </div>
         <div className="learn-head-pills">
@@ -271,163 +157,93 @@ export function LearnScreen({
               ✶ {progress.streak}
             </span>
           )}
-          <span className="score-pill" aria-label="Score">
-            {score.right}
-            <i>/{score.total}</i>
-            {score.total > 0 && <i> · {pct}%</i>}
-          </span>
+          {reviewNumbers.length > 0 && (
+            <span className="score-pill" title="Numbers queued for review">
+              ↻ {reviewNumbers.length}
+            </span>
+          )}
         </div>
       </header>
 
-      <div className="chip-row learn-levels" role="tablist" aria-label="Levels">
-        {LEVELS.map((l) => {
-          const s = progress.scores[l.id];
-          const mastered = s && s.total >= 10 && s.right / s.total >= 0.8;
+      {/* Age tracks */}
+      <div className="grid grid-cols-2 gap-3">
+        {AGE_GROUPS.map((g) => {
+          const on = g.id === age;
           return (
             <button
-              key={l.id}
+              key={g.id}
               type="button"
-              role="tab"
-              aria-selected={l.id === levelId}
-              title={l.subtitle}
-              className={"chip" + (l.id === levelId ? " chip-on" : "")}
-              onClick={() => selectLevel(l.id)}
+              onClick={() => selectAge(g.id)}
+              className={`flex flex-col items-start gap-1 rounded-3xl border px-4 py-4 text-left transition-colors ${
+                on
+                  ? "border-primary-green bg-pale-green shadow-card"
+                  : "border-border bg-warm-cream hover:bg-pale-green"
+              }`}
             >
-              {mastered ? "✓ " : ""}
-              {l.title}
+              <span className="text-3xl">{g.emoji}</span>
+              <span className="font-serif text-lg font-semibold text-deep-green">
+                {g.yoruba}
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-muted">
+                {g.english} · {g.ages}
+              </span>
+              <span className="text-xs leading-5 text-muted">{g.tagline}</span>
             </button>
           );
         })}
       </div>
 
-      <section className="learn-card">
-        {kind === "pick-word" ? (
-          <div className="learn-number">{n}</div>
-        ) : (
-          <div className="learn-word-q">{correct}</div>
-        )}
-        <div className="learn-answer">
-          {revealed ? (
-            kind === "pick-word" ? (
-              <span className="learn-word">{correct}</span>
-            ) : (
-              <span className="learn-answer-num">{n}</span>
-            )
-          ) : (
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => setRevealed(true)}
-            >
-              Tẹ láti rí ìdáhùn — tap to reveal
-            </button>
-          )}
-        </div>
-        <div className="learn-card-actions">
-          {VOICE_ENABLED && (
-            <button type="button" className="ghost-btn" onClick={() => onSpeak(correct)}>
-              <SpeakerGlyph size={14} /> Gbọ́ pípè
-            </button>
-          )}
-          <button type="button" className="primary-btn" onClick={nextQuestion}>
-            Tókàn →
-          </button>
-        </div>
-      </section>
-
-      {explanation && (
-        <p className="explain-card">
-          <b>Kí ló dé? </b>
-          <span className="explain-sum">{explanation.summary}</span>
-          {" — "}
-          {explanation.relation === "subtract" ? (
-            <>
-              <span className="explain-word">{explanation.parts[0].word}</span>{" "}
-              short of{" "}
-              <span className="explain-word">{explanation.anchor.word}</span>.
-            </>
-          ) : (
-            <>
-              <span className="explain-word">{explanation.anchor.word}</span>{" "}
-              plus <span className="explain-word">{explanation.parts[0].word}</span>.
-            </>
-          )}
-        </p>
+      {/* Level map for the chosen track */}
+      {age && (
+        <section className="flex flex-col gap-3">
+          <span className="eyebrow gold">Àwọn ipele — levels</span>
+          <div className="flex flex-col gap-2.5">
+            {LEVELS[age].map((level, i) => {
+              const prog = progress.levels[`${age}/${level.id}`];
+              const stars = prog?.stars ?? 0;
+              // Levels unlock in order: the first is always open, the rest
+              // open once the previous one has earned at least one star.
+              const prevId = i > 0 ? LEVELS[age][i - 1].id : null;
+              const prevStars = prevId
+                ? progress.levels[`${age}/${prevId}`]?.stars ?? 0
+                : 1;
+              const locked = i > 0 && prevStars < 1;
+              return (
+                <button
+                  key={level.id}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => setActiveLevel(level)}
+                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-left transition-colors ${
+                    locked
+                      ? "cursor-not-allowed border-border bg-background/50 opacity-60"
+                      : "border-border bg-warm-cream shadow-button hover:bg-pale-green"
+                  }`}
+                >
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-mono text-lg font-bold ${
+                      stars > 0
+                        ? "bg-primary-green text-warm-cream"
+                        : "bg-pale-green text-deep-green"
+                    }`}
+                  >
+                    {locked ? "🔒" : i + 1}
+                  </span>
+                  <span className="flex flex-1 flex-col">
+                    <span className="font-serif text-base font-semibold text-deep-green">
+                      {level.title}
+                    </span>
+                    <span className="text-xs text-muted">{level.subtitle}</span>
+                  </span>
+                  {!locked && <StarRow stars={stars} />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
       )}
 
-      <section className="quiz">
-        {kind === "pick-word" ? (
-          <>
-            <span className="eyebrow">
-              Yan ìdáhùn tó tọ́ <i>pick the right answer</i>
-            </span>
-            <div className="quiz-grid">
-              {choices.map((c) => {
-                const isPicked = quizChoice === c;
-                const isCorrect = c === correct;
-                const cls =
-                  revealed && isCorrect
-                    ? " quiz-right"
-                    : revealed && isPicked && !isCorrect
-                      ? " quiz-wrong"
-                      : "";
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    disabled={revealed}
-                    className={"quiz-choice" + cls}
-                    onClick={() => handlePick(c)}
-                  >
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <>
-            <span className="eyebrow">
-              Tẹ nọ́mbà náà <i>type the number</i>
-            </span>
-            <form
-              className="quiz-type"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleTyped();
-              }}
-            >
-              <input
-                type="text"
-                inputMode="numeric"
-                value={typed}
-                onChange={(e) => setTyped(e.target.value)}
-                disabled={revealed}
-                aria-label="Your answer in digits"
-              />
-              <button
-                type="submit"
-                className="primary-btn"
-                disabled={revealed || typed.trim() === ""}
-              >
-                Dán wò
-              </button>
-            </form>
-            {revealed && (
-              <p
-                className={
-                  "quiz-feedback " + (Number(typed.trim()) === n ? "ok" : "err")
-                }
-              >
-                {Number(typed.trim()) === n
-                  ? "Ó dára! Correct."
-                  : `Rárá — ìdáhùn ni ${n}.`}
-              </p>
-            )}
-          </>
-        )}
-      </section>
-
+      {/* Research notes — the "why" behind the words */}
       <section className="insights">
         <div className="insights-head">
           <div>
@@ -454,24 +270,6 @@ export function LearnScreen({
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="insights">
-        <div className="insights-head">
-          <div>
-            <span className="eyebrow gold">App checklist</span>
-            <h2 className="insights-title">50 polish details</h2>
-          </div>
-          <span className="badge-pill">{APP_POLISH_ITEMS.length} items</span>
-        </div>
-        <ol className="polish-grid">
-          {APP_POLISH_ITEMS.map((item, idx) => (
-            <li key={item} className="polish-item">
-              <span className="polish-num">{idx + 1}</span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ol>
       </section>
     </div>
   );
