@@ -193,7 +193,7 @@ export function KaaApp() {
       case "convert":
         return <ConverterScreen mode={settings.numberMode} onSpeak={speak} />;
       case "learn":
-        return <LearnScreen mode={settings.numberMode} onSpeak={speak} />;
+        return <LearnScreen mode={settings.numberMode} />;
       case "settings":
         return (
           <SettingsScreen
