@@ -1,6 +1,6 @@
 // Kàá — share-card generator. Renders a number and its Yorùbá name onto a
-// square canvas styled like the app (deep green, adire lattice, gold accent)
-// and triggers a PNG download. Pure browser APIs, no dependencies.
+// square canvas styled like the app (Adire Indigo, adire lattice, terracotta
+// accent) and triggers a PNG download. Pure browser APIs, no dependencies.
 
 export function downloadShareCard(numeral: string, yoruba: string): void {
   const size = 1080;
@@ -10,11 +10,11 @@ export function downloadShareCard(numeral: string, yoruba: string): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  ctx.fillStyle = "#0C5A39";
+  ctx.fillStyle = "#25307A";
   ctx.fillRect(0, 0, size, size);
 
   // Adire diamond lattice, echoing the app background pattern.
-  ctx.strokeStyle = "rgba(255, 253, 248, 0.07)";
+  ctx.strokeStyle = "rgba(255, 247, 238, 0.07)";
   ctx.lineWidth = 4;
   const step = 270;
   for (let x = 0; x < size; x += step) {
@@ -31,16 +31,16 @@ export function downloadShareCard(numeral: string, yoruba: string): void {
 
   const serif = "Georgia, 'Times New Roman', serif";
 
-  ctx.fillStyle = "#FFFDF8";
+  ctx.fillStyle = "#FFF7EE";
   ctx.font = `bold 72px ${serif}`;
   ctx.textAlign = "left";
   ctx.fillText("Kàá", 80, 130);
-  ctx.fillStyle = "#D4B478";
+  ctx.fillStyle = "#BC5429";
   ctx.beginPath();
   ctx.arc(238, 76, 14, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#D4B478";
+  ctx.fillStyle = "#BC5429";
   ctx.textAlign = "center";
   // Shrink the numeral to fit long values.
   let numeralSize = 220;
@@ -52,7 +52,7 @@ export function downloadShareCard(numeral: string, yoruba: string): void {
   ctx.fillText(numeral, size / 2, 420);
 
   // Word-wrap the Yorùbá phrase.
-  ctx.fillStyle = "#FFFDF8";
+  ctx.fillStyle = "#FFF7EE";
   let phraseSize = yoruba.length <= 16 ? 110 : yoruba.length <= 40 ? 80 : 58;
   ctx.font = `bold ${phraseSize}px ${serif}`;
   const words = yoruba.split(" ");
@@ -74,7 +74,7 @@ export function downloadShareCard(numeral: string, yoruba: string): void {
     ctx.fillText(l, size / 2, startY + i * lineHeight);
   });
 
-  ctx.fillStyle = "rgba(255, 253, 248, 0.6)";
+  ctx.fillStyle = "rgba(255, 247, 238, 0.6)";
   ctx.font = `40px ${serif}`;
   ctx.fillText("Ònkà Yorùbá — the Yorùbá number calculator", size / 2, size - 70);
 

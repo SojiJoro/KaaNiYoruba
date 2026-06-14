@@ -464,3 +464,248 @@ export function explainNumber(n: number): NumberExplanation | null {
     summary: `${n} = ${n - remainder} + ${remainder}`,
   };
 }
+
+// ---- Conversion breakdown (Yípadà "show your working") ----------------------
+
+/**
+ * One line of the breakdown: the Yorùbá word (or particle) for a piece of the
+ * number, paired with a plain-language gloss of what it contributes.
+ */
+export interface BreakdownStep {
+  /** The Yorùbá word or particle for this piece. */
+  term: string;
+  /** Plain-language meaning / arithmetic, e.g. "80 − 5" or "100". */
+  gloss: string;
+}
+
+/** A full, human-readable account of how a typed value becomes Yorùbá words. */
+export interface ConversionBreakdown {
+  /** What kind of value this is, so the UI can frame it. */
+  kind: 'root' | 'whole' | 'decimal' | 'digits';
+  /** One-sentence, plain-English summary of the strategy used. */
+  headline: string;
+  /** The pieces, in the order they are read aloud. */
+  steps: BreakdownStep[];
+  /** The full Yorùbá name being explained. */
+  result: string;
+}
+
+const groupDigits = (n: number | bigint) => n.toLocaleString('en-US');
+
+function joinStep(particle: string): BreakdownStep {
+  const gloss =
+    particle === PARTICLES.subtractJoin
+      ? 'minus — "short of" the round number above'
+      : particle === PARTICLES.addJoin
+        ? 'plus — added on to the base'
+        : 'and — joins the two parts';
+  return { term: particle, gloss };
+}
+
+/** Decompose 0–999 (one place-value group) into its building blocks. */
+function breakdownUnder1000(k: number, mode: YorubaMode): BreakdownStep[] {
+  if (k === 0) return [{ term: BASE_0_10[0], gloss: '0 — zero' }];
+  if (k <= 10) return [{ term: BASE_0_10[k], gloss: `${k} — one of the ten root words` }];
+  if (k < 100)
+    return mode === 'traditional' ? breakdownTensTraditional(k) : breakdownTensModern(k);
+  return breakdownHundreds(k, mode);
+}
+
+/** Traditional (vigesimal/subtractive) breakdown of 11–99. */
+function breakdownTensTraditional(k: number): BreakdownStep[] {
+  const units = k % 10;
+  if (units === 0)
+    return [{ term: TRADITIONAL_0_99[k], gloss: `${k} — a round number in the base-20 system` }];
+
+  if (units <= 4) {
+    const anchor = Math.floor(k / 10) * 10;
+    return [
+      { term: anchorWord(anchor), gloss: `${anchor}` },
+      joinStep(PARTICLES.addJoin),
+      { term: TRADITIONAL_0_99[units], gloss: `${units}` },
+    ];
+  }
+
+  const anchor = Math.ceil(k / 10) * 10;
+  const deficit = anchor - k;
+  return [
+    { term: anchorWord(anchor), gloss: `${anchor}` },
+    joinStep(PARTICLES.subtractJoin),
+    { term: TRADITIONAL_0_99[deficit], gloss: `${deficit}` },
+  ];
+}
+
+/** Modern (decimal-additive) breakdown of 11–99. */
+function breakdownTensModern(k: number): BreakdownStep[] {
+  if (k <= 14) {
+    if (k <= 10) return [{ term: BASE_0_10[k], gloss: `${k} — a root word` }];
+    return [
+      { term: BASE_0_10[10], gloss: '10' },
+      joinStep(PARTICLES.modernJoin),
+      { term: BASE_0_10[k - 10], gloss: `${k - 10}` },
+    ];
+  }
+  if (k % 10 === 0)
+    return [{ term: TENS_BASE[k], gloss: `${k} — a round ten` }];
+
+  const tens = Math.floor(k / 10) * 10;
+  const units = k % 10;
+  return [
+    { term: tens === 10 ? BASE_0_10[10] : TENS_BASE[tens], gloss: `${tens}` },
+    joinStep(PARTICLES.modernJoin),
+    { term: BASE_0_10[units], gloss: `${units}` },
+  ];
+}
+
+/** Breakdown of 100–999: hundred base ± remainder. */
+function breakdownHundreds(k: number, mode: YorubaMode): BreakdownStep[] {
+  const hundredCount = Math.floor(k / 100);
+  const remainder = k % 100;
+
+  if (mode === 'traditional') {
+    const deficit = (hundredCount + 1) * 100 - k;
+    if (remainder !== 0 && deficit <= O_DIN_MAX_DEFICIT) {
+      const nextBase = (hundredCount + 1) * 100;
+      return [
+        { term: HUNDREDS_BASE[nextBase], gloss: `${groupDigits(nextBase)}` },
+        joinStep(PARTICLES.subtractJoin),
+        ...breakdownUnder1000(deficit, mode),
+      ];
+    }
+    const base = hundredCount * 100;
+    if (remainder === 0)
+      return [{ term: HUNDREDS_BASE[base], gloss: `${groupDigits(base)} — a hundred-base word` }];
+    return [
+      { term: HUNDREDS_BASE[base], gloss: `${groupDigits(base)}` },
+      joinStep(PARTICLES.addJoin),
+      ...breakdownUnder1000(remainder, mode),
+    ];
+  }
+
+  const head: BreakdownStep =
+    hundredCount === 1
+      ? { term: TENS_BASE[100], gloss: '100' }
+      : {
+          term: `${TENS_BASE[100]} ${asMultiplier(hundredCount, 'modern')}`,
+          gloss: `${hundredCount} × 100 = ${groupDigits(hundredCount * 100)}`,
+        };
+  if (remainder === 0) return [head];
+  return [head, joinStep(PARTICLES.modernJoin), ...breakdownUnder1000(remainder, mode)];
+}
+
+/** The base word for a round ten/hundred anchor (10–100). */
+function anchorWord(anchor: number): string {
+  if (anchor === 10) return BASE_0_10[10];
+  return TENS_BASE[anchor] ?? TRADITIONAL_0_99[anchor];
+}
+
+/** Recursively break a whole BigInt into its place-value pieces, largest first. */
+function breakdownWhole(n: bigint, mode: YorubaMode): BreakdownStep[] {
+  if (n < 1000n) return breakdownUnder1000(Number(n), mode);
+
+  const scale = SCALE_WORDS_BIG.find((s) => n >= s.value)!;
+  const count = n / scale.value;
+  const remainder = n % scale.value;
+  const head: BreakdownStep = {
+    term: `${scale.word} ${asMultiplierBig(count, mode)}`,
+    gloss:
+      count === 1n
+        ? `${scale.word} = ${groupDigits(scale.value)}`
+        : `${groupDigits(count)} × ${groupDigits(scale.value)} = ${groupDigits(count * scale.value)}`,
+  };
+  if (remainder === 0n) return [head];
+  const join = mode === 'traditional' ? PARTICLES.addJoin : PARTICLES.modernJoin;
+  return [head, joinStep(join), ...breakdownWhole(remainder, mode)];
+}
+
+/**
+ * Explain, step by step, how a typed value becomes its Yorùbá name — the
+ * "show your working" panel on the Yípadà screen, written so someone who does
+ * not speak Yorùbá can still follow the logic. Returns null only when the
+ * input is not a valid number.
+ */
+export function explainConversion(
+  value: string,
+  mode: YorubaMode = 'traditional',
+): ConversionBreakdown | null {
+  const normalized = normalizeNumericInput(value);
+  if (!isNumericString(normalized)) return null;
+
+  const result = numericInputToYoruba(normalized, mode);
+  const negative = normalized.startsWith('-');
+  const unsigned = normalized.replace(/^[+-]/, '');
+
+  // Decimals: name the whole part, then the point, then each fractional digit.
+  if (unsigned.includes('.')) {
+    const [wholeRaw, fracRaw = ''] = unsigned.split('.');
+    const whole = wholeRaw || '0';
+    const steps: BreakdownStep[] = [
+      {
+        term: integerStringToYoruba(whole, mode),
+        gloss: `${groupDigits(BigInt(whole))} — the whole-number part`,
+      },
+      { term: PARTICLES.decimalMark, gloss: 'the decimal point ("ààmì")' },
+    ];
+    for (const d of fracRaw) {
+      if (d in DIGIT_WORDS) steps.push({ term: DIGIT_WORDS[d], gloss: `${d} — read on its own` });
+    }
+    return {
+      kind: 'decimal',
+      headline:
+        'Decimals read the whole part as a full number, then say each digit after the point on its own.',
+      steps,
+      result,
+    };
+  }
+
+  // Leading-zero codes / out-of-range magnitudes are read one digit at a time.
+  const isLeadingZero = /^0\d+/.test(unsigned);
+  const big = isLeadingZero ? null : BigInt(unsigned);
+  if (isLeadingZero || (big !== null && big >= MAX_NAMED)) {
+    return {
+      kind: 'digits',
+      headline: isLeadingZero
+        ? 'Codes with a leading zero (phone numbers, IDs) are read one digit at a time, so the 0 is never lost.'
+        : 'This value is larger than the named scale words reach, so it is read one digit at a time.',
+      steps: [...unsigned]
+        .filter((d) => d in DIGIT_WORDS)
+        .map((d) => ({ term: DIGIT_WORDS[d], gloss: d })),
+      result,
+    };
+  }
+
+  const n = big!;
+
+  // Classical exact units (Ẹgbàá = 2,000, Ọkẹ́ kan = 20,000) are one dedicated word.
+  if (mode === 'traditional') {
+    const classical = classicalName(n);
+    if (classical) {
+      return {
+        kind: 'root',
+        headline: `"${classical}" is a classical Yorùbá unit — a single dedicated word for ${groupDigits(n)}.`,
+        steps: [{ term: classical, gloss: `${groupDigits(n)} — a classical unit, kept as one word` }],
+        result,
+      };
+    }
+  }
+
+  const steps = breakdownWhole(n, mode);
+  if (negative) steps.unshift({ term: PARTICLES.negative, gloss: 'minus (negative)' });
+
+  let headline: string;
+  if (negative) {
+    headline = 'Negative numbers put "Òdì" (minus) in front, then the value is built as normal.';
+  } else if (steps.length === 1) {
+    headline = `"${result}" is a single base word — Yorùbá has a dedicated word for ${groupDigits(n)}.`;
+  } else if (n >= 1000n) {
+    headline =
+      'Large numbers are grouped by scale words from the biggest down, then the pieces are added together.';
+  } else if (steps.some((s) => s.term === PARTICLES.subtractJoin)) {
+    headline =
+      'Yorùbá builds this by counting back from a round number — "ó dín / dín" means "short of".';
+  } else {
+    headline = 'This is built by adding smaller pieces on to a round base number.';
+  }
+
+  return { kind: steps.length === 1 ? 'root' : 'whole', headline, steps, result };
+}

@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import {
   digitSequenceToYoruba,
   expressionToYoruba,
+  explainConversion,
   explainNumber,
   nairaToYoruba,
   numericInputToYoruba,
@@ -184,6 +185,64 @@ check('explain', () => {
   assert.equal(e595.anchor.value, 600);
   assert.equal(explainNumber(40), null);
 });
+
+// Conversion breakdown — the Yípadà "show your working" panel
+check('explainConversion', () => {
+  // Non-numbers explain nothing.
+  assert.equal(explainConversion('abc'), null);
+
+  // Subtractive (counting back) numbers expose the "ó dín" particle.
+  const b75 = explainConversion('75', 'traditional')!;
+  assert.equal(b75.kind, 'whole');
+  assert.equal(b75.result, 'Márùndínlọ́gọ́rin');
+  assert.ok(b75.steps.some((s) => s.term === 'ó dín'));
+  assert.ok(b75.steps.some((s) => s.term === 'Ọgọ́rin')); // 80 anchor
+
+  // Additive numbers expose the "ó lé" particle.
+  const b21 = explainConversion('21', 'traditional')!;
+  assert.ok(b21.steps.some((s) => s.term === 'ó lé'));
+  assert.ok(b21.steps.some((s) => s.term === 'Ogún')); // 20 anchor
+
+  // Root words need no construction.
+  const b5 = explainConversion('5', 'traditional')!;
+  assert.equal(b5.kind, 'root');
+  assert.equal(b5.steps.length, 1);
+
+  // Decimals: whole part + point + each fractional digit.
+  const bDec = explainConversion('2.5', 'traditional')!;
+  assert.equal(bDec.kind, 'decimal');
+  assert.ok(bDec.steps.some((s) => s.term === 'ààmì'));
+
+  // Leading-zero codes read digit by digit.
+  const bCode = explainConversion('0803', 'traditional')!;
+  assert.equal(bCode.kind, 'digits');
+  assert.equal(bCode.steps.length, 4);
+
+  // Classical exact units are named as one word.
+  const b2000 = explainConversion('2000', 'traditional')!;
+  assert.equal(b2000.kind, 'root');
+  assert.equal(b2000.result, 'Ẹgbàá');
+
+  // Scale grouping for large numbers.
+  const bBig = explainConversion('1000000', 'traditional')!;
+  assert.ok(bBig.steps.some((s) => s.term.startsWith('Mílíọ̀nù')));
+});
+
+// ---- Property test: a breakdown's result must equal the engine's name, and
+// every step must be clean (no undefined / leaked digits) for 0–9,999.
+for (const mode of ['traditional', 'modern'] as const) {
+  check(`property: ${mode} breakdown matches engine 0–9999`, () => {
+    for (let n = 0; n <= 9999; n++) {
+      const b = explainConversion(String(n), mode)!;
+      assert.equal(b.result, toYoruba(n, mode), `breakdown result mismatch for ${n}`);
+      assert.ok(b.steps.length > 0, `${mode}(${n}) has no steps`);
+      for (const step of b.steps) {
+        assert.ok(!step.term.includes('undefined'), `${mode}(${n}) term has undefined: ${step.term}`);
+        assert.ok(step.term.length > 0, `${mode}(${n}) empty term`);
+      }
+    }
+  });
+}
 
 // ---- Property tests: every name 0–9,999 in both modes must be well-formed
 // and unique. Uniqueness is the round-trip property — if two numbers shared a

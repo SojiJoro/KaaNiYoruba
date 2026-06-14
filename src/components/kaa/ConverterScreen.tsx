@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   digitSequenceToYoruba,
+  explainConversion,
   numericInputToYoruba,
   type YorubaMode,
 } from "@/lib/yorubaNumbers";
@@ -21,6 +22,7 @@ export function ConverterScreen({
   const [value, setValue] = useState("25");
   const yoruba = numericInputToYoruba(value, mode);
   const digitYoruba = digitSequenceToYoruba(value, mode);
+  const breakdown = explainConversion(value, mode);
   const empty = value.trim() === "";
 
   return (
@@ -65,6 +67,28 @@ export function ConverterScreen({
           {yoruba || (empty ? "—" : "Nọ́mbà yìí kò pé")}
         </p>
       </section>
+
+      {breakdown && (
+        <section className="convert-breakdown">
+          <div className="convert-result-head">
+            <span className="eyebrow">
+              Bí ó ṣe ṣiṣẹ́ <i>how we built it</i>
+            </span>
+          </div>
+          <p className="breakdown-headline">{breakdown.headline}</p>
+          <ol className="breakdown-steps">
+            {breakdown.steps.map((step, i) => (
+              <li key={i}>
+                <span className="breakdown-term">{step.term}</span>
+                <span className="breakdown-gloss">{step.gloss}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="breakdown-result">
+            <span className="breakdown-eq">=</span> {breakdown.result}
+          </p>
+        </section>
+      )}
 
       <section className="convert-digits">
         <div className="convert-result-head">
