@@ -465,7 +465,13 @@ export function explainNumber(n: number): NumberExplanation | null {
   };
 }
 
-// ---- Conversion breakdown (Yípadà "show your working") ----------------------
+// ---- Conversion breakdown (Yípadà "how this name is formed") ----------------
+//
+// This is the teaching layer: given a number, explain WHERE its Yorùbá name
+// comes from — the vigesimal multiplication, the "ten less" / "hundred less"
+// subtraction, and the contractions that fuse the pieces into one word. The
+// etymologies below are taken straight from docs/yoruba-number-logic.md (§6,
+// §8), the project's researched source of truth.
 
 /**
  * One line of the breakdown: the Yorùbá word (or particle) for a piece of the
@@ -474,7 +480,7 @@ export function explainNumber(n: number): NumberExplanation | null {
 export interface BreakdownStep {
   /** The Yorùbá word or particle for this piece. */
   term: string;
-  /** Plain-language meaning / arithmetic, e.g. "80 − 5" or "100". */
+  /** Plain-language meaning / etymology, e.g. "20 × 2 = 40, fused into Ogójì". */
   gloss: string;
 }
 
@@ -482,7 +488,7 @@ export interface BreakdownStep {
 export interface ConversionBreakdown {
   /** What kind of value this is, so the UI can frame it. */
   kind: 'root' | 'whole' | 'decimal' | 'digits';
-  /** One-sentence, plain-English summary of the strategy used. */
+  /** One-sentence, plain-English summary of how the name is formed. */
   headline: string;
   /** The pieces, in the order they are read aloud. */
   steps: BreakdownStep[];
@@ -492,69 +498,175 @@ export interface ConversionBreakdown {
 
 const groupDigits = (n: number | bigint) => n.toLocaleString('en-US');
 
+/**
+ * The "landmark" numbers — round tens and hundred bases — whose names are
+ * lexicalised (multiplied scores, or "ten/hundred less" forms) rather than
+ * mechanically generated. Each carries a short gloss (for when it is the anchor
+ * of a bigger number), a learner headline, and the full etymology steps that
+ * explain how its single word is built. Source: docs/yoruba-number-logic.md.
+ */
+interface Landmark {
+  /** Short etymology used when this value is the anchor inside a bigger name. */
+  short: string;
+  /** Learner-facing headline when this value is typed on its own. */
+  headline: string;
+  /** The full "how the word is built" steps. */
+  steps: BreakdownStep[];
+}
+
+// Multiples of twenty: "ogún × n", fused into one word (40 = Ogún méjì → Ogójì).
+function scoreMultiple(value: number, multiplier: string, mult: number): Landmark {
+  const word = (TENS_BASE[value] ?? HUNDREDS_BASE[value])!;
+  const times = mult === 2 ? 'twice' : mult === 3 ? 'three times' : mult === 4 ? 'four times' : 'five times';
+  const countWord = mult === 2 ? 'two' : mult === 3 ? 'three' : mult === 4 ? 'four' : 'five';
+  return {
+    short: `${countWord} twenties (20 × ${mult})`,
+    headline: `${value} is ${countWord} twenties: twenty (Ogún) counted ${times}.`,
+    steps: [
+      { term: 'Ogún', gloss: '20 — a score, the base of the whole system' },
+      { term: multiplier, gloss: `${mult} — counted ${times}` },
+      { term: word, gloss: `"Ogún ${lowerFirst(multiplier)}" = 20 × ${mult} = ${value}, fused into the single word ${word}` },
+    ],
+  };
+}
+
+// "Odd" tens: the next score minus ten — the àád- prefix means "ten less than".
+function tenLess(value: number): Landmark {
+  const word = TENS_BASE[value]!;
+  const up = value + 10;
+  const upWord = (TENS_BASE[up] ?? HUNDREDS_BASE[up])!;
+  return {
+    short: `ten less than ${up} (${up} − 10)`,
+    headline: `${value} is ten short of ${up}.`,
+    steps: [
+      { term: upWord, gloss: `${up} — the next landmark up` },
+      { term: 'dín ẹ̀wá', gloss: '10 less' },
+      { term: word, gloss: `${up} − 10 = ${value}. The prefix "àád-" is a frozen form of "dín ẹ̀wá" = "ten less than".` },
+    ],
+  };
+}
+
+// Multiples of two hundred: "igba × n" (600 = Igba mẹ́ta → Ẹgbẹ̀ta).
+function igbaMultiple(value: number, multiplier: string, mult: number): Landmark {
+  const word = HUNDREDS_BASE[value]!;
+  const countWord = mult === 3 ? 'three' : mult === 4 ? 'four' : 'five';
+  return {
+    short: `${countWord} two-hundreds (200 × ${mult})`,
+    headline: `${value} is ${countWord} two-hundreds: Igba (200) counted ${countWord} times.`,
+    steps: [
+      { term: 'Igba', gloss: '200 — the base word for two hundred' },
+      { term: multiplier, gloss: `${mult} — counted ${countWord} times` },
+      { term: word, gloss: `200 × ${mult} = ${value}; the "ẹgbẹ̀-" prefix means "igba times", fused into ${word}` },
+    ],
+  };
+}
+
+// Odd hundreds: the next even hundred minus 100 — ẹ̀ẹ́dẹ́- = "a hundred less".
+function hundredLess(value: number): Landmark {
+  const word = HUNDREDS_BASE[value]!;
+  const up = value + 100;
+  const upWord = HUNDREDS_BASE[up]!;
+  return {
+    short: `a hundred less than ${groupDigits(up)} (${groupDigits(up)} − 100)`,
+    headline: `${groupDigits(value)} is a hundred short of ${groupDigits(up)}.`,
+    steps: [
+      { term: upWord, gloss: `${groupDigits(up)} — the next even hundred up` },
+      { term: 'dín ọgọ́rùn-ún', gloss: '100 less' },
+      { term: word, gloss: `${groupDigits(up)} − 100 = ${groupDigits(value)}. The prefix "ẹ̀ẹ́dẹ́-" means "a hundred less than".` },
+    ],
+  };
+}
+
+// A basic, irreducible root word (its own lexeme, not built by arithmetic).
+function basicWord(value: number, word: string, note: string): Landmark {
+  return {
+    short: note,
+    headline: `${groupDigits(value)} — "${word}" — is a basic root word: ${note}.`,
+    steps: [{ term: word, gloss: `${groupDigits(value)} — ${note}` }],
+  };
+}
+
+const LANDMARKS: Record<number, Landmark> = {
+  20: basicWord(20, 'Ogún', 'a "score" — the base unit every bigger number is built from'),
+  30: basicWord(30, 'Ọgbọ̀n', 'a unique word for thirty (the one odd ten not built by subtraction)'),
+  40: scoreMultiple(40, 'Méjì', 2),
+  50: tenLess(50),
+  60: scoreMultiple(60, 'Mẹ́ta', 3),
+  70: tenLess(70),
+  80: scoreMultiple(80, 'Mẹ́rin', 4),
+  90: tenLess(90),
+  100: scoreMultiple(100, 'Márùn-ún', 5),
+  200: basicWord(200, 'Igba', 'a basic word for two hundred (it becomes the base for the hundreds)'),
+  300: basicWord(300, 'Ọ̀ọ́dúnrún', 'a basic word for three hundred (historically ≈ 20 × 15)'),
+  400: basicWord(400, 'Irinwó', 'a basic word for four hundred (historically ≈ 20 × 20, a "score of scores")'),
+  500: hundredLess(500),
+  600: igbaMultiple(600, 'Mẹ́ta', 3),
+  700: hundredLess(700),
+  800: igbaMultiple(800, 'Mẹ́rin', 4),
+  900: hundredLess(900),
+  1000: igbaMultiple(1000, 'Márùn-ún', 5),
+};
+
 function joinStep(particle: string): BreakdownStep {
   const gloss =
     particle === PARTICLES.subtractJoin
-      ? 'minus — "short of" the round number above'
+      ? 'minus — "ó dín" = short of the number above'
       : particle === PARTICLES.addJoin
-        ? 'plus — added on to the base'
-        : 'and — joins the two parts';
+        ? 'plus — "ó lé" = added on to the base'
+        : 'and — "àti" joins the two parts';
   return { term: particle, gloss };
+}
+
+/** The word for a round ten/hundred anchor (10–1,000). */
+function landmarkWord(value: number): string {
+  if (value === 10) return BASE_0_10[10];
+  if (value <= 100) return TENS_BASE[value] ?? TRADITIONAL_0_99[value];
+  return HUNDREDS_BASE[value];
+}
+
+/** An anchor step that also carries the anchor's own short etymology. */
+function landmarkStep(value: number): BreakdownStep {
+  const short = LANDMARKS[value]?.short;
+  return {
+    term: landmarkWord(value),
+    gloss: short ? `${groupDigits(value)} — ${short}` : `${groupDigits(value)}`,
+  };
+}
+
+/** A small unit step (1–10). */
+function unitStep(u: number): BreakdownStep {
+  return { term: TRADITIONAL_0_99[u] ?? BASE_0_10[u], gloss: `${u}` };
 }
 
 /** Decompose 0–999 (one place-value group) into its building blocks. */
 function breakdownUnder1000(k: number, mode: YorubaMode): BreakdownStep[] {
   if (k === 0) return [{ term: BASE_0_10[0], gloss: '0 — zero' }];
   if (k <= 10) return [{ term: BASE_0_10[k], gloss: `${k} — one of the ten root words` }];
+  // Exact landmarks (round tens, hundred bases) carry their own full etymology.
+  if (LANDMARKS[k]) return LANDMARKS[k].steps;
   if (k < 100)
     return mode === 'traditional' ? breakdownTensTraditional(k) : breakdownTensModern(k);
   return breakdownHundreds(k, mode);
 }
 
-/** Traditional (vigesimal/subtractive) breakdown of 11–99. */
+/** Traditional (vigesimal/subtractive) breakdown of non-round 11–99. */
 function breakdownTensTraditional(k: number): BreakdownStep[] {
   const units = k % 10;
-  if (units === 0)
-    return [{ term: TRADITIONAL_0_99[k], gloss: `${k} — a round number in the base-20 system` }];
-
   if (units <= 4) {
     const anchor = Math.floor(k / 10) * 10;
-    return [
-      { term: anchorWord(anchor), gloss: `${anchor}` },
-      joinStep(PARTICLES.addJoin),
-      { term: TRADITIONAL_0_99[units], gloss: `${units}` },
-    ];
+    return [landmarkStep(anchor), joinStep(PARTICLES.addJoin), unitStep(units)];
   }
-
   const anchor = Math.ceil(k / 10) * 10;
-  const deficit = anchor - k;
-  return [
-    { term: anchorWord(anchor), gloss: `${anchor}` },
-    joinStep(PARTICLES.subtractJoin),
-    { term: TRADITIONAL_0_99[deficit], gloss: `${deficit}` },
-  ];
+  return [landmarkStep(anchor), joinStep(PARTICLES.subtractJoin), unitStep(anchor - k)];
 }
 
-/** Modern (decimal-additive) breakdown of 11–99. */
+/** Modern (decimal-additive) breakdown of non-round 11–99. */
 function breakdownTensModern(k: number): BreakdownStep[] {
   if (k <= 14) {
-    if (k <= 10) return [{ term: BASE_0_10[k], gloss: `${k} — a root word` }];
-    return [
-      { term: BASE_0_10[10], gloss: '10' },
-      joinStep(PARTICLES.modernJoin),
-      { term: BASE_0_10[k - 10], gloss: `${k - 10}` },
-    ];
+    return [landmarkStep(10), joinStep(PARTICLES.modernJoin), unitStep(k - 10)];
   }
-  if (k % 10 === 0)
-    return [{ term: TENS_BASE[k], gloss: `${k} — a round ten` }];
-
   const tens = Math.floor(k / 10) * 10;
-  const units = k % 10;
-  return [
-    { term: tens === 10 ? BASE_0_10[10] : TENS_BASE[tens], gloss: `${tens}` },
-    joinStep(PARTICLES.modernJoin),
-    { term: BASE_0_10[units], gloss: `${units}` },
-  ];
+  return [landmarkStep(tens), joinStep(PARTICLES.modernJoin), unitStep(k % 10)];
 }
 
 /** Breakdown of 100–999: hundred base ± remainder. */
@@ -565,18 +677,14 @@ function breakdownHundreds(k: number, mode: YorubaMode): BreakdownStep[] {
   if (mode === 'traditional') {
     const deficit = (hundredCount + 1) * 100 - k;
     if (remainder !== 0 && deficit <= O_DIN_MAX_DEFICIT) {
-      const nextBase = (hundredCount + 1) * 100;
       return [
-        { term: HUNDREDS_BASE[nextBase], gloss: `${groupDigits(nextBase)}` },
+        landmarkStep((hundredCount + 1) * 100),
         joinStep(PARTICLES.subtractJoin),
         ...breakdownUnder1000(deficit, mode),
       ];
     }
-    const base = hundredCount * 100;
-    if (remainder === 0)
-      return [{ term: HUNDREDS_BASE[base], gloss: `${groupDigits(base)} — a hundred-base word` }];
     return [
-      { term: HUNDREDS_BASE[base], gloss: `${groupDigits(base)}` },
+      landmarkStep(hundredCount * 100),
       joinStep(PARTICLES.addJoin),
       ...breakdownUnder1000(remainder, mode),
     ];
@@ -584,19 +692,13 @@ function breakdownHundreds(k: number, mode: YorubaMode): BreakdownStep[] {
 
   const head: BreakdownStep =
     hundredCount === 1
-      ? { term: TENS_BASE[100], gloss: '100' }
+      ? landmarkStep(100)
       : {
           term: `${TENS_BASE[100]} ${asMultiplier(hundredCount, 'modern')}`,
-          gloss: `${hundredCount} × 100 = ${groupDigits(hundredCount * 100)}`,
+          gloss: `100 × ${hundredCount} = ${groupDigits(hundredCount * 100)}`,
         };
   if (remainder === 0) return [head];
   return [head, joinStep(PARTICLES.modernJoin), ...breakdownUnder1000(remainder, mode)];
-}
-
-/** The base word for a round ten/hundred anchor (10–100). */
-function anchorWord(anchor: number): string {
-  if (anchor === 10) return BASE_0_10[10];
-  return TENS_BASE[anchor] ?? TRADITIONAL_0_99[anchor];
 }
 
 /** Recursively break a whole BigInt into its place-value pieces, largest first. */
@@ -618,11 +720,45 @@ function breakdownWhole(n: bigint, mode: YorubaMode): BreakdownStep[] {
   return [head, joinStep(join), ...breakdownWhole(remainder, mode)];
 }
 
+/** Plain-English headline for a whole number below 1,000. */
+function wholeHeadline(n: number, mode: YorubaMode): string {
+  if (n <= 10) return `${n} is one of the ten basic number words.`;
+  if (LANDMARKS[n]) return LANDMARKS[n].headline;
+
+  // Modern mode is purely decimal-additive (tens + units, hundreds + rest).
+  if (mode === 'modern') {
+    if (n < 100) {
+      const tens = Math.floor(n / 10) * 10;
+      return `${n} is ${tens} and ${n % 10} (${tens} + ${n % 10}), joined with "àti".`;
+    }
+    const hundreds = Math.floor(n / 100) * 100;
+    return `${n} is ${hundreds} and ${n % 100} (${hundreds} + ${n % 100}), joined with "àti".`;
+  }
+
+  if (n < 100) {
+    const u = n % 10;
+    if (u <= 4) {
+      const anchor = Math.floor(n / 10) * 10;
+      return `${n} is built by adding ${u} on to ${anchor} (${anchor} + ${u}).`;
+    }
+    const anchor = Math.ceil(n / 10) * 10;
+    return `${n} is built by counting back from ${anchor} — it is ${anchor - n} short of ${anchor} (${anchor} − ${anchor - n}).`;
+  }
+
+  const hundredCount = Math.floor(n / 100);
+  const remainder = n % 100;
+  const deficit = (hundredCount + 1) * 100 - n;
+  if (remainder !== 0 && deficit <= O_DIN_MAX_DEFICIT) {
+    return `${n} is ${deficit} short of ${(hundredCount + 1) * 100} (${(hundredCount + 1) * 100} − ${deficit}).`;
+  }
+  return `${n} is ${hundredCount * 100} plus ${remainder} (${hundredCount * 100} + ${remainder}).`;
+}
+
 /**
- * Explain, step by step, how a typed value becomes its Yorùbá name — the
- * "show your working" panel on the Yípadà screen, written so someone who does
- * not speak Yorùbá can still follow the logic. Returns null only when the
- * input is not a valid number.
+ * Explain, step by step, how a typed value gets its Yorùbá name — the teaching
+ * panel on the Yípadà screen. It shows where the word comes from (the scores,
+ * the "ten/hundred less" subtraction, the contractions), written so someone who
+ * does not speak Yorùbá can follow it. Returns null only for non-numbers.
  */
 export function explainConversion(
   value: string,
@@ -683,28 +819,25 @@ export function explainConversion(
       return {
         kind: 'root',
         headline: `"${classical}" is a classical Yorùbá unit — a single dedicated word for ${groupDigits(n)}.`,
-        steps: [{ term: classical, gloss: `${groupDigits(n)} — a classical unit, kept as one word` }],
+        steps: [{ term: classical, gloss: `${groupDigits(n)} — a classical cowrie-counting unit, kept as one word` }],
         result,
       };
     }
   }
 
   const steps = breakdownWhole(n, mode);
-  if (negative) steps.unshift({ term: PARTICLES.negative, gloss: 'minus (negative)' });
 
   let headline: string;
-  if (negative) {
-    headline = 'Negative numbers put "Òdì" (minus) in front, then the value is built as normal.';
-  } else if (steps.length === 1) {
-    headline = `"${result}" is a single base word — Yorùbá has a dedicated word for ${groupDigits(n)}.`;
-  } else if (n >= 1000n) {
+  if (n >= 1000n) {
     headline =
-      'Large numbers are grouped by scale words from the biggest down, then the pieces are added together.';
-  } else if (steps.some((s) => s.term === PARTICLES.subtractJoin)) {
-    headline =
-      'Yorùbá builds this by counting back from a round number — "ó dín / dín" means "short of".';
+      'Large numbers are grouped by scale words (Ẹgbẹ̀rún, Mílíọ̀nù …) from the biggest down, then added together.';
   } else {
-    headline = 'This is built by adding smaller pieces on to a round base number.';
+    headline = wholeHeadline(Number(n), mode);
+  }
+
+  if (negative) {
+    steps.unshift({ term: PARTICLES.negative, gloss: 'minus (negative)' });
+    headline = `Negative: "Òdì" (minus) goes in front, then ${headline.charAt(0).toLowerCase()}${headline.slice(1)}`;
   }
 
   return { kind: steps.length === 1 ? 'root' : 'whole', headline, steps, result };

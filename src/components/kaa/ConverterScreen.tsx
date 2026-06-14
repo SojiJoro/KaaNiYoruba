@@ -72,7 +72,7 @@ export function ConverterScreen({
         <section className="convert-breakdown">
           <div className="convert-result-head">
             <span className="eyebrow">
-              Bí ó ṣe ṣiṣẹ́ <i>how we built it</i>
+              Bí orúkọ náà ṣe wá <i>how this name is formed</i>
             </span>
           </div>
           <p className="breakdown-headline">{breakdown.headline}</p>

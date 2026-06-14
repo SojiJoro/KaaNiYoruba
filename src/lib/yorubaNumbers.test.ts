@@ -186,22 +186,42 @@ check('explain', () => {
   assert.equal(explainNumber(40), null);
 });
 
-// Conversion breakdown — the Yípadà "show your working" panel
+// Conversion breakdown — the Yípadà "how this name is formed" panel
 check('explainConversion', () => {
   // Non-numbers explain nothing.
   assert.equal(explainConversion('abc'), null);
 
-  // Subtractive (counting back) numbers expose the "ó dín" particle.
+  // Round multiple of twenty: the etymology shows ogún × 2 fusing into Ogójì.
+  const b40 = explainConversion('40', 'traditional')!;
+  assert.equal(b40.result, 'Ogójì');
+  assert.ok(b40.steps.some((s) => s.term === 'Ogún')); // 20 base
+  assert.ok(b40.steps.some((s) => s.term === 'Méjì')); // ×2
+  assert.ok(b40.steps.some((s) => s.term === 'Ogójì')); // fused result
+  assert.ok(/two twenties/i.test(b40.headline));
+
+  // "Odd" ten: 50 is sixty minus ten (the àád- prefix).
+  const b50 = explainConversion('50', 'traditional')!;
+  assert.ok(b50.steps.some((s) => s.term === 'Ọgọ́ta')); // 60 anchor
+  assert.ok(b50.steps.some((s) => s.term === 'Àádọ́ta'));
+  assert.ok(/short of/i.test(b50.headline));
+
+  // Subtractive (counting back) numbers expose the "ó dín" particle, and the
+  // anchor carries its own etymology (80 = four twenties).
   const b75 = explainConversion('75', 'traditional')!;
-  assert.equal(b75.kind, 'whole');
   assert.equal(b75.result, 'Márùndínlọ́gọ́rin');
   assert.ok(b75.steps.some((s) => s.term === 'ó dín'));
-  assert.ok(b75.steps.some((s) => s.term === 'Ọgọ́rin')); // 80 anchor
+  const anchor80 = b75.steps.find((s) => s.term === 'Ọgọ́rin');
+  assert.ok(anchor80 && /four twenties/i.test(anchor80.gloss));
 
   // Additive numbers expose the "ó lé" particle.
   const b21 = explainConversion('21', 'traditional')!;
   assert.ok(b21.steps.some((s) => s.term === 'ó lé'));
   assert.ok(b21.steps.some((s) => s.term === 'Ogún')); // 20 anchor
+
+  // Hundreds built on igba: 600 = Igba × 3.
+  const b600 = explainConversion('600', 'traditional')!;
+  assert.ok(b600.steps.some((s) => s.term === 'Igba'));
+  assert.ok(b600.steps.some((s) => s.term === 'Ẹgbẹ̀ta'));
 
   // Root words need no construction.
   const b5 = explainConversion('5', 'traditional')!;
