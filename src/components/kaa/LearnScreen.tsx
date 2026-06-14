@@ -19,48 +19,6 @@ import {
 } from "@/lib/learn";
 import { Session } from "../learn/Session";
 
-// Research notes carried over from the previous Learn screen — kept so the
-// "why" behind the numbers stays one scroll away from the practice.
-const LEARN_INSIGHTS = [
-  {
-    title: "Base-20 backbone",
-    yoruba: "Ogún ni ìpìlẹ̀",
-    detail:
-      "Traditional Yorùbá numerals are commonly described as vigesimal, so round numbers lean on scores: 40 is two twenties, 60 is three twenties, and 80 is four twenties.",
-    example: "40 → Ogójì • 60 → Ọgọ́ta • 80 → Ọgọ́rin",
-    source: "Omniglot Yoruba numbers",
-    sourceUrl: "https://www.omniglot.com/language/numbers/yoruba.htm",
-  },
-  {
-    title: "Arithmetic builds words",
-    yoruba: "Ìṣirò wà nínú ọ̀rọ̀",
-    detail:
-      "Recent morphology research frames Yorùbá number names as form-meaning constructions that encode arithmetic operations such as addition, subtraction, and multiplication.",
-    example: "21 adds to 20 • 35 subtracts from 40 • 200 groups scores",
-    source: "A Construction Morphology Approach to Yoruba Numerals",
-    sourceUrl: "https://constructions.journals.hhu.de/article/view/549",
-  },
-  {
-    title: "Count back near targets",
-    yoruba: "Dín = count back",
-    detail:
-      "Many forms before the next ten or score use subtractive phrasing, so the app teaches 35 as five less than 40 and 75 as five less than 80.",
-    example: "35 → Márùndínlógójì • 75 → Márùndínlọ́gọ́rin",
-    source: "Linguistic analysis of the structure of Yoruba numerals",
-    sourceUrl: "https://www.tandfonline.com/doi/abs/10.1080/10228195.2013.857362",
-  },
-  {
-    title: "Modern decimal help",
-    yoruba: "Ọ̀nà òde-òní",
-    detail:
-      "Some modern teaching proposals simplify hard subtractive forms with more decimal, additive phrasing. That is why Kàá keeps both traditional and modern modes visible.",
-    example: "75 traditional → Márùndínlọ́gọ́rin • modern → Àádọ́rin àti Márùn-ún",
-    source: "Proposal for a Yoruba decimal counting system",
-    sourceUrl:
-      "https://repository.ui.edu.ng/items/6164afe0-3ef5-4e30-9fb1-c303a6e783b6",
-  },
-];
-
 function StarRow({ stars }: { stars: number }) {
   return (
     <span
@@ -242,35 +200,6 @@ export function LearnScreen({ mode }: { mode: YorubaMode }) {
           </div>
         </section>
       )}
-
-      {/* Research notes — the "why" behind the words */}
-      <section className="insights">
-        <div className="insights-head">
-          <div>
-            <span className="eyebrow gold">Research notes</span>
-            <h2 className="insights-title">Yorùbá number counting</h2>
-          </div>
-          <span className="badge-pill">20-base</span>
-        </div>
-        <div className="insight-grid">
-          {LEARN_INSIGHTS.map((item) => (
-            <article key={item.title} className="insight-card">
-              <div className="insight-card-head">
-                <h3>{item.title}</h3>
-                <span className="insight-yo">{item.yoruba}</span>
-              </div>
-              <p className="insight-detail">{item.detail}</p>
-              <p className="insight-example">{item.example}</p>
-              <p className="insight-source">
-                Source:{" "}
-                <a href={item.sourceUrl} target="_blank" rel="noreferrer">
-                  {item.source}
-                </a>
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

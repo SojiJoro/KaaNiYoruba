@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================================================
-   Káà redesign — "Adire Indigo" design system (design handoff: Káà Redesign)
+   Kàá redesign — "Adire Indigo" design system (design handoff: Kàá Redesign)
    Three palettes (adire / forest / clay), light + dark, applied via
    data-palette / data-theme attributes set before first paint.
    ========================================================================= */
@@ -898,6 +898,69 @@ main,
   line-height: 1.35;
   margin: 0;
   text-wrap: pretty;
+}
+
+.convert-breakdown {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.breakdown-headline {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 2px 0 14px;
+}
+.breakdown-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.breakdown-steps li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+.breakdown-steps li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.breakdown-term {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--primary);
+  font-weight: 600;
+}
+.breakdown-gloss {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: right;
+}
+.breakdown-result {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.breakdown-eq {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .convert-digits {

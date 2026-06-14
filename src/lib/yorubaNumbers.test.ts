@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import {
   digitSequenceToYoruba,
   expressionToYoruba,
+  explainConversion,
   explainNumber,
   nairaToYoruba,
   numericInputToYoruba,
@@ -184,6 +185,84 @@ check('explain', () => {
   assert.equal(e595.anchor.value, 600);
   assert.equal(explainNumber(40), null);
 });
+
+// Conversion breakdown — the Yípadà "how this name is formed" panel
+check('explainConversion', () => {
+  // Non-numbers explain nothing.
+  assert.equal(explainConversion('abc'), null);
+
+  // Round multiple of twenty: the etymology shows ogún × 2 fusing into Ogójì.
+  const b40 = explainConversion('40', 'traditional')!;
+  assert.equal(b40.result, 'Ogójì');
+  assert.ok(b40.steps.some((s) => s.term === 'Ogún')); // 20 base
+  assert.ok(b40.steps.some((s) => s.term === 'Méjì')); // ×2
+  assert.ok(b40.steps.some((s) => s.term === 'Ogójì')); // fused result
+  assert.ok(/two twenties/i.test(b40.headline));
+
+  // "Odd" ten: 50 is sixty minus ten (the àád- prefix).
+  const b50 = explainConversion('50', 'traditional')!;
+  assert.ok(b50.steps.some((s) => s.term === 'Ọgọ́ta')); // 60 anchor
+  assert.ok(b50.steps.some((s) => s.term === 'Àádọ́ta'));
+  assert.ok(/short of/i.test(b50.headline));
+
+  // Subtractive (counting back) numbers expose the "ó dín" particle, and the
+  // anchor carries its own etymology (80 = four twenties).
+  const b75 = explainConversion('75', 'traditional')!;
+  assert.equal(b75.result, 'Márùndínlọ́gọ́rin');
+  assert.ok(b75.steps.some((s) => s.term === 'ó dín'));
+  const anchor80 = b75.steps.find((s) => s.term === 'Ọgọ́rin');
+  assert.ok(anchor80 && /four twenties/i.test(anchor80.gloss));
+
+  // Additive numbers expose the "ó lé" particle.
+  const b21 = explainConversion('21', 'traditional')!;
+  assert.ok(b21.steps.some((s) => s.term === 'ó lé'));
+  assert.ok(b21.steps.some((s) => s.term === 'Ogún')); // 20 anchor
+
+  // Hundreds built on igba: 600 = Igba × 3.
+  const b600 = explainConversion('600', 'traditional')!;
+  assert.ok(b600.steps.some((s) => s.term === 'Igba'));
+  assert.ok(b600.steps.some((s) => s.term === 'Ẹgbẹ̀ta'));
+
+  // Root words need no construction.
+  const b5 = explainConversion('5', 'traditional')!;
+  assert.equal(b5.kind, 'root');
+  assert.equal(b5.steps.length, 1);
+
+  // Decimals: whole part + point + each fractional digit.
+  const bDec = explainConversion('2.5', 'traditional')!;
+  assert.equal(bDec.kind, 'decimal');
+  assert.ok(bDec.steps.some((s) => s.term === 'ààmì'));
+
+  // Leading-zero codes read digit by digit.
+  const bCode = explainConversion('0803', 'traditional')!;
+  assert.equal(bCode.kind, 'digits');
+  assert.equal(bCode.steps.length, 4);
+
+  // Classical exact units are named as one word.
+  const b2000 = explainConversion('2000', 'traditional')!;
+  assert.equal(b2000.kind, 'root');
+  assert.equal(b2000.result, 'Ẹgbàá');
+
+  // Scale grouping for large numbers.
+  const bBig = explainConversion('1000000', 'traditional')!;
+  assert.ok(bBig.steps.some((s) => s.term.startsWith('Mílíọ̀nù')));
+});
+
+// ---- Property test: a breakdown's result must equal the engine's name, and
+// every step must be clean (no undefined / leaked digits) for 0–9,999.
+for (const mode of ['traditional', 'modern'] as const) {
+  check(`property: ${mode} breakdown matches engine 0–9999`, () => {
+    for (let n = 0; n <= 9999; n++) {
+      const b = explainConversion(String(n), mode)!;
+      assert.equal(b.result, toYoruba(n, mode), `breakdown result mismatch for ${n}`);
+      assert.ok(b.steps.length > 0, `${mode}(${n}) has no steps`);
+      for (const step of b.steps) {
+        assert.ok(!step.term.includes('undefined'), `${mode}(${n}) term has undefined: ${step.term}`);
+        assert.ok(step.term.length > 0, `${mode}(${n}) empty term`);
+      }
+    }
+  });
+}
 
 // ---- Property tests: every name 0–9,999 in both modes must be well-formed
 // and unique. Uniqueness is the round-trip property — if two numbers shared a
