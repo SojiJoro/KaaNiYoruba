@@ -135,3 +135,29 @@ To review, run `npm run review-packet` — it writes `docs/review/yoruba-review-
 ### Ìmúdájú — verified by
 
 *This section credits the fluent speakers who have verified the engine's output. Awaiting first review.*
+
+## 6. Contributing
+
+Contributions are welcome — especially native-speaker corrections to the
+Yorùbá forms above 100. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for setup,
+the language-pack workflow, and the review-packet process. Please also read
+the [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
+
+## 7. Support
+
+Kàá is free, with no paid tiers, accounts, or locked features — that's
+permanent, not a trial. If you'd like to support development, look for a
+"Sponsor" button on this repository (configured in
+[`.github/FUNDING.yml`](./.github/FUNDING.yml)); donations are entirely
+optional.
+
+## 8. License
+
+The code in this repository is licensed under the [MIT License](./LICENSE).
+
+The Yorùbá language data in [`shared/yoruba-language-pack.json`](./shared/yoruba-language-pack.json)
+is licensed separately under [CC-BY-SA-4.0](./shared/LICENSE) — share and
+adapt it freely, with attribution, under the same terms.
+
+The "Kàá" name, wordmark, and app icon are reserved — see
+[`TRADEMARKS.md`](./TRADEMARKS.md).

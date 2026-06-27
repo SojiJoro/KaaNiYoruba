@@ -8,9 +8,7 @@ replace it.
 ## Who records
 
 A fluent speaker with clear tone production — ideally the same person who
-does the native review (one session can cover both). A Masoyinbo
-collaboration here would be both quality and marketing ("counting voiced
-by…").
+does the native review (one session can cover both).
 
 ## What to record (129 clips)
 
@@ -47,4 +45,4 @@ name (`o-le.mp3`, `o-din.mp3`, `aami.mp3`), or the word in ASCII
 
 Drop the files in `public/audio/yo/` and open an issue titled "Audio ready" —
 wiring tap-to-hear to those files is a small, already-scoped code task
-(roadmap items 11–14 in `docs/launch-roadmap-50.md`).
+(roadmap items 11–14 in `docs/app-roadmap-50.md`).
