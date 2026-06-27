@@ -1,176 +1,54 @@
-// Káà — Yoruba Number Engine
+// Kàá — Yoruba Number Engine
 // ---------------------------------------------------------------------------
 // Converts numbers into Yoruba word forms and can spell arbitrary digit strings.
 // Two modes are supported:
-//   - 'traditional': full vigesimal/subtractive logic (e.g. 75 = Márùndínlọ́gọ́rin)
-//   - 'modern'     : additive-only simplification (e.g. 75 = Àádọ́rin àti Márùn-ún)
+//   - 'traditional': vigesimal/subtractive logic (e.g. 75 = Márùndínlọ́gọ́rin)
+//   - 'modern'     : decimal additive simplification (e.g. 75 = Àádọ́rin àti Márùn-ún)
 //
-// The 0–99 traditional table is hand-verified against published grammars
-// (Bamgboṣe 1966; Abraham 1958; Yoruba Modern Practical Dictionary).
-// Hundreds/thousands combining forms are programmatic readable fallbacks;
-// the verified subtractive source of truth remains the explicit 0–99 table.
-// For decimals, IDs, phone-like strings, and values outside the full-number
-// renderer, the engine falls back to digit-by-digit reading so every typed
-// digit can still be written in Yorùbá.
+// All word tables live in shared/yoruba-language-pack.json (single source of
+// truth for the web and iOS engines) and are imported via the generated
+// yorubaTables.generated.ts. Composition rules follow
+// docs/yoruba-number-logic.md:
+//   * 0–99            : hand-verified table (subtractive tone changes resist
+//                       clean generation, so the spellings live in a table).
+//   * 100–999         : hundred base + remainder, joined base-first with "ó lé"
+//                       — or "ó dín" (short of) when the value sits just under
+//                       the next hundred (595 = Ẹgbẹ̀ta ó dín Márùn-ún, §11).
+//   * classical units : exact traditional values keep their classical words —
+//                       Ẹgbàá (2,000), Ẹgbàájì (4,000), Ọkẹ́ multiples (20,000n).
+//   * 1,000 and above : grouped by scale words (Ẹgbẹ̀rún = 1e3, Mílíọ̀nù = 1e6,
+//                       …, Dẹ́sílíọ̀nù = 1e33), each group joined with "ó lé"
+//                       (traditional) or "àti" (modern).
+//
+// Only true digit strings (leading-zero codes, phone numbers, IDs, the
+// fractional digits of a decimal, or values beyond Number.MAX_SAFE_INTEGER) fall
+// back to digit-by-digit reading.
+
+import {
+  BASE_0_10,
+  CLASSICAL_EXACT,
+  HUNDREDS_BASE,
+  OKE,
+  OPERATOR_WORDS,
+  ORDINALS_1_10,
+  PARTICLES,
+  SCALE_WORDS_BIG,
+  TENS_BASE,
+  TRADITIONAL_0_99,
+} from './yorubaTables.generated';
+
+export { BASE_0_10, TENS_BASE, HUNDREDS_BASE, TRADITIONAL_0_99 };
 
 export type YorubaMode = 'traditional' | 'modern';
 
-// ---- Tier 1: standalone cardinals 0–10 (verified) -------------------------
+// Largest magnitude we name with scale words (one notch above a decillion).
+// Beyond this, fall back to scientific notation so strings stay sane.
+const MAX_NAMED = 10n ** 36n;
 
-export const BASE_0_10: Record<number, string> = {
-  0: 'Òdo',
-  1: 'Ọ̀kan',
-  2: 'Méjì',
-  3: 'Mẹ́ta',
-  4: 'Mẹ́rin',
-  5: 'Márùn-ún',
-  6: 'Mẹ́fà',
-  7: 'Méje',
-  8: 'Mẹ́jọ',
-  9: 'Mẹ́sàn-án',
-  10: 'Mẹ́wàá',
-};
-
-// ---- Tier 2: round tens 20–100 (verified) ---------------------------------
-
-export const TENS_BASE: Record<number, string> = {
-  20: 'Ogún',
-  30: 'Ọgbọ̀n',
-  40: 'Ogójì',
-  50: 'Àádọ́ta',
-  60: 'Ọgọ́ta',
-  70: 'Àádọ́rin',
-  80: 'Ọgọ́rin',
-  90: 'Àádọ́rùn',
-  100: 'Ọgọ́rùn-ún',
-};
-
-// ---- Tier 3: hundreds 100–1000 (verified bases) ---------------------------
-// Even-hundred bases use Yoruba vigesimal: 200 = Igba, 400 = Irinwó, etc.
-// Odd-hundred bases use subtractive form: 500 = "100 less than 600", etc.
-
-export const HUNDREDS_BASE: Record<number, string> = {
-  100: 'Ọgọ́rùn-ún',
-  200: 'Igba',
-  300: 'Ọ̀ọ́dúnrún',
-  400: 'Irinwó',
-  500: 'Ẹ̀ẹ́dẹ́gbẹ̀ta',
-  600: 'Ẹgbẹ̀ta',
-  700: 'Ẹ̀ẹ́dẹ́gbẹ̀rin',
-  800: 'Ẹgbẹ̀rin',
-  900: 'Ẹ̀ẹ́dẹ́gbẹ̀rún',
-  1000: 'Ẹgbẹ̀rún',
-};
-
-// ---- Tier 4: hand-verified 0–99 traditional table -------------------------
-// This table is the canonical source-of-truth for 0–99. It is intentionally
-// explicit (not generated) because subtractive vowel-tone changes in
-// compounds resist a clean algorithmic derivation.
-
-const TRADITIONAL_0_99: Record<number, string> = {
-  0: 'Òdo',
-  1: 'Ọ̀kan',
-  2: 'Méjì',
-  3: 'Mẹ́ta',
-  4: 'Mẹ́rin',
-  5: 'Márùn-ún',
-  6: 'Mẹ́fà',
-  7: 'Méje',
-  8: 'Mẹ́jọ',
-  9: 'Mẹ́sàn-án',
-  10: 'Mẹ́wàá',
-  11: 'Mọ́kànlá',
-  12: 'Méjìlá',
-  13: 'Mẹ́tàlá',
-  14: 'Mẹ́rìnlá',
-  15: 'Mẹ́ẹ̀dógún',
-  16: 'Mẹ́rìndínlógún',
-  17: 'Mẹ́tàdínlógún',
-  18: 'Méjìdínlógún',
-  19: 'Mọ́kàndínlógún',
-  20: 'Ogún',
-  21: 'Mọ́kànlélógún',
-  22: 'Méjìlélógún',
-  23: 'Mẹ́tàlélógún',
-  24: 'Mẹ́rìnlélógún',
-  25: 'Mẹ́ẹ̀dọ́gbọ̀n',
-  26: 'Mẹ́rìndínlọ́gbọ̀n',
-  27: 'Mẹ́tàdínlọ́gbọ̀n',
-  28: 'Méjìdínlọ́gbọ̀n',
-  29: 'Mọ́kàndínlọ́gbọ̀n',
-  30: 'Ọgbọ̀n',
-  31: 'Mọ́kànlélọ́gbọ̀n',
-  32: 'Méjìlélọ́gbọ̀n',
-  33: 'Mẹ́tàlélọ́gbọ̀n',
-  34: 'Mẹ́rìnlélọ́gbọ̀n',
-  35: 'Márùndínlógójì',
-  36: 'Mẹ́rìndínlógójì',
-  37: 'Mẹ́tàdínlógójì',
-  38: 'Méjìdínlógójì',
-  39: 'Mọ́kàndínlógójì',
-  40: 'Ogójì',
-  41: 'Mọ́kànlélógójì',
-  42: 'Méjìlélógójì',
-  43: 'Mẹ́tàlélógójì',
-  44: 'Mẹ́rìnlélógójì',
-  45: 'Márùndínláàádọ́ta',
-  46: 'Mẹ́rìndínláàádọ́ta',
-  47: 'Mẹ́tàdínláàádọ́ta',
-  48: 'Méjìdínláàádọ́ta',
-  49: 'Mọ́kàndínláàádọ́ta',
-  50: 'Àádọ́ta',
-  51: 'Mọ́kànléláàádọ́ta',
-  52: 'Méjìléláàádọ́ta',
-  53: 'Mẹ́tàléláàádọ́ta',
-  54: 'Mẹ́rìnléláàádọ́ta',
-  55: 'Márùndínlọ́gọ́ta',
-  56: 'Mẹ́rìndínlọ́gọ́ta',
-  57: 'Mẹ́tàdínlọ́gọ́ta',
-  58: 'Méjìdínlọ́gọ́ta',
-  59: 'Mọ́kàndínlọ́gọ́ta',
-  60: 'Ọgọ́ta',
-  61: 'Mọ́kànlélọ́gọ́ta',
-  62: 'Méjìlélọ́gọ́ta',
-  63: 'Mẹ́tàlélọ́gọ́ta',
-  64: 'Mẹ́rìnlélọ́gọ́ta',
-  65: 'Márùndínláàádọ́rin',
-  66: 'Mẹ́rìndínláàádọ́rin',
-  67: 'Mẹ́tàdínláàádọ́rin',
-  68: 'Méjìdínláàádọ́rin',
-  69: 'Mọ́kàndínláàádọ́rin',
-  70: 'Àádọ́rin',
-  71: 'Mọ́kànléláàádọ́rin',
-  72: 'Méjìléláàádọ́rin',
-  73: 'Mẹ́tàléláàádọ́rin',
-  74: 'Mẹ́rìnléláàádọ́rin',
-  75: 'Márùndínlọ́gọ́rin',
-  76: 'Mẹ́rìndínlọ́gọ́rin',
-  77: 'Mẹ́tàdínlọ́gọ́rin',
-  78: 'Méjìdínlọ́gọ́rin',
-  79: 'Mọ́kàndínlọ́gọ́rin',
-  80: 'Ọgọ́rin',
-  81: 'Mọ́kànlélọ́gọ́rin',
-  82: 'Méjìlélọ́gọ́rin',
-  83: 'Mẹ́tàlélọ́gọ́rin',
-  84: 'Mẹ́rìnlélọ́gọ́rin',
-  85: 'Márùndínláàádọ́rùn',
-  86: 'Mẹ́rìndínláàádọ́rùn',
-  87: 'Mẹ́tàdínláàádọ́rùn',
-  88: 'Méjìdínláàádọ́rùn',
-  89: 'Mọ́kàndínláàádọ́rùn',
-  90: 'Àádọ́rùn',
-  91: 'Mọ́kànléláàádọ́rùn',
-  92: 'Méjìléláàádọ́rùn',
-  93: 'Mẹ́tàléláàádọ́rùn',
-  94: 'Mẹ́rìnléláàádọ́rùn',
-  95: 'Márùndínlọ́gọ́rùn',
-  96: 'Mẹ́rìndínlọ́gọ́rùn',
-  97: 'Mẹ́tàdínlọ́gọ́rùn',
-  98: 'Méjìdínlọ́gọ́rùn',
-  99: 'Mọ́kàndínlọ́gọ́rùn',
-};
-
-const MAX_FULL_NUMBER = 999_999;
+// Deficits this small read as "short of the next hundred" (ó dín) rather than
+// "over the current one" (ó lé): 595 = Ẹgbẹ̀ta ó dín Márùn-ún (doc §11).
+// REVIEW: the exact cut-over point is dialect-variable; 1–10 is conservative.
+const O_DIN_MAX_DEFICIT = 10;
 
 const DIGIT_WORDS: Record<string, string> = {
   '0': BASE_0_10[0],
@@ -189,10 +67,11 @@ const DIGIT_WORDS: Record<string, string> = {
 
 /**
  * Convert a JavaScript number to Yoruba words.
- * Full traditional/modern number names are rendered through 999,999.
- * Larger finite values and decimals fall back to readable digit spelling rather
- * than showing raw Arabic numerals, so every possible key input has a Yoruba
- * output. Negative numbers are prefixed with "Òdì" (negative).
+ * Any finite safe integer is named in full Yorùbá (no upper table limit).
+ * Decimals render the whole part as a name plus individually spoken fractional
+ * digits. Values beyond Number.MAX_SAFE_INTEGER fall back to readable digit
+ * spelling so precision is never silently invented. Negative numbers are
+ * prefixed with "Òdì" (negative).
  */
 export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
   if (!Number.isFinite(n)) return '—';
@@ -200,20 +79,199 @@ export function toYoruba(n: number, mode: YorubaMode = 'traditional'): string {
 
   if (n < 0) {
     const positive = toYoruba(Math.abs(n), mode);
-    return `Òdì ${positive}`;
+    return `${PARTICLES.negative} ${positive}`;
   }
 
-  if (n > MAX_FULL_NUMBER) return digitSequenceToYoruba(n.toString(), mode);
-
-  if (mode === 'modern') return toModern(n);
-  return toTraditional(n);
+  // Name with scale words (million → decillion) using exact BigInt arithmetic.
+  // Exact integers convert directly; a value beyond the exact range is a rounded
+  // float, so we keep 15 significant figures (calculator precision) and zero the
+  // unreliable tail — empty place-value groups then vanish, giving a clean name
+  // instead of an "Òdo Òdo …" run. Only astronomical values use scientific form.
+  const big = Number.isSafeInteger(n) ? BigInt(n) : roundedBigInt(n, 15);
+  if (big < MAX_NAMED) return wholeToWords(big, mode);
+  return scientificToYoruba(n, mode);
 }
+
+/**
+ * Whole-number entry point: classical units apply only to the value as a
+ * whole (2,000 = Ẹgbàá; 20,000 = Ọkẹ́ kan), never inside compounds, where
+ * mixing classical and scale words is unattested.
+ */
+function wholeToWords(n: bigint, mode: YorubaMode): string {
+  if (mode === 'traditional') {
+    const classical = classicalName(n);
+    if (classical) return classical;
+  }
+  return bigToWords(n, mode);
+}
+
+/** Classical vigesimal name for an exact traditional value, or null. */
+function classicalName(n: bigint): string | null {
+  const small = Number(n < 10n ** 15n ? n : 0n);
+  if (small in CLASSICAL_EXACT) return CLASSICAL_EXACT[small];
+  // Exact "bags": Ọkẹ́ kan (20,000), Ọkẹ́ méjì (40,000), … REVIEW: capped at
+  // 19 bags so values like 1,000,000 keep the modern Mílíọ̀nù reading rather
+  // than the cowrie-era "àádọ́ta ọkẹ́"; the cut-over is a product choice.
+  if (n % OKE.value === 0n) {
+    const count = n / OKE.value;
+    if (count >= 1n && count < 20n) {
+      return `${OKE.word} ${asMultiplierBig(count, 'traditional')}`;
+    }
+  }
+  return null;
+}
+
+/** Round a large positive float to `sig` significant figures as an exact BigInt. */
+function roundedBigInt(n: number, sig: number): bigint {
+  const [mantissa, expStr] = n.toExponential(sig - 1).split('e');
+  const exp = parseInt(expStr, 10);
+  const digits = mantissa.replace('.', '');
+  const scale = exp - (sig - 1);
+  return scale >= 0
+    ? BigInt(digits) * 10n ** BigInt(scale)
+    : BigInt(digits) / 10n ** BigInt(-scale);
+}
+
+/**
+ * Render a value too large (or small) to name exactly as Yorùbá scientific
+ * notation: "[mantissa] ìgbà mẹ́wàá ní ọ̀nà [exponent]" — literally
+ * "mantissa times ten to the power exponent".
+ */
+function scientificToYoruba(n: number, mode: YorubaMode): string {
+  const [mantissaRaw, expRaw] = n.toExponential(6).split('e');
+  const mantissa = mantissaRaw.includes('.')
+    ? mantissaRaw.replace(/0+$/, '').replace(/\.$/, '')
+    : mantissaRaw;
+  const exp = Number(expRaw);
+  const mantissaWords = numericInputToYoruba(mantissa, mode);
+  const expWords = toYoruba(Math.abs(exp), mode);
+  const expPhrase = exp < 0 ? `${PARTICLES.negative} ${expWords}` : expWords;
+  return `${mantissaWords} ${PARTICLES.powerOfTenPhrase} ${expPhrase}`;
+}
+
+/**
+ * The generative heart of the engine: render a non-negative BigInt.
+ * 0–999 use the verified tables; 1,000 and up peel off the largest scale word
+ * (Ẹgbẹ̀rún … Dẹ́sílíọ̀nù) and recurse on the remainder. Empty groups vanish, so
+ * 1,000,000,000 reads "Bílíọ̀nù kan" — never a string of zeros.
+ */
+function bigToWords(n: bigint, mode: YorubaMode): string {
+  if (n < 1000n) {
+    const k = Number(n);
+    if (k === 0) return BASE_0_10[0];
+    if (k < 100) return mode === 'traditional' ? TRADITIONAL_0_99[k] : modernUnder100(k);
+    return hundredsGroup(k, mode);
+  }
+
+  const scale = SCALE_WORDS_BIG.find((s) => n >= s.value)!;
+  const count = n / scale.value;
+  const remainder = n % scale.value;
+  const head = `${scale.word} ${asMultiplierBig(count, mode)}`;
+  if (remainder === 0n) return head;
+  // Traditional keeps the vigesimal additive particle "ó lé"; modern joins
+  // place-value groups with the decimal "àti".
+  const join = mode === 'traditional' ? PARTICLES.addJoin : PARTICLES.modernJoin;
+  return `${head} ${join} ${bigToWords(remainder, mode)}`;
+}
+
+/** Multiplier after a BigInt scale word: "kan" for 1, else lower-cased name. */
+function asMultiplierBig(n: bigint, mode: YorubaMode): string {
+  if (n === 1n) return PARTICLES.one;
+  const word = bigToWords(n, mode);
+  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
+}
+
+/**
+ * Render a value 100–999 as "hundred-base ± remainder".
+ * Traditional: base first, linked with "ó lé" — or, when the value falls just
+ * short of the next hundred, the next base with "ó dín" (595 = Ẹgbẹ̀ta ó dín
+ * Márùn-ún). Modern: "Ọgọ́rùn-ún [×n] àti [remainder]".
+ */
+function hundredsGroup(n: number, mode: YorubaMode): string {
+  const hundredCount = Math.floor(n / 100);
+  const remainder = n % 100;
+
+  if (mode === 'traditional') {
+    const deficit = (hundredCount + 1) * 100 - n;
+    if (remainder !== 0 && deficit <= O_DIN_MAX_DEFICIT) {
+      const nextBase = HUNDREDS_BASE[(hundredCount + 1) * 100];
+      return `${nextBase} ${PARTICLES.subtractJoin} ${TRADITIONAL_0_99[deficit]}`;
+    }
+    const base = HUNDREDS_BASE[hundredCount * 100];
+    if (remainder === 0) return base;
+    return `${base} ${PARTICLES.addJoin} ${TRADITIONAL_0_99[remainder]}`;
+  }
+
+  const hundredWord =
+    hundredCount === 1
+      ? TENS_BASE[100]
+      : `${TENS_BASE[100]} ${asMultiplier(hundredCount, 'modern')}`;
+  if (remainder === 0) return hundredWord;
+  return `${hundredWord} ${PARTICLES.modernJoin} ${modernUnder100(remainder)}`;
+}
+
+/**
+ * Modern decimal-additive form for 0–99: "[tens] àti [units]".
+ * Keeps the canonical 0–14 forms; uses "àti" for 15–99 where the traditional
+ * subtractive construction would otherwise apply.
+ */
+function modernUnder100(n: number): string {
+  if (n <= 10) return BASE_0_10[n];
+  if (n <= 14) return TRADITIONAL_0_99[n];
+  if (n in TENS_BASE) return TENS_BASE[n];
+
+  const tens = Math.floor(n / 10) * 10;
+  const units = n % 10;
+  const tensWord = tens === 10 ? BASE_0_10[10] : TENS_BASE[tens];
+  if (units === 0) return tensWord;
+  return `${tensWord} ${PARTICLES.modernJoin} ${BASE_0_10[units]}`;
+}
+
+/** Multiplier after a hundred word (small counts), via the BigInt path. */
+function asMultiplier(n: number, mode: YorubaMode): string {
+  return asMultiplierBig(BigInt(n), mode);
+}
+
+// ---- Ordinals, money -------------------------------------------------------
+
+/**
+ * Ordinal name (doc §13): verified table for 1st–10th; larger ordinals use the
+ * positional fallback "Ipò [cardinal]" ("position n").
+ * REVIEW: 5th–9th follow the regular ìk- pattern and the fallback phrasing
+ * should be confirmed by a fluent speaker.
+ */
+export function toYorubaOrdinal(n: number, mode: YorubaMode = 'traditional'): string {
+  if (!Number.isInteger(n) || n < 1) return '';
+  if (n in ORDINALS_1_10) return ORDINALS_1_10[n];
+  return `${PARTICLES.ordinalFallbackPrefix} ${lowerFirst(toYoruba(n, mode))}`;
+}
+
+/**
+ * Money phrasing (doc §13): "náírà [cardinal]", with kobo appended when the
+ * amount has a fractional part — ₦500 → "náírà ẹ̀ẹ́dẹ́gbẹ̀ta",
+ * ₦12.50 → "náírà méjìlá àti kọ́bọ̀ àádọ́ta".
+ */
+export function nairaToYoruba(amount: number, mode: YorubaMode = 'traditional'): string {
+  if (!Number.isFinite(amount)) return '—';
+  const sign = amount < 0 ? `${PARTICLES.negative} ` : '';
+  const abs = Math.abs(amount);
+  const naira = Math.floor(abs);
+  const kobo = Math.round((abs - naira) * 100);
+  const nairaPhrase = `${PARTICLES.naira} ${lowerFirst(toYoruba(naira, mode))}`;
+  if (kobo === 0) return `${sign}${nairaPhrase}`;
+  return `${sign}${nairaPhrase} ${PARTICLES.modernJoin} ${PARTICLES.kobo} ${lowerFirst(toYoruba(kobo, mode))}`;
+}
+
+function lowerFirst(word: string): string {
+  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
+}
+
+// ---- Digit strings and typed input -----------------------------------------
 
 /**
  * Spell every digit and decimal/sign mark in a numeric string. Useful for long
  * account numbers, phone numbers, leading-zero values, and any value beyond the
- * verified full-number renderer. Grouping commas, underscores, and spaces are
- * ignored.
+ * safe-integer range. Grouping commas, underscores, and spaces are ignored.
  */
 export function digitSequenceToYoruba(
   value: string,
@@ -225,17 +283,18 @@ export function digitSequenceToYoruba(
   const words: string[] = [];
   for (const char of normalized) {
     if (char in DIGIT_WORDS) words.push(DIGIT_WORDS[char]);
-    else if (char === '-') words.push('Òdì');
-    else if (char === '+') words.push('Àfikún');
-    else if (char === '.') words.push('Ẹsẹ');
+    else if (char === '-') words.push(PARTICLES.negative);
+    else if (char === '+') words.push(PARTICLES.positive);
+    else if (char === '.') words.push(PARTICLES.decimalMark);
   }
   return words.join(' ');
 }
 
 /**
- * Render a typed numeric string. Integers in the verified range use full Yoruba
- * number names; decimals use a whole-number phrase plus individually spoken
- * fractional digits; otherwise the function falls back to digit spelling.
+ * Render a typed numeric string. Integers within the safe-integer range use full
+ * Yoruba number names; decimals use a whole-number phrase plus individually
+ * spoken fractional digits ("2.5" → "Méjì ààmì Márùn-ún"); leading-zero values
+ * and out-of-range magnitudes fall back to digit spelling.
  */
 export function numericInputToYoruba(
   value: string,
@@ -244,36 +303,39 @@ export function numericInputToYoruba(
   const normalized = normalizeNumericInput(value);
   if (!isNumericString(normalized)) return '';
 
-  const sign = normalized.startsWith('-') ? 'Òdì ' : '';
+  const sign = normalized.startsWith('-') ? `${PARTICLES.negative} ` : '';
   const unsigned = normalized.replace(/^[+-]/, '');
 
   if (unsigned.includes('.')) {
     const [wholePartRaw, fractionPartRaw = ''] = unsigned.split('.');
     const wholePart = wholePartRaw || '0';
-    const wholeNumber = Number(wholePart);
-    const wholeWords =
-      wholePart.length > 15 || wholeNumber > MAX_FULL_NUMBER
-        ? digitSequenceToYoruba(wholePart, mode)
-        : toYoruba(wholeNumber, mode);
+    const wholeWords = integerStringToYoruba(wholePart, mode);
     const fractionWords = fractionPartRaw
       .split('')
       .map((digit) => DIGIT_WORDS[digit])
       .filter(Boolean)
       .join(' ');
 
-    return `${sign}${wholeWords}${fractionWords ? ` Ẹsẹ ${fractionWords}` : ' Ẹsẹ'}`.trim();
+    const mark = PARTICLES.decimalMark;
+    return `${sign}${wholeWords}${fractionWords ? ` ${mark} ${fractionWords}` : ` ${mark}`}`.trim();
   }
 
   // Preserve leading-zero values as digit strings because 007 is not the same
   // written form as 7 for phone numbers, IDs, and codes.
   if (/^0\d+/.test(unsigned)) return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
 
-  const n = Number(unsigned);
-  if (!Number.isSafeInteger(n) || n > MAX_FULL_NUMBER) {
-    return `${sign}${digitSequenceToYoruba(unsigned, mode)}`.trim();
-  }
+  return `${sign}${integerStringToYoruba(unsigned, mode)}`.trim();
+}
 
-  return `${sign}${toYoruba(n, mode)}`.trim();
+/**
+ * Name a plain integer string of any length exactly via BigInt — so a typed
+ * quadrillion reads "Kwadírílíọ̀nù kan", not a precision-losing float. Beyond the
+ * named scale range (≈37 digits) it falls back to digit-by-digit reading.
+ */
+function integerStringToYoruba(digits: string, mode: YorubaMode): string {
+  const value = BigInt(digits);
+  if (value < MAX_NAMED) return wholeToWords(value, mode);
+  return digitSequenceToYoruba(digits, mode);
 }
 
 function normalizeNumericInput(value: string): string {
@@ -284,85 +346,7 @@ function isNumericString(value: string): boolean {
   return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value);
 }
 
-function toTraditional(n: number): string {
-  if (n <= 99) return TRADITIONAL_0_99[n];
-  if (n in HUNDREDS_BASE) return HUNDREDS_BASE[n];
-  if (n >= 1000) return thousandsPlusRemainder(n, 'traditional');
-  return hundredsPlusRemainder(n, 'traditional');
-}
-
-function toModern(n: number): string {
-  if (n <= 10) return BASE_0_10[n];
-  if (n === 1000) return HUNDREDS_BASE[1000];
-  if (n >= 1000) return thousandsPlusRemainder(n, 'modern');
-  if (n >= 100) return modernHundredsPlusRemainder(n);
-
-  if (n in TENS_BASE) return TENS_BASE[n];
-
-  if (n >= 11 && n <= 99) {
-    // Modern: decimal additive "[tens] àti [units]".
-    // Preserves the canonical 11–14 forms (Mọ́kànlá etc.) where they are
-    // already universal, and uses "àti" for the 15–99 window where the
-    // traditional subtractive form would otherwise apply.
-    if (n <= 14) return TRADITIONAL_0_99[n];
-    const tens = Math.floor(n / 10) * 10;
-    const units = n % 10;
-    const tensWord = tens === 10 ? BASE_0_10[10] : TENS_BASE[tens];
-    if (units === 0) return tensWord;
-    return `${tensWord} àti ${BASE_0_10[units]}`;
-  }
-
-  return '';
-}
-
-function modernHundredsPlusRemainder(n: number): string {
-  const hundredCount = Math.floor(n / 100);
-  const remainder = n % 100;
-  const hundredWord =
-    hundredCount === 1
-      ? TENS_BASE[100]
-      : `${TENS_BASE[100]} ${unitCount(hundredCount, 'modern')}`;
-
-  if (remainder === 0) return hundredWord;
-  return `${hundredWord} àti ${toModern(remainder)}`;
-}
-
-// Thousands + remainder uses a transparent decimal grouping so larger typed
-// values never fall back to Arabic digits. Classical cowrie numerals above
-// 1,000 are less regular, so this is intentionally a readable app fallback.
-function thousandsPlusRemainder(n: number, mode: YorubaMode): string {
-  const thousands = Math.floor(n / 1000);
-  const remainder = n % 1000;
-  const thousandsWord = `Ẹgbẹ̀rún ${unitCount(thousands, mode)}`;
-
-  if (remainder === 0) return thousandsWord;
-  return `${thousandsWord} àti ${mode === 'traditional' ? toTraditional(remainder) : toModern(remainder)}`;
-}
-
-function unitCount(n: number, mode: YorubaMode): string {
-  if (n === 1) return 'kan';
-  const word = mode === 'traditional' ? toTraditional(n) : toModern(n);
-  return word.charAt(0).toLocaleLowerCase('yo-NG') + word.slice(1);
-}
-
-// Hundreds + remainder: traditional combines hundreds with "ó lé" linker;
-// modern just uses "àti" (and). The combined forms below 1000 are programmatic.
-function hundredsPlusRemainder(n: number, mode: YorubaMode): string {
-  const hundred = Math.floor(n / 100) * 100;
-  const remainder = n - hundred;
-  const hundredWord = HUNDREDS_BASE[hundred];
-
-  if (remainder === 0) return hundredWord;
-
-  // REVIEW: For 101–999 non-multiples of 100, fluent speakers commonly say
-  // "[remainder] ó lé [hundred]" in traditional, e.g. 105 ≈ "Márùn-ún ó lé
-  // ní ọgọ́rùn-ún". Compound vowel elision varies by dialect, so we render
-  // an explicit additive form and flag for review.
-  if (mode === 'traditional') {
-    return `${toTraditional(remainder)} ó lé ní ${hundredWord}`; // REVIEW
-  }
-  return `${hundredWord} àti ${toModern(remainder)}`;
-}
+// ---- Expressions and UI helpers ---------------------------------------------
 
 /**
  * Render a Yoruba operator word for a given symbol.
@@ -370,18 +354,21 @@ function hundredsPlusRemainder(n: number, mode: YorubaMode): string {
 export function operatorWord(symbol: string): string {
   switch (symbol) {
     case '+':
-      return 'pẹ̀lú';
+      return OPERATOR_WORDS['+'];
     case '-':
     case '−':
-      return 'yọ';
+      return OPERATOR_WORDS['-'];
     case '*':
     case '×':
-      return 'ìgbà';
+      return OPERATOR_WORDS['×'];
     case '/':
     case '÷':
-      return 'pín sí';
+      return OPERATOR_WORDS['÷'];
+    case '^':
+      // "in n ways/places" — x^n read as "x ní ọ̀nà [n]".
+      return OPERATOR_WORDS['^'];
     case '=':
-      return 'dọ́gba';
+      return OPERATOR_WORDS['='];
     default:
       return symbol;
   }
@@ -395,7 +382,7 @@ export function expressionToYoruba(expr: string, mode: YorubaMode = 'traditional
   // Tokenise on operators while keeping them.
   const tokens = expr
     .replace(/\s+/g, '')
-    .split(/([+\-−*×/÷])/)
+    .split(/([+\-−*×/÷^])/)
     .filter(Boolean);
 
   return tokens
@@ -412,9 +399,446 @@ export function expressionToYoruba(expr: string, mode: YorubaMode = 'traditional
  * Convenience: a Yoruba word for the digit a user just tapped, including ".".
  */
 export function digitWord(digit: string, mode: YorubaMode = 'traditional'): string {
-  if (digit === '.') return 'Ẹsẹ';
+  if (digit === '.') return PARTICLES.decimalMark;
   if (digit in DIGIT_WORDS) return DIGIT_WORDS[digit];
   const n = Number(digit);
   if (Number.isNaN(n)) return '';
   return toYoruba(n, mode);
+}
+
+/**
+ * Decompose a number into the reasoning behind its traditional name — the
+ * "explain this number" feature. Returns null when there is nothing to explain
+ * (units, exact bases).
+ */
+export interface NumberExplanation {
+  parts: Array<{ value: number; word: string }>;
+  relation: 'add' | 'subtract';
+  anchor: { value: number; word: string };
+  summary: string;
+}
+
+export function explainNumber(n: number): NumberExplanation | null {
+  if (!Number.isInteger(n) || n < 11 || n > 999) return null;
+
+  if (n < 100) {
+    const u = n % 10;
+    if (u === 0) return null;
+    if (u <= 4) {
+      const anchor = Math.floor(n / 10) * 10;
+      return {
+        parts: [{ value: u, word: TRADITIONAL_0_99[u] }],
+        relation: 'add',
+        anchor: { value: anchor, word: TRADITIONAL_0_99[anchor] },
+        summary: `${n} = ${anchor} + ${u}`,
+      };
+    }
+    const anchor = Math.ceil(n / 10) * 10;
+    const deficit = anchor - n;
+    return {
+      parts: [{ value: deficit, word: TRADITIONAL_0_99[deficit] }],
+      relation: 'subtract',
+      anchor: { value: anchor, word: TRADITIONAL_0_99[anchor] },
+      summary: `${n} = ${anchor} − ${deficit}`,
+    };
+  }
+
+  const hundreds = Math.floor((n % 1000) / 100) * 100;
+  const name = toYoruba(n, 'traditional');
+  if (name.includes(` ${PARTICLES.subtractJoin} `)) {
+    const anchor = hundreds + 100;
+    const deficit = anchor - (n % 1000);
+    return {
+      parts: [{ value: deficit, word: TRADITIONAL_0_99[deficit] }],
+      relation: 'subtract',
+      anchor: { value: anchor, word: HUNDREDS_BASE[anchor] ?? toYoruba(anchor, 'traditional') },
+      summary: `${n} = ${anchor} − ${deficit}`,
+    };
+  }
+  const remainder = n % 100;
+  if (remainder === 0) return null;
+  return {
+    parts: [{ value: remainder, word: TRADITIONAL_0_99[remainder] }],
+    relation: 'add',
+    anchor: { value: n - remainder, word: toYoruba(n - remainder, 'traditional') },
+    summary: `${n} = ${n - remainder} + ${remainder}`,
+  };
+}
+
+// ---- Conversion breakdown (Yípadà "how this name is formed") ----------------
+//
+// This is the teaching layer: given a number, explain WHERE its Yorùbá name
+// comes from — the vigesimal multiplication, the "ten less" / "hundred less"
+// subtraction, and the contractions that fuse the pieces into one word. The
+// etymologies below are taken straight from docs/yoruba-number-logic.md (§6,
+// §8), the project's researched source of truth.
+
+/**
+ * One line of the breakdown: the Yorùbá word (or particle) for a piece of the
+ * number, paired with a plain-language gloss of what it contributes.
+ */
+export interface BreakdownStep {
+  /** The Yorùbá word or particle for this piece. */
+  term: string;
+  /** Plain-language meaning / etymology, e.g. "20 × 2 = 40, fused into Ogójì". */
+  gloss: string;
+}
+
+/** A full, human-readable account of how a typed value becomes Yorùbá words. */
+export interface ConversionBreakdown {
+  /** What kind of value this is, so the UI can frame it. */
+  kind: 'root' | 'whole' | 'decimal' | 'digits';
+  /** One-sentence, plain-English summary of how the name is formed. */
+  headline: string;
+  /** The pieces, in the order they are read aloud. */
+  steps: BreakdownStep[];
+  /** The full Yorùbá name being explained. */
+  result: string;
+}
+
+const groupDigits = (n: number | bigint) => n.toLocaleString('en-US');
+
+/**
+ * The "landmark" numbers — round tens and hundred bases — whose names are
+ * lexicalised (multiplied scores, or "ten/hundred less" forms) rather than
+ * mechanically generated. Each carries a short gloss (for when it is the anchor
+ * of a bigger number), a learner headline, and the full etymology steps that
+ * explain how its single word is built. Source: docs/yoruba-number-logic.md.
+ */
+interface Landmark {
+  /** Short etymology used when this value is the anchor inside a bigger name. */
+  short: string;
+  /** Learner-facing headline when this value is typed on its own. */
+  headline: string;
+  /** The full "how the word is built" steps. */
+  steps: BreakdownStep[];
+}
+
+// Multiples of twenty: "ogún × n", fused into one word (40 = Ogún méjì → Ogójì).
+function scoreMultiple(value: number, multiplier: string, mult: number): Landmark {
+  const word = (TENS_BASE[value] ?? HUNDREDS_BASE[value])!;
+  const times = mult === 2 ? 'twice' : mult === 3 ? 'three times' : mult === 4 ? 'four times' : 'five times';
+  const countWord = mult === 2 ? 'two' : mult === 3 ? 'three' : mult === 4 ? 'four' : 'five';
+  return {
+    short: `${countWord} twenties (20 × ${mult})`,
+    headline: `${value} is ${countWord} twenties: twenty (Ogún) counted ${times}.`,
+    steps: [
+      { term: 'Ogún', gloss: '20 — a score, the base of the whole system' },
+      { term: multiplier, gloss: `${mult} — counted ${times}` },
+      { term: word, gloss: `"Ogún ${lowerFirst(multiplier)}" = 20 × ${mult} = ${value}, fused into the single word ${word}` },
+    ],
+  };
+}
+
+// "Odd" tens: the next score minus ten — the àád- prefix means "ten less than".
+function tenLess(value: number): Landmark {
+  const word = TENS_BASE[value]!;
+  const up = value + 10;
+  const upWord = (TENS_BASE[up] ?? HUNDREDS_BASE[up])!;
+  return {
+    short: `ten less than ${up} (${up} − 10)`,
+    headline: `${value} is ten short of ${up}.`,
+    steps: [
+      { term: upWord, gloss: `${up} — the next landmark up` },
+      { term: 'dín ẹ̀wá', gloss: '10 less' },
+      { term: word, gloss: `${up} − 10 = ${value}. The prefix "àád-" is a frozen form of "dín ẹ̀wá" = "ten less than".` },
+    ],
+  };
+}
+
+// Multiples of two hundred: "igba × n" (600 = Igba mẹ́ta → Ẹgbẹ̀ta).
+function igbaMultiple(value: number, multiplier: string, mult: number): Landmark {
+  const word = HUNDREDS_BASE[value]!;
+  const countWord = mult === 3 ? 'three' : mult === 4 ? 'four' : 'five';
+  return {
+    short: `${countWord} two-hundreds (200 × ${mult})`,
+    headline: `${value} is ${countWord} two-hundreds: Igba (200) counted ${countWord} times.`,
+    steps: [
+      { term: 'Igba', gloss: '200 — the base word for two hundred' },
+      { term: multiplier, gloss: `${mult} — counted ${countWord} times` },
+      { term: word, gloss: `200 × ${mult} = ${value}; the "ẹgbẹ̀-" prefix means "igba times", fused into ${word}` },
+    ],
+  };
+}
+
+// Odd hundreds: the next even hundred minus 100 — ẹ̀ẹ́dẹ́- = "a hundred less".
+function hundredLess(value: number): Landmark {
+  const word = HUNDREDS_BASE[value]!;
+  const up = value + 100;
+  const upWord = HUNDREDS_BASE[up]!;
+  return {
+    short: `a hundred less than ${groupDigits(up)} (${groupDigits(up)} − 100)`,
+    headline: `${groupDigits(value)} is a hundred short of ${groupDigits(up)}.`,
+    steps: [
+      { term: upWord, gloss: `${groupDigits(up)} — the next even hundred up` },
+      { term: 'dín ọgọ́rùn-ún', gloss: '100 less' },
+      { term: word, gloss: `${groupDigits(up)} − 100 = ${groupDigits(value)}. The prefix "ẹ̀ẹ́dẹ́-" means "a hundred less than".` },
+    ],
+  };
+}
+
+// A basic, irreducible root word (its own lexeme, not built by arithmetic).
+function basicWord(value: number, word: string, note: string): Landmark {
+  return {
+    short: note,
+    headline: `${groupDigits(value)} — "${word}" — is a basic root word: ${note}.`,
+    steps: [{ term: word, gloss: `${groupDigits(value)} — ${note}` }],
+  };
+}
+
+const LANDMARKS: Record<number, Landmark> = {
+  20: basicWord(20, 'Ogún', 'a "score" — the base unit every bigger number is built from'),
+  30: basicWord(30, 'Ọgbọ̀n', 'a unique word for thirty (the one odd ten not built by subtraction)'),
+  40: scoreMultiple(40, 'Méjì', 2),
+  50: tenLess(50),
+  60: scoreMultiple(60, 'Mẹ́ta', 3),
+  70: tenLess(70),
+  80: scoreMultiple(80, 'Mẹ́rin', 4),
+  90: tenLess(90),
+  100: scoreMultiple(100, 'Márùn-ún', 5),
+  200: basicWord(200, 'Igba', 'a basic word for two hundred (it becomes the base for the hundreds)'),
+  300: basicWord(300, 'Ọ̀ọ́dúnrún', 'a basic word for three hundred (historically ≈ 20 × 15)'),
+  400: basicWord(400, 'Irinwó', 'a basic word for four hundred (historically ≈ 20 × 20, a "score of scores")'),
+  500: hundredLess(500),
+  600: igbaMultiple(600, 'Mẹ́ta', 3),
+  700: hundredLess(700),
+  800: igbaMultiple(800, 'Mẹ́rin', 4),
+  900: hundredLess(900),
+  1000: igbaMultiple(1000, 'Márùn-ún', 5),
+};
+
+function joinStep(particle: string): BreakdownStep {
+  const gloss =
+    particle === PARTICLES.subtractJoin
+      ? 'minus — "ó dín" = short of the number above'
+      : particle === PARTICLES.addJoin
+        ? 'plus — "ó lé" = added on to the base'
+        : 'and — "àti" joins the two parts';
+  return { term: particle, gloss };
+}
+
+/** The word for a round ten/hundred anchor (10–1,000). */
+function landmarkWord(value: number): string {
+  if (value === 10) return BASE_0_10[10];
+  if (value <= 100) return TENS_BASE[value] ?? TRADITIONAL_0_99[value];
+  return HUNDREDS_BASE[value];
+}
+
+/** An anchor step that also carries the anchor's own short etymology. */
+function landmarkStep(value: number): BreakdownStep {
+  const short = LANDMARKS[value]?.short;
+  return {
+    term: landmarkWord(value),
+    gloss: short ? `${groupDigits(value)} — ${short}` : `${groupDigits(value)}`,
+  };
+}
+
+/** A small unit step (1–10). */
+function unitStep(u: number): BreakdownStep {
+  return { term: TRADITIONAL_0_99[u] ?? BASE_0_10[u], gloss: `${u}` };
+}
+
+/** Decompose 0–999 (one place-value group) into its building blocks. */
+function breakdownUnder1000(k: number, mode: YorubaMode): BreakdownStep[] {
+  if (k === 0) return [{ term: BASE_0_10[0], gloss: '0 — zero' }];
+  if (k <= 10) return [{ term: BASE_0_10[k], gloss: `${k} — one of the ten root words` }];
+  // Exact landmarks (round tens, hundred bases) carry their own full etymology.
+  if (LANDMARKS[k]) return LANDMARKS[k].steps;
+  if (k < 100)
+    return mode === 'traditional' ? breakdownTensTraditional(k) : breakdownTensModern(k);
+  return breakdownHundreds(k, mode);
+}
+
+/** Traditional (vigesimal/subtractive) breakdown of non-round 11–99. */
+function breakdownTensTraditional(k: number): BreakdownStep[] {
+  const units = k % 10;
+  if (units <= 4) {
+    const anchor = Math.floor(k / 10) * 10;
+    return [landmarkStep(anchor), joinStep(PARTICLES.addJoin), unitStep(units)];
+  }
+  const anchor = Math.ceil(k / 10) * 10;
+  return [landmarkStep(anchor), joinStep(PARTICLES.subtractJoin), unitStep(anchor - k)];
+}
+
+/** Modern (decimal-additive) breakdown of non-round 11–99. */
+function breakdownTensModern(k: number): BreakdownStep[] {
+  if (k <= 14) {
+    return [landmarkStep(10), joinStep(PARTICLES.modernJoin), unitStep(k - 10)];
+  }
+  const tens = Math.floor(k / 10) * 10;
+  return [landmarkStep(tens), joinStep(PARTICLES.modernJoin), unitStep(k % 10)];
+}
+
+/** Breakdown of 100–999: hundred base ± remainder. */
+function breakdownHundreds(k: number, mode: YorubaMode): BreakdownStep[] {
+  const hundredCount = Math.floor(k / 100);
+  const remainder = k % 100;
+
+  if (mode === 'traditional') {
+    const deficit = (hundredCount + 1) * 100 - k;
+    if (remainder !== 0 && deficit <= O_DIN_MAX_DEFICIT) {
+      return [
+        landmarkStep((hundredCount + 1) * 100),
+        joinStep(PARTICLES.subtractJoin),
+        ...breakdownUnder1000(deficit, mode),
+      ];
+    }
+    return [
+      landmarkStep(hundredCount * 100),
+      joinStep(PARTICLES.addJoin),
+      ...breakdownUnder1000(remainder, mode),
+    ];
+  }
+
+  const head: BreakdownStep =
+    hundredCount === 1
+      ? landmarkStep(100)
+      : {
+          term: `${TENS_BASE[100]} ${asMultiplier(hundredCount, 'modern')}`,
+          gloss: `100 × ${hundredCount} = ${groupDigits(hundredCount * 100)}`,
+        };
+  if (remainder === 0) return [head];
+  return [head, joinStep(PARTICLES.modernJoin), ...breakdownUnder1000(remainder, mode)];
+}
+
+/** Recursively break a whole BigInt into its place-value pieces, largest first. */
+function breakdownWhole(n: bigint, mode: YorubaMode): BreakdownStep[] {
+  if (n < 1000n) return breakdownUnder1000(Number(n), mode);
+
+  const scale = SCALE_WORDS_BIG.find((s) => n >= s.value)!;
+  const count = n / scale.value;
+  const remainder = n % scale.value;
+  const head: BreakdownStep = {
+    term: `${scale.word} ${asMultiplierBig(count, mode)}`,
+    gloss:
+      count === 1n
+        ? `${scale.word} = ${groupDigits(scale.value)}`
+        : `${groupDigits(count)} × ${groupDigits(scale.value)} = ${groupDigits(count * scale.value)}`,
+  };
+  if (remainder === 0n) return [head];
+  const join = mode === 'traditional' ? PARTICLES.addJoin : PARTICLES.modernJoin;
+  return [head, joinStep(join), ...breakdownWhole(remainder, mode)];
+}
+
+/** Plain-English headline for a whole number below 1,000. */
+function wholeHeadline(n: number, mode: YorubaMode): string {
+  if (n <= 10) return `${n} is one of the ten basic number words.`;
+  if (LANDMARKS[n]) return LANDMARKS[n].headline;
+
+  // Modern mode is purely decimal-additive (tens + units, hundreds + rest).
+  if (mode === 'modern') {
+    if (n < 100) {
+      const tens = Math.floor(n / 10) * 10;
+      return `${n} is ${tens} and ${n % 10} (${tens} + ${n % 10}), joined with "àti".`;
+    }
+    const hundreds = Math.floor(n / 100) * 100;
+    return `${n} is ${hundreds} and ${n % 100} (${hundreds} + ${n % 100}), joined with "àti".`;
+  }
+
+  if (n < 100) {
+    const u = n % 10;
+    if (u <= 4) {
+      const anchor = Math.floor(n / 10) * 10;
+      return `${n} is built by adding ${u} on to ${anchor} (${anchor} + ${u}).`;
+    }
+    const anchor = Math.ceil(n / 10) * 10;
+    return `${n} is built by counting back from ${anchor} — it is ${anchor - n} short of ${anchor} (${anchor} − ${anchor - n}).`;
+  }
+
+  const hundredCount = Math.floor(n / 100);
+  const remainder = n % 100;
+  const deficit = (hundredCount + 1) * 100 - n;
+  if (remainder !== 0 && deficit <= O_DIN_MAX_DEFICIT) {
+    return `${n} is ${deficit} short of ${(hundredCount + 1) * 100} (${(hundredCount + 1) * 100} − ${deficit}).`;
+  }
+  return `${n} is ${hundredCount * 100} plus ${remainder} (${hundredCount * 100} + ${remainder}).`;
+}
+
+/**
+ * Explain, step by step, how a typed value gets its Yorùbá name — the teaching
+ * panel on the Yípadà screen. It shows where the word comes from (the scores,
+ * the "ten/hundred less" subtraction, the contractions), written so someone who
+ * does not speak Yorùbá can follow it. Returns null only for non-numbers.
+ */
+export function explainConversion(
+  value: string,
+  mode: YorubaMode = 'traditional',
+): ConversionBreakdown | null {
+  const normalized = normalizeNumericInput(value);
+  if (!isNumericString(normalized)) return null;
+
+  const result = numericInputToYoruba(normalized, mode);
+  const negative = normalized.startsWith('-');
+  const unsigned = normalized.replace(/^[+-]/, '');
+
+  // Decimals: name the whole part, then the point, then each fractional digit.
+  if (unsigned.includes('.')) {
+    const [wholeRaw, fracRaw = ''] = unsigned.split('.');
+    const whole = wholeRaw || '0';
+    const steps: BreakdownStep[] = [
+      {
+        term: integerStringToYoruba(whole, mode),
+        gloss: `${groupDigits(BigInt(whole))} — the whole-number part`,
+      },
+      { term: PARTICLES.decimalMark, gloss: 'the decimal point ("ààmì")' },
+    ];
+    for (const d of fracRaw) {
+      if (d in DIGIT_WORDS) steps.push({ term: DIGIT_WORDS[d], gloss: `${d} — read on its own` });
+    }
+    return {
+      kind: 'decimal',
+      headline:
+        'Decimals read the whole part as a full number, then say each digit after the point on its own.',
+      steps,
+      result,
+    };
+  }
+
+  // Leading-zero codes / out-of-range magnitudes are read one digit at a time.
+  const isLeadingZero = /^0\d+/.test(unsigned);
+  const big = isLeadingZero ? null : BigInt(unsigned);
+  if (isLeadingZero || (big !== null && big >= MAX_NAMED)) {
+    return {
+      kind: 'digits',
+      headline: isLeadingZero
+        ? 'Codes with a leading zero (phone numbers, IDs) are read one digit at a time, so the 0 is never lost.'
+        : 'This value is larger than the named scale words reach, so it is read one digit at a time.',
+      steps: [...unsigned]
+        .filter((d) => d in DIGIT_WORDS)
+        .map((d) => ({ term: DIGIT_WORDS[d], gloss: d })),
+      result,
+    };
+  }
+
+  const n = big!;
+
+  // Classical exact units (Ẹgbàá = 2,000, Ọkẹ́ kan = 20,000) are one dedicated word.
+  if (mode === 'traditional') {
+    const classical = classicalName(n);
+    if (classical) {
+      return {
+        kind: 'root',
+        headline: `"${classical}" is a classical Yorùbá unit — a single dedicated word for ${groupDigits(n)}.`,
+        steps: [{ term: classical, gloss: `${groupDigits(n)} — a classical cowrie-counting unit, kept as one word` }],
+        result,
+      };
+    }
+  }
+
+  const steps = breakdownWhole(n, mode);
+
+  let headline: string;
+  if (n >= 1000n) {
+    headline =
+      'Large numbers are grouped by scale words (Ẹgbẹ̀rún, Mílíọ̀nù …) from the biggest down, then added together.';
+  } else {
+    headline = wholeHeadline(Number(n), mode);
+  }
+
+  if (negative) {
+    steps.unshift({ term: PARTICLES.negative, gloss: 'minus (negative)' });
+    headline = `Negative: "Òdì" (minus) goes in front, then ${headline.charAt(0).toLowerCase()}${headline.slice(1)}`;
+  }
+
+  return { kind: steps.length === 1 ? 'root' : 'whole', headline, steps, result };
 }

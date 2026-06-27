@@ -1,6 +1,6 @@
-# Káà — 50 things that make it feel like a real app
+# Kàá — 50 things that make it feel like a real app
 
-A backlog of concrete, mostly self-contained improvements that move Káà from
+A backlog of concrete, mostly self-contained improvements that move Kàá from
 "a calculator that prints Yorùbá words" to a product people open every day.
 Grouped by theme; roughly ordered by impact within each group. Pair this with
 `docs/yoruba-number-logic.md` (the counting source of truth).

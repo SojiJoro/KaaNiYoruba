@@ -1,4 +1,4 @@
-// Káà — Calculator view-model
+// Kàá — Calculator view-model
 // ---------------------------------------------------------------------------
 // Mirrors src/lib/calculator.ts (in the web app at the repo root). Owns the
 // expression string, evaluated
@@ -6,7 +6,6 @@
 
 import Foundation
 import SwiftUI
-import AVFoundation
 
 public enum CalcKey: String, Hashable {
     case d0 = "0", d1 = "1", d2 = "2", d3 = "3", d4 = "4"
@@ -42,8 +41,6 @@ public final class CalculatorViewModel: ObservableObject {
     @Published public var error: String? = nil
     @Published public var mode: YorubaMode = .traditional
     @Published public var history: [HistoryEntry] = []
-
-    private let speaker = AVSpeechSynthesizer()
 
     public init() {}
 
@@ -152,20 +149,6 @@ public final class CalculatorViewModel: ObservableObject {
         expression = entry.expression
         lastResult = nil
         error = nil
-    }
-
-    public func speak(_ text: String) {
-        guard !text.isEmpty else { return }
-        // Placeholder: AVSpeechSynthesizer does not include a Yoruba voice on
-        // most devices. Until recorded clips are bundled, fall back to the
-        // closest available voice so the audio button is still functional.
-        speaker.stopSpeaking(at: .immediate)
-        let utter = AVSpeechUtterance(string: text)
-        utter.voice = AVSpeechSynthesisVoice(language: "yo-NG")
-            ?? AVSpeechSynthesisVoice(language: "en-NG")
-            ?? AVSpeechSynthesisVoice.speechVoices().first
-        utter.rate = 0.42
-        speaker.speak(utter)
     }
 
     // MARK: Pure helpers

@@ -1,9 +1,9 @@
-// Káà — Yoruba Number Engine (Swift port)
+// Kàá — Yoruba Number Engine (Swift port)
 // ---------------------------------------------------------------------------
 // Identical semantics to src/lib/yorubaNumbers.ts (web app, repo root).
-// Hand-verified 0–99 in
-// traditional mode; hundreds combining forms are programmatic and should be
-// reviewed by a fluent speaker before shipping.
+// All word tables come from YorubaNumberTables.generated.swift, generated from
+// shared/yoruba-language-pack.json — the single source of truth for both
+// engines. Run `npm run generate` at the repo root after editing the pack.
 
 import Foundation
 
@@ -14,128 +14,67 @@ public enum YorubaMode: String, CaseIterable, Identifiable, Codable {
 }
 
 public enum YorubaNumberEngine {
-    // MARK: Tier 1 – units 0–10
-    public static let base0to10: [Int: String] = [
-        0: "Òdo",
-        1: "Ọ̀kan",
-        2: "Méjì",
-        3: "Mẹ́ta",
-        4: "Mẹ́rin",
-        5: "Márùn-ún",
-        6: "Mẹ́fà",
-        7: "Méje",
-        8: "Mẹ́jọ",
-        9: "Mẹ́sàn-án",
-        10: "Mẹ́wàá",
-    ]
+    // Tables re-exported for views that referenced them directly.
+    public static let base0to10 = YorubaTables.base0to10
+    public static let tensBase = YorubaTables.tensBase
+    public static let hundredsBase = YorubaTables.hundredsBase
+    public static let traditional0to99 = YorubaTables.traditional0to99
 
-    // MARK: Tier 2 – round tens
-    public static let tensBase: [Int: String] = [
-        20: "Ogún",
-        30: "Ọgbọ̀n",
-        40: "Ogójì",
-        50: "Àádọ́ta",
-        60: "Ọgọ́ta",
-        70: "Àádọ́rin",
-        80: "Ọgọ́rin",
-        90: "Àádọ́rùn",
-        100: "Ọgọ́rùn-ún",
-    ]
-
-    // MARK: Tier 3 – hundreds
-    public static let hundredsBase: [Int: String] = [
-        100: "Ọgọ́rùn-ún",
-        200: "Igba",
-        300: "Ọ̀ọ́dúnrún",
-        400: "Irinwó",
-        500: "Ẹ̀ẹ́dẹ́gbẹ̀ta",
-        600: "Ẹgbẹ̀ta",
-        700: "Ẹ̀ẹ́dẹ́gbẹ̀rin",
-        800: "Ẹgbẹ̀rin",
-        900: "Ẹ̀ẹ́dẹ́gbẹ̀rún",
-        1000: "Ẹgbẹ̀rún",
-    ]
-
-    // MARK: Tier 4 – hand-verified 0–99 traditional
-    public static let traditional0to99: [Int: String] = [
-        0: "Òdo", 1: "Ọ̀kan", 2: "Méjì", 3: "Mẹ́ta", 4: "Mẹ́rin",
-        5: "Márùn-ún", 6: "Mẹ́fà", 7: "Méje", 8: "Mẹ́jọ", 9: "Mẹ́sàn-án",
-        10: "Mẹ́wàá",
-        11: "Mọ́kànlá", 12: "Méjìlá", 13: "Mẹ́tàlá", 14: "Mẹ́rìnlá",
-        15: "Mẹ́ẹ̀dógún", 16: "Mẹ́rìndínlógún", 17: "Mẹ́tàdínlógún",
-        18: "Méjìdínlógún", 19: "Mọ́kàndínlógún",
-        20: "Ogún",
-        21: "Mọ́kànlélógún", 22: "Méjìlélógún", 23: "Mẹ́tàlélógún",
-        24: "Mẹ́rìnlélógún",
-        25: "Mẹ́ẹ̀dọ́gbọ̀n", 26: "Mẹ́rìndínlọ́gbọ̀n",
-        27: "Mẹ́tàdínlọ́gbọ̀n", 28: "Méjìdínlọ́gbọ̀n",
-        29: "Mọ́kàndínlọ́gbọ̀n",
-        30: "Ọgbọ̀n",
-        31: "Mọ́kànlélọ́gbọ̀n", 32: "Méjìlélọ́gbọ̀n",
-        33: "Mẹ́tàlélọ́gbọ̀n", 34: "Mẹ́rìnlélọ́gbọ̀n",
-        35: "Márùndínlógójì", 36: "Mẹ́rìndínlógójì",
-        37: "Mẹ́tàdínlógójì", 38: "Méjìdínlógójì",
-        39: "Mọ́kàndínlógójì",
-        40: "Ogójì",
-        41: "Mọ́kànlélógójì", 42: "Méjìlélógójì",
-        43: "Mẹ́tàlélógójì", 44: "Mẹ́rìnlélógójì",
-        45: "Márùndínláàádọ́ta", 46: "Mẹ́rìndínláàádọ́ta",
-        47: "Mẹ́tàdínláàádọ́ta", 48: "Méjìdínláàádọ́ta",
-        49: "Mọ́kàndínláàádọ́ta",
-        50: "Àádọ́ta",
-        51: "Mọ́kànléláàádọ́ta", 52: "Méjìléláàádọ́ta",
-        53: "Mẹ́tàléláàádọ́ta", 54: "Mẹ́rìnléláàádọ́ta",
-        55: "Márùndínlọ́gọ́ta", 56: "Mẹ́rìndínlọ́gọ́ta",
-        57: "Mẹ́tàdínlọ́gọ́ta", 58: "Méjìdínlọ́gọ́ta",
-        59: "Mọ́kàndínlọ́gọ́ta",
-        60: "Ọgọ́ta",
-        61: "Mọ́kànlélọ́gọ́ta", 62: "Méjìlélọ́gọ́ta",
-        63: "Mẹ́tàlélọ́gọ́ta", 64: "Mẹ́rìnlélọ́gọ́ta",
-        65: "Márùndínláàádọ́rin", 66: "Mẹ́rìndínláàádọ́rin",
-        67: "Mẹ́tàdínláàádọ́rin", 68: "Méjìdínláàádọ́rin",
-        69: "Mọ́kàndínláàádọ́rin",
-        70: "Àádọ́rin",
-        71: "Mọ́kànléláàádọ́rin", 72: "Méjìléláàádọ́rin",
-        73: "Mẹ́tàléláàádọ́rin", 74: "Mẹ́rìnléláàádọ́rin",
-        75: "Márùndínlọ́gọ́rin", 76: "Mẹ́rìndínlọ́gọ́rin",
-        77: "Mẹ́tàdínlọ́gọ́rin", 78: "Méjìdínlọ́gọ́rin",
-        79: "Mọ́kàndínlọ́gọ́rin",
-        80: "Ọgọ́rin",
-        81: "Mọ́kànlélọ́gọ́rin", 82: "Méjìlélọ́gọ́rin",
-        83: "Mẹ́tàlélọ́gọ́rin", 84: "Mẹ́rìnlélọ́gọ́rin",
-        85: "Márùndínláàádọ́rùn", 86: "Mẹ́rìndínláàádọ́rùn",
-        87: "Mẹ́tàdínláàádọ́rùn", 88: "Méjìdínláàádọ́rùn",
-        89: "Mọ́kàndínláàádọ́rùn",
-        90: "Àádọ́rùn",
-        91: "Mọ́kànléláàádọ́rùn", 92: "Méjìléláàádọ́rùn",
-        93: "Mẹ́tàléláàádọ́rùn", 94: "Mẹ́rìnléláàádọ́rùn",
-        95: "Márùndínlọ́gọ́rùn", 96: "Mẹ́rìndínlọ́gọ́rùn",
-        97: "Mẹ́tàdínlọ́gọ́rùn", 98: "Méjìdínlọ́gọ́rùn",
-        99: "Mọ́kàndínlọ́gọ́rùn",
-    ]
+    // Deficits this small read as "short of the next hundred" (ó dín) rather
+    // than "over the current one" (ó lé): 595 = Ẹgbẹ̀ta ó dín Márùn-ún.
+    // REVIEW: the exact cut-over point is dialect-variable; 1–10 is conservative.
+    private static let oDinMaxDeficit = 10
 
     // MARK: Public API
 
-    /// Convert an integer (-1000…1000) to Yoruba words.
+    /// Convert an integer to Yoruba words. Any non-negative Int is named in full
+    /// Yorùbá (no upper table limit); negatives are prefixed with "Òdì".
     public static func toYoruba(_ n: Int, mode: YorubaMode = .traditional) -> String {
         if n < 0 {
-            return "Òdì \(toYoruba(-n, mode: mode))"
+            return "\(YorubaTables.particles["negative"]!) \(toYoruba(-n, mode: mode))"
         }
-        if n > 1000 { return String(n) }
-        switch mode {
-        case .traditional: return toTraditional(n)
-        case .modern: return toModern(n)
+        if mode == .traditional, let classical = classicalName(n) {
+            return classical
         }
+        return toWords(n, mode: mode)
+    }
+
+    /// Ordinal name: verified table for 1st–10th; larger ordinals use the
+    /// positional fallback "Ipò [cardinal]".
+    /// REVIEW: 5th–9th follow the regular ìk- pattern and the fallback phrasing
+    /// should be confirmed by a fluent speaker.
+    public static func toYorubaOrdinal(_ n: Int, mode: YorubaMode = .traditional) -> String {
+        guard n >= 1 else { return "" }
+        if let word = YorubaTables.ordinals1to10[n] { return word }
+        let prefix = YorubaTables.particles["ordinalFallbackPrefix"]!
+        return "\(prefix) \(lowerFirst(toYoruba(n, mode: mode)))"
+    }
+
+    /// Money phrasing: "náírà [cardinal]", with kobo appended when fractional —
+    /// ₦500 → "náírà ẹ̀ẹ́dẹ́gbẹ̀ta", ₦12.50 → "náírà méjìlá àti kọ́bọ̀ àádọ́ta".
+    public static func nairaToYoruba(_ amount: Double, mode: YorubaMode = .traditional) -> String {
+        guard amount.isFinite else { return "—" }
+        let sign = amount < 0 ? "\(YorubaTables.particles["negative"]!) " : ""
+        let abs = Swift.abs(amount)
+        let naira = Int(abs)
+        let kobo = Int(((abs - Double(naira)) * 100).rounded())
+        let nairaWord = YorubaTables.particles["naira"]!
+        let phrase = "\(nairaWord) \(lowerFirst(toYoruba(naira, mode: mode)))"
+        if kobo == 0 { return sign + phrase }
+        let join = YorubaTables.particles["modernJoin"]!
+        let koboWord = YorubaTables.particles["kobo"]!
+        return "\(sign)\(phrase) \(join) \(koboWord) \(lowerFirst(toYoruba(kobo, mode: mode)))"
     }
 
     /// Yoruba word for a calculator operator symbol.
     public static func operatorWord(_ symbol: String) -> String {
         switch symbol {
-        case "+": return "pẹ̀lú"
-        case "-", "−": return "yọ"
-        case "*", "×": return "ìgbà"
-        case "/", "÷": return "pín sí"
-        case "=": return "dọ́gba"
+        case "+": return YorubaTables.operatorWords["+"]!
+        case "-", "−": return YorubaTables.operatorWords["-"]!
+        case "*", "×": return YorubaTables.operatorWords["×"]!
+        case "/", "÷": return YorubaTables.operatorWords["÷"]!
+        case "^": return YorubaTables.operatorWords["^"]!
+        case "=": return YorubaTables.operatorWords["="]!
         default: return symbol
         }
     }
@@ -153,50 +92,97 @@ public enum YorubaNumberEngine {
 
     /// Yoruba word for a single tapped digit (including decimal point).
     public static func digitWord(_ digit: String, mode: YorubaMode = .traditional) -> String {
-        if digit == "." { return "ààmì" }
+        if digit == "." { return YorubaTables.particles["decimalMark"]! }
         if let n = Int(digit) { return toYoruba(n, mode: mode) }
         return ""
     }
 
     // MARK: Internals
 
-    private static func toTraditional(_ n: Int) -> String {
-        if n <= 99 { return traditional0to99[n] ?? String(n) }
-        if let h = hundredsBase[n] { return h }
-        return hundredsPlusRemainder(n, mode: .traditional)
-    }
-
-    private static func toModern(_ n: Int) -> String {
-        if n <= 10 { return base0to10[n] ?? String(n) }
-        if let t = tensBase[n] { return t }
-        if let h = hundredsBase[n] { return h }
-        if (11...99).contains(n) {
-            // Modern: decimal additive "[tens] àti [units]". 11–14 keep their
-            // canonical forms; 15–99 use "àti" rather than the traditional
-            // subtractive construction.
-            if n <= 14 { return traditional0to99[n] ?? String(n) }
-            let tens = (n / 10) * 10
-            let units = n % 10
-            let tensWord = tens == 10 ? (base0to10[10] ?? String(tens)) : (tensBase[tens] ?? String(tens))
-            if units == 0 { return tensWord }
-            let unitWord = base0to10[units] ?? String(units)
-            return "\(tensWord) àti \(unitWord)"
+    /// Classical vigesimal name for an exact traditional value, or nil.
+    /// Applies only to the value as a whole (2,000 = Ẹgbàá; 20,000 = Ọkẹ́ kan),
+    /// never inside compounds. REVIEW: ọkẹ́ multiples capped at 19 bags so
+    /// values like 1,000,000 keep the modern Mílíọ̀nù reading.
+    private static func classicalName(_ n: Int) -> String? {
+        if let exact = YorubaTables.classicalExact[n] { return exact }
+        if n >= YorubaTables.okeValue, n % YorubaTables.okeValue == 0 {
+            let count = n / YorubaTables.okeValue
+            if count < 20 {
+                return "\(YorubaTables.okeWord) \(asMultiplier(count, mode: .traditional))"
+            }
         }
-        return hundredsPlusRemainder(n, mode: .modern)
+        return nil
     }
 
-    private static func hundredsPlusRemainder(_ n: Int, mode: YorubaMode) -> String {
-        let hundred = (n / 100) * 100
-        let remainder = n - hundred
-        let hundredWord = hundredsBase[hundred] ?? String(hundred)
+    /// Generative core: render a non-negative integer in Yorùbá.
+    private static func toWords(_ n: Int, mode: YorubaMode) -> String {
+        if n == 0 { return YorubaTables.base0to10[0]! }
+        if n < 100 {
+            return mode == .traditional ? (YorubaTables.traditional0to99[n] ?? String(n)) : modernUnder100(n)
+        }
+        if n < 1000 { return hundredsGroup(n, mode: mode) }
+
+        // 1,000 and above: peel off the largest scale, recurse on the remainder.
+        let scale = YorubaTables.scaleWords.first(where: { n >= $0.value })!
+        let count = n / scale.value
+        let remainder = n % scale.value
+        let head = "\(scale.word) \(asMultiplier(count, mode: mode))"
+        if remainder == 0 { return head }
+        // Traditional keeps the vigesimal additive particle "ó lé"; modern joins
+        // place-value groups with the decimal "àti".
+        let join = mode == .traditional
+            ? YorubaTables.particles["addJoin"]!
+            : YorubaTables.particles["modernJoin"]!
+        return "\(head) \(join) \(toWords(remainder, mode: mode))"
+    }
+
+    /// 100–999 as "hundred-base ± remainder": base-first "ó lé" — or "ó dín"
+    /// from the next hundred when the value falls just short of it
+    /// (traditional); "Ọgọ́rùn-ún [×n] àti [remainder]" (modern).
+    private static func hundredsGroup(_ n: Int, mode: YorubaMode) -> String {
+        let hundredCount = n / 100
+        let remainder = n % 100
+        if mode == .traditional {
+            let deficit = (hundredCount + 1) * 100 - n
+            if remainder != 0, deficit <= oDinMaxDeficit {
+                let nextBase = YorubaTables.hundredsBase[(hundredCount + 1) * 100] ?? String((hundredCount + 1) * 100)
+                let subtractJoin = YorubaTables.particles["subtractJoin"]!
+                return "\(nextBase) \(subtractJoin) \(YorubaTables.traditional0to99[deficit] ?? String(deficit))"
+            }
+            let base = YorubaTables.hundredsBase[hundredCount * 100] ?? String(hundredCount * 100)
+            if remainder == 0 { return base }
+            let addJoin = YorubaTables.particles["addJoin"]!
+            return "\(base) \(addJoin) \(YorubaTables.traditional0to99[remainder] ?? String(remainder))"
+        }
+        let hundredWord = hundredCount == 1
+            ? (YorubaTables.tensBase[100] ?? "Ọgọ́rùn-ún")
+            : "\(YorubaTables.tensBase[100] ?? "Ọgọ́rùn-ún") \(asMultiplier(hundredCount, mode: .modern))"
         if remainder == 0 { return hundredWord }
-        // REVIEW: combining form for hundreds + remainder is dialect-sensitive.
-        switch mode {
-        case .traditional:
-            return "\(toTraditional(remainder)) ó lé ní \(hundredWord)"
-        case .modern:
-            return "\(hundredWord) àti \(toModern(remainder))"
-        }
+        return "\(hundredWord) \(YorubaTables.particles["modernJoin"]!) \(modernUnder100(remainder))"
+    }
+
+    /// Modern decimal-additive form for 0–99: "[tens] àti [units]".
+    private static func modernUnder100(_ n: Int) -> String {
+        if n <= 10 { return YorubaTables.base0to10[n] ?? String(n) }
+        if n <= 14 { return YorubaTables.traditional0to99[n] ?? String(n) }
+        if let t = YorubaTables.tensBase[n] { return t }
+        let tens = (n / 10) * 10
+        let units = n % 10
+        let tensWord = tens == 10 ? (YorubaTables.base0to10[10] ?? String(tens)) : (YorubaTables.tensBase[tens] ?? String(tens))
+        if units == 0 { return tensWord }
+        return "\(tensWord) \(YorubaTables.particles["modernJoin"]!) \(YorubaTables.base0to10[units] ?? String(units))"
+    }
+
+    /// Multiplier after a scale or hundred word: "kan" for 1, else the
+    /// number word with a lower-cased leading character so it reads as a modifier.
+    private static func asMultiplier(_ n: Int, mode: YorubaMode) -> String {
+        if n == 1 { return YorubaTables.particles["one"]! }
+        let word = toWords(n, mode: mode)
+        return lowerFirst(word)
+    }
+
+    private static func lowerFirst(_ word: String) -> String {
+        word.prefix(1).lowercased() + word.dropFirst()
     }
 
     private static func tokenizeExpression(_ expr: String) -> [String] {
@@ -205,7 +191,7 @@ public enum YorubaNumberEngine {
         var buf = ""
         for char in stripped {
             let s = String(char)
-            if "+-−*×/÷".contains(char) {
+            if "+-−*×/÷^".contains(char) {
                 if !buf.isEmpty { out.append(buf); buf = "" }
                 out.append(s)
             } else {

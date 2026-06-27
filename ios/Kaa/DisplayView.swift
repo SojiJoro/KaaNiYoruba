@@ -1,4 +1,4 @@
-// Káà — Display view
+// Kàá — Display view
 // ---------------------------------------------------------------------------
 // Renders the current expression (Arabic + Yoruba) plus a headline Yoruba
 // result and a tiny Arabic numeral right-aligned.
@@ -30,24 +30,10 @@ struct DisplayView: View {
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                HStack(spacing: 10) {
-                    Button {
-                        vm.speak(vm.headlineYoruba)
-                    } label: {
-                        Image(systemName: "speaker.wave.2.fill")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(KaaTheme.moss)
-                            .padding(8)
-                            .background(KaaTheme.moss.opacity(0.18))
-                            .clipShape(Circle())
-                    }
-                    .accessibilityLabel("Gbọ́ pípè")
-
-                    Text(vm.headlineArabic)
-                        .font(.system(.title3, design: .monospaced))
-                        .foregroundColor(KaaTheme.mutedText(scheme))
-                        .frame(minWidth: 36, alignment: .trailing)
-                }
+                Text(vm.headlineArabic)
+                    .font(.system(.title3, design: .monospaced))
+                    .foregroundColor(KaaTheme.mutedText(scheme))
+                    .frame(minWidth: 36, alignment: .trailing)
             }
         }
         .padding(20)

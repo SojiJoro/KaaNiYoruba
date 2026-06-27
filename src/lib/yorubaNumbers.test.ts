@@ -1,16 +1,24 @@
-// Káà — Yoruba number engine test cases
+// Kàá — Yoruba number engine test cases
 // ---------------------------------------------------------------------------
 // Runnable as a plain Node script (`node --import tsx src/lib/yorubaNumbers.test.ts`)
 // or under any test runner that recognises `assert`-based files. The shape is
 // intentionally minimal so the suite stays vendor-neutral.
+//
+// The named cases mirror the verification corpus in
+// docs/yoruba-number-logic.md §15 — keep the three in sync (this file, the doc,
+// and ios/KaaTests/YorubaNumberEngineTests.swift).
 
 import assert from 'node:assert/strict';
 import {
   digitSequenceToYoruba,
   expressionToYoruba,
+  explainConversion,
+  explainNumber,
+  nairaToYoruba,
   numericInputToYoruba,
   operatorWord,
   toYoruba,
+  toYorubaOrdinal,
 } from './yorubaNumbers';
 
 interface Case {
@@ -58,66 +66,293 @@ const CASES: Case[] = [
   { n: 300, trad: 'Ọ̀ọ́dúnrún' },
   { n: 400, trad: 'Irinwó' },
   { n: 500, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ọgọ́rùn-ún márùn-ún' },
-  { n: 1000, trad: 'Ẹgbẹ̀rún', modern: 'Ẹgbẹ̀rún' },
-  { n: 1001, trad: 'Ẹgbẹ̀rún kan àti Ọ̀kan', modern: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
-  { n: 558, trad: 'Méjìdínlọ́gọ́ta ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Mẹ́jọ' },
-  { n: 2232, trad: 'Ẹgbẹ̀rún méjì àti Méjìlélọ́gbọ̀n ó lé ní Igba', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
-  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta àti Mẹ́rìnléláàádọ́rùn ó lé ní Ẹ̀ẹ́dẹ́gbẹ̀ta', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
+  // Hundreds + remainder: base-first "ó lé" (traditional), "àti" (modern)
+  { n: 105, trad: 'Ọgọ́rùn-ún ó lé Márùn-ún', modern: 'Ọgọ́rùn-ún àti Márùn-ún' },
+  { n: 250, trad: 'Igba ó lé Àádọ́ta', modern: 'Ọgọ́rùn-ún méjì àti Àádọ́ta' },
+  { n: 555, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Márùndínlọ́gọ́ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Márùn-ún' },
+  // Just under the next hundred: subtractive "ó dín" (doc §11, §15)
+  { n: 199, trad: 'Igba ó dín Ọ̀kan', modern: 'Ọgọ́rùn-ún àti Àádọ́rùn àti Mẹ́sàn-án' },
+  { n: 590, trad: 'Ẹgbẹ̀ta ó dín Mẹ́wàá' },
+  { n: 595, trad: 'Ẹgbẹ̀ta ó dín Márùn-ún' },
+  { n: 995, trad: 'Ẹgbẹ̀rún ó dín Márùn-ún' },
+  // Classical large units, exact values only (doc §9, §15)
+  { n: 2000, trad: 'Ẹgbàá', modern: 'Ẹgbẹ̀rún méjì' },
+  { n: 4000, trad: 'Ẹgbàájì', modern: 'Ẹgbẹ̀rún mẹ́rin' },
+  { n: 20000, trad: 'Ọkẹ́ kan', modern: 'Ẹgbẹ̀rún ogún' },
+  { n: 40000, trad: 'Ọkẹ́ méjì', modern: 'Ẹgbẹ̀rún ogójì' },
+  // Thousands and beyond — generated, never digit-spelled
+  { n: 1000, trad: 'Ẹgbẹ̀rún kan', modern: 'Ẹgbẹ̀rún kan' },
+  { n: 1001, trad: 'Ẹgbẹ̀rún kan ó lé Ọ̀kan', modern: 'Ẹgbẹ̀rún kan àti Ọ̀kan' },
+  { n: 558, trad: 'Ẹ̀ẹ́dẹ́gbẹ̀ta ó lé Méjìdínlọ́gọ́ta', modern: 'Ọgọ́rùn-ún márùn-ún àti Àádọ́ta àti Mẹ́jọ' },
+  { n: 2232, trad: 'Ẹgbẹ̀rún méjì ó lé Igba ó lé Méjìlélọ́gbọ̀n', modern: 'Ẹgbẹ̀rún méjì àti Ọgọ́rùn-ún méjì àti Ọgbọ̀n àti Méjì' },
+  { n: 64594, trad: 'Ẹgbẹ̀rún mẹ́rìnlélọ́gọ́ta ó lé Ẹgbẹ̀ta ó dín Mẹ́fà', modern: 'Ẹgbẹ̀rún ọgọ́ta àti Mẹ́rin àti Ọgọ́rùn-ún márùn-ún àti Àádọ́rùn àti Mẹ́rin' },
+  { n: 1_000_000, trad: 'Mílíọ̀nù kan', modern: 'Mílíọ̀nù kan' },
+  { n: 1_258_222, trad: 'Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún' },
 ];
 
 let pass = 0;
 let fail = 0;
 
-for (const c of CASES) {
+function check(label: string, fn: () => void) {
   try {
+    fn();
+    pass++;
+  } catch (e) {
+    fail++;
+    console.error(' ✗', label, '—', (e as Error).message);
+  }
+}
+
+for (const c of CASES) {
+  check(`case ${c.n}`, () => {
     assert.equal(toYoruba(c.n, 'traditional'), c.trad, `traditional(${c.n})`);
     if (c.modern) {
       assert.equal(toYoruba(c.n, 'modern'), c.modern, `modern(${c.n})`);
     }
-    pass++;
-  } catch (e) {
-    fail++;
-    console.error(' ✗', (e as Error).message);
-  }
+  });
 }
 
 // Expressions
-try {
+check('expressions', () => {
   assert.equal(expressionToYoruba('2+2'), 'Méjì pẹ̀lú Méjì');
   assert.equal(expressionToYoruba('12×3'), 'Méjìlá ìgbà Mẹ́ta');
   assert.equal(expressionToYoruba('10-4'), 'Mẹ́wàá yọ Mẹ́rin');
   assert.equal(expressionToYoruba('100÷5'), 'Ọgọ́rùn-ún pín sí Márùn-ún');
-  assert.equal(expressionToYoruba('2.5+3'), 'Méjì Ẹsẹ Márùn-ún pẹ̀lú Mẹ́ta');
-  pass += 5;
-} catch (e) {
-  fail += 5;
-  console.error(' ✗', (e as Error).message);
-}
+  assert.equal(expressionToYoruba('2.5+3'), 'Méjì ààmì Márùn-ún pẹ̀lú Mẹ́ta');
+  assert.equal(expressionToYoruba('2^10'), 'Méjì ní ọ̀nà Mẹ́wàá');
+});
 
 // Typed numbers, decimals, and arbitrary digit strings
-try {
+check('typed input', () => {
   assert.equal(numericInputToYoruba('007'), 'Òdo Òdo Méje');
-  assert.equal(numericInputToYoruba('12345678901234567890'), 'Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo Ọ̀kan Méjì Mẹ́ta Mẹ́rin Márùn-ún Mẹ́fà Méje Mẹ́jọ Mẹ́sàn-án Òdo');
-  assert.equal(numericInputToYoruba('12.05'), 'Méjìlá Ẹsẹ Òdo Márùn-ún');
-  assert.equal(toYoruba(1_000_000), 'Ọ̀kan Òdo Òdo Òdo Òdo Òdo Òdo');
-  assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo Ẹsẹ Ọ̀kan');
-  pass += 5;
-} catch (e) {
-  fail += 5;
-  console.error(' ✗', (e as Error).message);
-}
+  // A leading-zero string still reads digit-by-digit (phone numbers / IDs).
+  assert.equal(digitSequenceToYoruba('007'), 'Òdo Òdo Méje');
+  // The decimal point reads "ààmì" and fractional digits read one by one (§12).
+  assert.equal(numericInputToYoruba('2.5'), 'Méjì ààmì Márùn-ún');
+  assert.equal(numericInputToYoruba('12.05'), 'Méjìlá ààmì Òdo Márùn-ún');
+  assert.equal(toYoruba(1_000_000), 'Mílíọ̀nù kan');
+  assert.equal(numericInputToYoruba('1258222'), 'Mílíọ̀nù kan ó lé Ẹgbẹ̀rún igba ó lé Méjìdínlọ́gọ́ta ó lé Igba ó lé Méjìlélógún');
+  assert.equal(digitSequenceToYoruba('-90.1'), 'Òdì Mẹ́sàn-án Òdo ààmì Ọ̀kan');
+  // Borrowed scale words past a trillion (exact via BigInt) — quadrillion → decillion.
+  assert.equal(toYoruba(1e15), 'Kwadírílíọ̀nù kan');
+  assert.equal(toYoruba(1e18), 'Kwíntílíọ̀nù kan');
+  assert.equal(toYoruba(1e21), 'Sẹ́kítílíọ̀nù kan');
+  assert.equal(toYoruba(1e24), 'Sẹ́ptílíọ̀nù kan');
+  assert.equal(numericInputToYoruba('1000000000000'), 'Tirílíọ̀nù kan');
+  assert.equal(numericInputToYoruba('1000000000000000000000000000000000'), 'Dẹ́sílíọ̀nù kan');
+  // Large values never produce an "Òdo Òdo" run.
+  assert.equal(/Òdo Òdo Òdo/.test(toYoruba(2.232e30)), false);
+});
 
 // Operator words
-try {
+check('operators', () => {
   assert.equal(operatorWord('+'), 'pẹ̀lú');
   assert.equal(operatorWord('−'), 'yọ');
   assert.equal(operatorWord('×'), 'ìgbà');
   assert.equal(operatorWord('÷'), 'pín sí');
-  pass += 4;
-} catch (e) {
-  fail += 4;
-  console.error(' ✗', (e as Error).message);
+  assert.equal(operatorWord('^'), 'ní ọ̀nà');
+});
+
+// Ordinals (doc §13)
+check('ordinals', () => {
+  assert.equal(toYorubaOrdinal(1), 'Àkọ́kọ́');
+  assert.equal(toYorubaOrdinal(2), 'Ìkejì');
+  assert.equal(toYorubaOrdinal(3), 'Ìkẹta');
+  assert.equal(toYorubaOrdinal(4), 'Ìkẹrin');
+  assert.equal(toYorubaOrdinal(10), 'Ìkẹwàá');
+  assert.equal(toYorubaOrdinal(11), 'Ipò mọ́kànlá');
+  assert.equal(toYorubaOrdinal(0), '');
+});
+
+// Money (doc §13): ₦500 = náírà ẹ̀ẹ́dẹ́gbẹ̀ta
+check('naira', () => {
+  assert.equal(nairaToYoruba(500), 'náírà ẹ̀ẹ́dẹ́gbẹ̀ta');
+  assert.equal(nairaToYoruba(12.5), 'náírà méjìlá àti kọ́bọ̀ àádọ́ta');
+  assert.equal(nairaToYoruba(-20), 'Òdì náírà ogún');
+});
+
+// Explain-this-number decomposition
+check('explain', () => {
+  const e75 = explainNumber(75)!;
+  assert.equal(e75.relation, 'subtract');
+  assert.equal(e75.anchor.value, 80);
+  assert.equal(e75.summary, '75 = 80 − 5');
+  const e21 = explainNumber(21)!;
+  assert.equal(e21.relation, 'add');
+  assert.equal(e21.anchor.value, 20);
+  const e595 = explainNumber(595)!;
+  assert.equal(e595.relation, 'subtract');
+  assert.equal(e595.anchor.value, 600);
+  assert.equal(explainNumber(40), null);
+});
+
+// Conversion breakdown — the Yípadà "how this name is formed" panel
+check('explainConversion', () => {
+  // Non-numbers explain nothing.
+  assert.equal(explainConversion('abc'), null);
+
+  // Round multiple of twenty: the etymology shows ogún × 2 fusing into Ogójì.
+  const b40 = explainConversion('40', 'traditional')!;
+  assert.equal(b40.result, 'Ogójì');
+  assert.ok(b40.steps.some((s) => s.term === 'Ogún')); // 20 base
+  assert.ok(b40.steps.some((s) => s.term === 'Méjì')); // ×2
+  assert.ok(b40.steps.some((s) => s.term === 'Ogójì')); // fused result
+  assert.ok(/two twenties/i.test(b40.headline));
+
+  // "Odd" ten: 50 is sixty minus ten (the àád- prefix).
+  const b50 = explainConversion('50', 'traditional')!;
+  assert.ok(b50.steps.some((s) => s.term === 'Ọgọ́ta')); // 60 anchor
+  assert.ok(b50.steps.some((s) => s.term === 'Àádọ́ta'));
+  assert.ok(/short of/i.test(b50.headline));
+
+  // Subtractive (counting back) numbers expose the "ó dín" particle, and the
+  // anchor carries its own etymology (80 = four twenties).
+  const b75 = explainConversion('75', 'traditional')!;
+  assert.equal(b75.result, 'Márùndínlọ́gọ́rin');
+  assert.ok(b75.steps.some((s) => s.term === 'ó dín'));
+  const anchor80 = b75.steps.find((s) => s.term === 'Ọgọ́rin');
+  assert.ok(anchor80 && /four twenties/i.test(anchor80.gloss));
+
+  // Additive numbers expose the "ó lé" particle.
+  const b21 = explainConversion('21', 'traditional')!;
+  assert.ok(b21.steps.some((s) => s.term === 'ó lé'));
+  assert.ok(b21.steps.some((s) => s.term === 'Ogún')); // 20 anchor
+
+  // Hundreds built on igba: 600 = Igba × 3.
+  const b600 = explainConversion('600', 'traditional')!;
+  assert.ok(b600.steps.some((s) => s.term === 'Igba'));
+  assert.ok(b600.steps.some((s) => s.term === 'Ẹgbẹ̀ta'));
+
+  // Root words need no construction.
+  const b5 = explainConversion('5', 'traditional')!;
+  assert.equal(b5.kind, 'root');
+  assert.equal(b5.steps.length, 1);
+
+  // Decimals: whole part + point + each fractional digit.
+  const bDec = explainConversion('2.5', 'traditional')!;
+  assert.equal(bDec.kind, 'decimal');
+  assert.ok(bDec.steps.some((s) => s.term === 'ààmì'));
+
+  // Leading-zero codes read digit by digit.
+  const bCode = explainConversion('0803', 'traditional')!;
+  assert.equal(bCode.kind, 'digits');
+  assert.equal(bCode.steps.length, 4);
+
+  // Classical exact units are named as one word.
+  const b2000 = explainConversion('2000', 'traditional')!;
+  assert.equal(b2000.kind, 'root');
+  assert.equal(b2000.result, 'Ẹgbàá');
+
+  // Scale grouping for large numbers.
+  const bBig = explainConversion('1000000', 'traditional')!;
+  assert.ok(bBig.steps.some((s) => s.term.startsWith('Mílíọ̀nù')));
+});
+
+// ---- Property test: a breakdown's result must equal the engine's name, and
+// every step must be clean (no undefined / leaked digits) for 0–9,999.
+for (const mode of ['traditional', 'modern'] as const) {
+  check(`property: ${mode} breakdown matches engine 0–9999`, () => {
+    for (let n = 0; n <= 9999; n++) {
+      const b = explainConversion(String(n), mode)!;
+      assert.equal(b.result, toYoruba(n, mode), `breakdown result mismatch for ${n}`);
+      assert.ok(b.steps.length > 0, `${mode}(${n}) has no steps`);
+      for (const step of b.steps) {
+        assert.ok(!step.term.includes('undefined'), `${mode}(${n}) term has undefined: ${step.term}`);
+        assert.ok(step.term.length > 0, `${mode}(${n}) empty term`);
+      }
+    }
+  });
 }
 
-console.log(`Káà tests — ${pass} passed, ${fail} failed`);
+// ---- Property tests: every name 0–9,999 in both modes must be well-formed
+// and unique. Uniqueness is the round-trip property — if two numbers shared a
+// name, Yorùbá → number would be ambiguous.
+for (const mode of ['traditional', 'modern'] as const) {
+  check(`property: ${mode} 0–9999 well-formed and unique`, () => {
+    const seen = new Map<string, number>();
+    for (let n = 0; n <= 9999; n++) {
+      const word = toYoruba(n, mode);
+      assert.ok(word.length > 0, `${mode}(${n}) is empty`);
+      assert.ok(!word.includes('undefined'), `${mode}(${n}) contains undefined`);
+      assert.ok(!word.includes('  '), `${mode}(${n}) has a double space`);
+      assert.ok(!/\d/.test(word), `${mode}(${n}) leaked a digit: ${word}`);
+      if (n > 0) {
+        assert.ok(!word.includes('Òdo'), `${mode}(${n}) contains a zero word: ${word}`);
+      }
+      const dup = seen.get(word);
+      assert.equal(dup, undefined, `${mode}: ${n} and ${dup} share the name "${word}"`);
+      seen.set(word, n);
+    }
+  });
+}
+
+// ---- Syllable splitter (powers the spelling games) --------------------------
+import { splitSyllables, spellTarget } from './syllables';
+
+check('syllables', () => {
+  assert.deepEqual(splitSyllables('Méjì'), ['Mé', 'jì']);
+  assert.deepEqual(splitSyllables('Ọ̀kan'), ['Ọ̀', 'kan']);
+  assert.deepEqual(splitSyllables('Ogún'), ['O', 'gún']);
+  assert.deepEqual(splitSyllables('Ọgbọ̀n'), ['Ọ', 'gbọ̀n']);
+  assert.deepEqual(splitSyllables('Márùn-ún'), ['Má', 'rùn', 'ún']);
+  assert.deepEqual(splitSyllables('Mọ́kànlélógún'), ['Mọ́', 'kàn', 'lé', 'ló', 'gún']);
+  assert.deepEqual(splitSyllables('Àádọ́ta'), ['À', 'á', 'dọ́', 'ta']);
+  assert.deepEqual(splitSyllables('Ẹgbẹ̀rún'), ['Ẹ', 'gbẹ̀', 'rún']);
+  assert.deepEqual(splitSyllables('Mẹ́wàá'), ['Mẹ́', 'wà', 'á']);
+  // Round-trip: rebuilding the tiles must reproduce the word for every name
+  // the spelling games can serve (0–100 plus the hundred anchors).
+  for (let n = 0; n <= 100; n++) {
+    const word = toYoruba(n, 'traditional');
+    assert.equal(
+      splitSyllables(word).join('').normalize('NFC'),
+      spellTarget(word).normalize('NFC'),
+      `syllable round-trip failed for ${n}: ${word}`,
+    );
+  }
+  for (const n of [200, 300, 400, 500, 600, 700, 800, 900, 1000]) {
+    const word = toYoruba(n, 'traditional');
+    assert.equal(
+      splitSyllables(word).join('').normalize('NFC'),
+      spellTarget(word).normalize('NFC'),
+      `syllable round-trip failed for ${n}: ${word}`,
+    );
+  }
+});
+
+
+// ---- Learn engine: every level in every age group must build clean sessions
+import { AGE_GROUPS, LEVELS, buildSession, exerciseNumber } from './learn';
+
+check('learn sessions generate cleanly', () => {
+  for (const group of AGE_GROUPS) {
+    for (const level of LEVELS[group.id]) {
+      for (const mode of ['traditional', 'modern'] as const) {
+        for (let seed = 1; seed <= 25; seed++) {
+          const session = buildSession(group.id, level, mode, seed % 3 === 0 ? [7, 12] : [], seed);
+          assert.equal(session.length, 8, `${group.id}/${level.id} session length`);
+          for (const ex of session) {
+            exerciseNumber(ex); // must not throw
+            if ('options' in ex) {
+              assert.ok(ex.options.length >= 2, `${group.id}/${level.id} ${ex.kind} has too few options`);
+              assert.equal(new Set<string | number>(ex.options).size, ex.options.length, `${group.id}/${level.id} ${ex.kind} duplicate options`);
+            }
+            if (ex.kind === 'spell') {
+              assert.ok(ex.syllables.length >= 2, `${group.id}/${level.id} spell word too short: ${ex.word}`);
+              assert.equal(ex.syllables.join('').normalize('NFC'), ex.word.normalize('NFC'), `spell tiles mismatch for ${ex.word}`);
+            }
+            if (ex.kind === 'pick-word') {
+              assert.ok(ex.options.includes(ex.correct), `pick-word options missing answer for ${ex.n}`);
+            }
+            if (ex.kind === 'match') {
+              assert.ok(ex.pairs.length >= 2, `${group.id}/${level.id} match has too few pairs`);
+            }
+          }
+        }
+      }
+    }
+  }
+});
+
+
+console.log(`Kàá tests — ${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

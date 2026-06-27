@@ -1,4 +1,4 @@
-// Káà — Calculator engine
+// Kàá — Calculator engine
 // ---------------------------------------------------------------------------
 // A small, dependency-free expression evaluator that supports +, −, ×, ÷
 // with operator precedence. Designed to keep state as a single readable
@@ -21,6 +21,7 @@ export type CalcKey =
   | '−'
   | '×'
   | '÷'
+  | '^'
   | '='
   | 'C'
   | '⌫';
@@ -37,7 +38,12 @@ export const initialState: CalcState = {
   error: null,
 };
 
-const OPERATORS = new Set(['+', '−', '×', '÷']);
+const OPERATORS = new Set(['+', '−', '×', '÷', '^']);
+
+// Cap how many digits one operand can hold. Typed numbers are named exactly via
+// BigInt, so we allow the full named range (up to a decillion, 34 digits). Note
+// arithmetic itself stays float-precision (~15 sig figs), like a pocket calculator.
+const MAX_OPERAND_DIGITS = 34;
 
 function isOperator(c: string) {
   return OPERATORS.has(c);
@@ -82,6 +88,13 @@ export function applyKey(state: CalcState, key: CalcKey): CalcState {
     // Replace a stale result with a fresh number when typing after "=".
     if (base.lastResult !== null && base.expression === formatNumber(base.lastResult)) {
       return { ...base, expression: key, lastResult: null };
+    }
+    // Cap the current operand's digit count (real-calculator behaviour).
+    if (/^[0-9]$/.test(key)) {
+      const lastOpIndex = lastOperatorIndex(base.expression);
+      const currentOperand = base.expression.slice(lastOpIndex + 1);
+      const digitCount = (currentOperand.match(/\d/g) ?? []).length;
+      if (digitCount >= MAX_OPERAND_DIGITS) return base;
     }
     return { ...base, expression: base.expression + key };
   }
@@ -130,7 +143,8 @@ export function evaluate(expr: string): EvalResult {
     const rpn = toRPN(tokens);
     const value = evalRPN(rpn);
     if (!Number.isFinite(value)) {
-      return { value: null, error: 'Àṣìṣe' };
+      // Overflow (e.g. a huge power) reads as "too big"; NaN is a generic error.
+      return { value: null, error: Number.isNaN(value) ? 'Àṣìṣe' : 'Tóbi jù' };
     }
     return { value, error: null };
   } catch (err) {
@@ -173,7 +187,14 @@ const PRECEDENCE: Record<string, number> = {
   '−': 1,
   '×': 2,
   '÷': 2,
+  '^': 3,
 };
+
+// '^' (power) is right-associative, so equal-precedence powers stack to the
+// right: 2^3^2 = 2^(3^2). Every other operator is left-associative.
+function isRightAssociative(op: string): boolean {
+  return op === '^';
+}
 
 function toRPN(tokens: Token[]): Token[] {
   const out: Token[] = [];
@@ -182,11 +203,16 @@ function toRPN(tokens: Token[]): Token[] {
     if (t.kind === 'num') {
       out.push(t);
     } else {
-      while (
-        ops.length &&
-        PRECEDENCE[ops[ops.length - 1].value] >= PRECEDENCE[t.value]
-      ) {
-        out.push(ops.pop()!);
+      while (ops.length) {
+        const top = ops[ops.length - 1].value;
+        const higher = PRECEDENCE[top] > PRECEDENCE[t.value];
+        const equalLeft =
+          PRECEDENCE[top] === PRECEDENCE[t.value] && !isRightAssociative(t.value);
+        if (higher || equalLeft) {
+          out.push(ops.pop()!);
+        } else {
+          break;
+        }
       }
       ops.push(t);
     }
@@ -218,6 +244,9 @@ function evalRPN(rpn: Token[]): number {
         if (b === 0) throw new Error('Pípín pẹ̀lú òdo');
         stack.push(a / b);
         break;
+      case '^':
+        stack.push(Math.pow(a, b));
+        break;
     }
   }
   return stack[0] ?? 0;
@@ -225,7 +254,25 @@ function evalRPN(rpn: Token[]): number {
 
 export function formatNumber(n: number): string {
   if (!Number.isFinite(n)) return '—';
-  if (Number.isInteger(n)) return n.toString();
-  // Trim trailing zeros and cap to 6 decimal places.
+  const abs = Math.abs(n);
+  // Exact integers stay as plain digits.
+  if (Number.isInteger(n) && abs <= Number.MAX_SAFE_INTEGER) {
+    return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 0 });
+  }
+  // Too big (or too small) to show exactly → scientific notation, like a
+  // physical calculator, instead of a precision-losing string of zeros.
+  if (abs !== 0 && (abs >= 1e15 || abs < 1e-6)) {
+    return trimExponential(n.toExponential(6));
+  }
+  // Ordinary decimals: trim trailing zeros, cap to 6 places.
   return parseFloat(n.toFixed(6)).toString();
+}
+
+// "2.232000e+30" -> "2.232e30"
+function trimExponential(s: string): string {
+  const [mantissaRaw, expRaw] = s.split('e');
+  const mantissa = mantissaRaw.includes('.')
+    ? mantissaRaw.replace(/0+$/, '').replace(/\.$/, '')
+    : mantissaRaw;
+  return `${mantissa}e${expRaw.replace('+', '')}`;
 }

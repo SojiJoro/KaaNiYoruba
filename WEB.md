@@ -1,4 +1,4 @@
-# Káà — Web
+# Kàá — Web
 
 Next.js 14 (App Router) + TypeScript + Tailwind. Lives at the repo root so Vercel auto-detects it as a Next.js project with zero configuration.
 
@@ -45,11 +45,7 @@ ios/
 
 ### Environment variables
 
-None required for the MVP. When recorded audio clips are wired up, add:
-
-| Key | Purpose |
-|---|---|
-| `NEXT_PUBLIC_AUDIO_CDN` | Base URL of recorded Yoruba pronunciations |
+None required for the MVP.
 
 ## Project structure
 

@@ -1,4 +1,4 @@
-// Káà — Children's learning mode
+// Kàá — Children's learning mode
 
 import SwiftUI
 
@@ -78,14 +78,6 @@ struct LearningModeView: View {
                     }
                 }
                 .frame(minHeight: 32)
-                Button {
-                    vm.speak(correct)
-                } label: {
-                    Label("Gbọ́ pípè", systemImage: "speaker.wave.2.fill")
-                        .font(.footnote)
-                        .foregroundColor(KaaTheme.mossDark)
-                }
-                .buttonStyle(.plain)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 24)

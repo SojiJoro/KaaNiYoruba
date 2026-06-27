@@ -1,4 +1,4 @@
-// Káà — Color & font tokens
+// Kàá — Color & font tokens
 // ---------------------------------------------------------------------------
 // Hex tokens map to the same palette used in the web app's tailwind.config.ts
 // so the two implementations remain visually identical.

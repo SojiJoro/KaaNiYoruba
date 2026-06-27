@@ -1,6 +1,6 @@
 # Yorùbá Number Logic — Memory & Source of Truth
 
-> **Status:** Canonical reference for Káà's number engine.
+> **Status:** Canonical reference for Kàá's number engine.
 > This file is the *memory* of the project: the place where the counting logic
 > is researched, written down, and kept. Before changing
 > `src/lib/yorubaNumbers.ts` or `ios/Kaa/YorubaNumberEngine.swift`, read this
@@ -222,6 +222,26 @@ dialect-specific (cowrie-counting math: a "bag" `ọkẹ́` = 20,000 cowries; a
 §10**, and reserve the classical large units for the learning/reference screens
 where their cultural logic is the point.
 
+### Borrowed international scale words (engine source of truth)
+
+For large magnitudes modern Yorùbá borrows the international scale names and
+pronounces them Yorùbá-style. The engine groups by these (on BigInt, so any
+magnitude is exact) and joins groups with `ó lé` (traditional) or `àti` (modern):
+
+| Value | Word | | Value | Word |
+|------:|------|-|------:|------|
+| 10⁶ | **Mílíọ̀nù** | | 10²¹ | **Sẹ́kítílíọ̀nù** |
+| 10⁹ | **Bílíọ̀nù** | | 10²⁴ | **Sẹ́ptílíọ̀nù** |
+| 10¹² | **Tirílíọ̀nù** | | 10²⁷ | **Ọ́kítílíọ̀nù** |
+| 10¹⁵ | **Kwadírílíọ̀nù** | | 10³⁰ | **Nónílíọ̀nù** |
+| 10¹⁸ | **Kwíntílíọ̀nù** | | 10³³ | **Dẹ́sílíọ̀nù** |
+
+So `1,000,000` → **Mílíọ̀nù kan**, `1,000,000,000` → **Bílíọ̀nù kan**,
+`1,000,000,000,000` → **Tirílíọ̀nù kan**, … `10³³` → **Dẹ́sílíọ̀nù kan**.
+Each empty place-value group is omitted, so there is never an "Òdo Òdo" run.
+Beyond ~10³⁶ the engine switches to scientific notation
+(`[mantissa] ìgbà mẹ́wàá ní ọ̀nà [exp]`).
+
 ---
 
 ## 10. Modern decimal forms (recommended for results > 200)
@@ -242,7 +262,7 @@ parts with **`àti`** ("and"):
 1,234 Ẹgbẹ̀rún (kan) àti Igba àti Mẹ́rìnlélọ́gbọ̀n
 ```
 
-This is why Káà ships **two modes**:
+This is why Kàá ships **two modes**:
 
 * **Traditional** — vigesimal + subtractive (`§7`, `§8`); the cultural system.
 * **Modern** — decimal-additive with `àti`; how most people read big numbers
@@ -279,6 +299,7 @@ For a number `N = base + r` (base = the largest table value ≤ N, r = remainder
 | `−` | **yọ** | take away |
 | `×` | **ìṣẹ́po / ìgbà** | times |
 | `÷` | **pín sí** | divide into |
+| `^` | **ní ọ̀nà** | "in n ways/places" — `2^10` = `Méjì ní ọ̀nà Mẹ́wàá` (two, in ten places) |
 | `=` | **dọ́gba** | equals |
 | `.` (point) | **ààmì** | mark |
 | `−n` (negative) | **òdì** | negative |
