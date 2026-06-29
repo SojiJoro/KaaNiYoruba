@@ -36,39 +36,42 @@ Vercel auto-detects Next.js — no special config needed.
 
 ### Why the iOS folder doesn't break the deploy
 
-`ios/` contains only Swift sources. Vercel ignores non-Next.js files. No `.vercelignore` is required, but you can add one if you want to skip large folders explicitly:
+`ios/` contains only Swift sources. Vercel ignores non-Next.js files. This repository includes a small `.vercelignore` so Vercel skips native sources and project docs:
 
 ```
 ios/
 *.md
+!README.md
 ```
 
 ### Environment variables
 
-None required for the MVP.
+None required for the current web app.
 
 ## Project structure
 
 ```
-/                          ← Vercel project root
+/                              ← Vercel project root
 ├─ src/
 │  ├─ app/
-│  │  ├─ layout.tsx        # html shell, font loading
-│  │  ├─ page.tsx          # mounts <Calculator/>
-│  │  └─ globals.css       # tokens + adire pattern
+│  │  ├─ layout.tsx            # html shell, metadata, PWA setup
+│  │  ├─ page.tsx              # landing page
+│  │  ├─ onka/page.tsx         # mounts the Kàá calculator app
+│  │  ├─ about/page.tsx        # project background
+│  │  └─ globals.css           # design tokens, layout, adire pattern
 │  ├─ components/
-│  │  ├─ Calculator.tsx    # top-level state + tabs
-│  │  ├─ Display.tsx       # expression + headline result
-│  │  ├─ Keypad.tsx        # digit/operator buttons w/ Yoruba labels
-│  │  ├─ ModeToggle.tsx    # traditional ↔ modern
-│  │  ├─ History.tsx
-│  │  ├─ ConverterPanel.tsx
-│  │  └─ LearningMode.tsx
+│  │  ├─ kaa/                  # calculator, converter, history, settings
+│  │  ├─ learn/                # learning exercises and sessions
+│  │  └─ PwaSetup.tsx          # service-worker registration
 │  └─ lib/
-│     ├─ yorubaNumbers.ts  # the number engine
-│     ├─ yorubaNumbers.test.ts
-│     └─ calculator.ts     # expression evaluator
-├─ ios/                    # SwiftUI sources (ignored by Vercel)
+│     ├─ yorubaNumbers.ts      # the number engine
+│     ├─ yorubaNumbers.test.ts # engine regression tests
+│     ├─ calculator.ts         # expression evaluator
+│     ├─ learn.ts              # learning-mode content helpers
+│     └─ speech.ts             # audio/speech integration points
+├─ shared/                     # language pack shared by web and iOS
+├─ ios/                        # SwiftUI sources (ignored by Vercel)
+├─ public/                     # PWA manifest, icons, service worker
 ├─ tailwind.config.ts
 └─ package.json
 ```

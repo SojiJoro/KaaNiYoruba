@@ -132,10 +132,6 @@ The traditional engine is well-attested for 0–99. For 100–1,000 published so
 
 To review, run `npm run review-packet` — it writes `docs/review/yoruba-review-packet.csv`, a spreadsheet of every generated form (with the contested ones flagged) plus columns for corrections. A fluent speaker can work through it in one sitting; corrections go into `shared/yoruba-language-pack.json` (the single source of truth for the web and iOS engines — regenerate with `npm run generate`).
 
-### Ìmúdájú — verified by
-
-*This section credits the fluent speakers who have verified the engine's output. Awaiting first review.*
-
 ## 6. Contributing
 
 Contributions are welcome — especially native-speaker corrections to the
@@ -146,10 +142,9 @@ the [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
 ## 7. Support
 
 Kàá is free, with no paid tiers, accounts, or locked features — that's
-permanent, not a trial. If you'd like to support development, look for a
-"Sponsor" button on this repository (configured in
-[`.github/FUNDING.yml`](./.github/FUNDING.yml)); donations are entirely
-optional.
+permanent, not a trial. The best ways to support the project right now are
+to report issues, review Yorùbá forms with fluent speakers, share the app
+with learners, or contribute fixes.
 
 ## 8. License
 
